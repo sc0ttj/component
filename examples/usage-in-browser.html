@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component thing demo</title>
+</head>
+
+<body>
+  <p class="container">I will be replaced when the JS is loaded</p>
+
+  <script src="../src/component.js"></script>
+  <script>
+
+  // ------------------------------------------------
+  // USAGE: Defining components
+  // ------------------------------------------------
+
+  // Define our app state
+  var state = {
+    count: 0,
+    incrementBy: 5,
+    id: "foo-id",
+    items: [
+      { name: "Item one" },
+      { name: "Item two" },
+    ],
+    btnColor: 'black',
+    borderColor: 'grey',
+  }
+
+  // Define some generic, re-usable, stateless "sub-components"
+  var Heading = (text)      => `<h1>${text}</h1>`
+  var List    = (items)     => `<ul>${items.map(item => `<li>${item.name}</li>`).join('')}</ul>`
+  var Button  = (label, fn) => `<button class="btn" onclick=${fn}>${label}</button>`
+
+  // Define a stateful main component
+  var App = new Component(state);
+
+  // Define some styles for the view (optional)
+  App.style = (props) => `
+    #${props.id} {
+      background-color: #eee;
+      border: 2px solid ${props.borderColor || 'red'};
+      margin: 0 auto;
+      max-width: 360px;
+      padding: 0 18px 18px 18px;
+    }
+    .btn {
+      background-color: ${props.btnColor || 'red'};
+      border: 0;
+      color: white;
+      padding: 6px;
+    }`
+
+  // Define a view - include our sub-components
+  App.view = (props) => `
+    <div id=${props.id}>
+      ${Heading('Total so far = ' + props.count)}
+      ${List(props.items)}
+      ${Button('Click here', `App.clickBtn(${props.incrementBy})`)}
+    </div>`
+
+  // Define some events (optional)
+  App.clickBtn = (props) => App.setState({ count: App.state.count + props})
+
+
+
+  // ------------------------------------------------
+  // USAGE: Using the component
+  // ------------------------------------------------
+
+  App.log = false      // disable logging of state changes in console/DevTools
+  App.log = true       // enable logging of state changes in console/DevTools
+  App.reactive = false // disable auto re-render on state changes
+  App.reactive = true  // enable auto re-render on state changes
+
+  // Add our app to the page
+  App.render('.container')
+
+  // Using setState() to trigger a full re-render
+  App.setState({
+    items: [ { name: "First" } ],
+  })
+
+  // ...Or call any methods you defined directly
+  App.clickBtn(1)
+
+
+
+  // ------------------------------------------------
+  // OPTIONAL: Define chainable "actions", to update the state more easily
+  // ------------------------------------------------
+
+  // Define "actions" to update your state in specific ways
+
+  // These "actions" are like regular methods, except
+  // they're always chainable and tagged by name in
+  // your components state history
+  App.actions({
+
+    update:     (props) => App.setState({ props }), // same as calling App.setState()
+
+    reset:      (props) => App.setState({ count: 0 }),
+
+    count:      (props) => App.setState({ count: props }),
+
+    plus:       (props) => App.setState({ count: App.state.count + props }),
+
+    minus:      (props) => App.setState({ count: App.state.count - props }),
+
+    items:      (props) => App.setState({ items: props }),
+
+    addItems:   (props) => App.setState({ items: [ ...App.state.items, ...props ] }),
+
+  });
+
+  // If you defined some "actions", you can use them
+  // to update specific parts of your state
+  App.plus(105)
+  App.minus(5)
+
+  // A components "actions" can be chained
+  App
+    .minus(1)
+    .minus(1)
+    .minus(1)
+    .plus(3)
+    .addItems([ { name: "two" }, { name: "three" } ])
+
+
+  // ------------------------------------------------
+  // OPTIONAL: Using the state "timeline"
+  // ------------------------------------------------
+
+  // Take a "snapshot" (we'll use it later)
+  var snapshot = App.state
+
+  App.rewind()         // go to initial state
+  App.forward()        // go to latest state
+  App.rewind(2)        // rewind two steps to a previous state
+  App.forward(2)       // fast-forward two steps to a more current state
+  App.undo()           // same as App.rewind(1)
+  App.redo()           // same as App.forward(1)
+
+  // Set a previous state
+  App.setState(App.history[2].state)
+  // Set a "named" state, from a previous point in time
+  App.setState(snapshot)
+
+
+  </script>
+</body>
