@@ -25,30 +25,33 @@ var Button = (label, fn) =>
 // Define a stateful main component
 var App = new Component(state)
 
-// Define a view - a function which receives the state as `props`
-// and can returns the view as a string, object, etc
+// OPTIONAL: call only 'setState()' instead of 'App.setState()'
+var setState = App.setState
 
-// create an HTML view, using template literals
+// OPTIONAL: Define some events
+clickBtn = props => setState({ count: App.state.count + props })
+
+// IMPORTANT: Define a view - a function which receives the
+// state as `props` and returns the view as a string or JSON
+
+// Create an HTML view, using template literals
 var htmlView = props => `
     <div id=${props.id}>
       ${Heading("Total so far = " + props.count)}
       ${List(props.items)}
-      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
+      ${Button("Click here", `clickBtn(${props.incrementBy})`)}
     </div>`
 
-// or a JS object view
+// ...or a JS object view
 var jsonView = props => {
   return { count: props.count, items: props.items }
 }
 
-// or return the state itself (pure headless component)
+// ...or return the state itself (pure headless component)
 var dataOnlyView = props => props
 
-// Lets use data only for now.. change this if you like
+// ... for now, lets use data view
 App.view = dataOnlyView
-
-// Define some events (optional)
-App.clickBtn = props => App.setState({ count: App.state.count + props })
 
 // ------------------------------------------------
 // OPTIONAL: Define chainable "actions", to update the state more easily
@@ -58,19 +61,19 @@ App.clickBtn = props => App.setState({ count: App.state.count + props })
 // they're always chainable and tagged by name in
 // your components state history
 App.actions({
-  update: props => App.setState({ props }), // same as calling App.setState()
+  update: props => setState({ props }), // same as calling App.setState()
 
-  reset: props => App.setState({ count: 0 }),
+  reset: props => setState({ count: 0 }),
 
-  count: props => App.setState({ count: props }),
+  count: props => setState({ count: props }),
 
-  plus: props => App.setState({ count: App.state.count + props }),
+  plus: props => setState({ count: App.state.count + props }),
 
-  minus: props => App.setState({ count: App.state.count - props }),
+  minus: props => setState({ count: App.state.count - props }),
 
-  items: props => App.setState({ items: props }),
+  items: props => setState({ items: props }),
 
-  addItems: props => App.setState({ items: [...App.state.items, ...props] })
+  addItems: props => setState({ items: [...App.state.items, ...props] })
 })
 
 //
@@ -85,12 +88,10 @@ App.actions({
 //
 
 // Using setState() to trigger a full re-render
-App.setState({
-  items: [{ name: "First" }]
-})
+App.setState({ items: [{ name: "First" }] })
 
-// ...Or call any methods you defined directly
-App.clickBtn(1)
+// ...Or directly call any methods you defined
+clickBtn(1)
 
 // If you defined some "actions", you can use them
 // to update specific parts of your state

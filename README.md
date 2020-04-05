@@ -17,9 +17,9 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- Only 904 bytes, minified and gzipped
-- Simple syntax, easy to use
+- Less than 1kb, minified and gzipped
 - No build tools or transpiler needed
+- Simple syntax, easy to use, easy to learn
 - Works **client-side**, in browsers:
   - add your component to the page as you would a normal Element
 - Works **server-side**, in Node:
@@ -30,7 +30,8 @@ A "state" is a snapshot of your application data at a specific time.
 Your components will support:
 
 - Automatic re-rendering on state change
-- CSS styling and re-rendering
+- Scoped CSS styling, with re-rendering on CSS changes
+- Event attributes like `onclick`, `onchange`, `onkeyup`, etc, etc
 - Easy state management:
   - define "actions" to easily update the state in specific ways 
   - a state timeline:
@@ -42,11 +43,12 @@ Your components will support:
 
 ## Limitations
 
-- Simplistic rendering - no virtual DOM (vdom)
+Currently, the most important limitations are:
+
 - No DOM diffing - re-renders just replace your component containers innerHTML
+- No Event objects passed into components events attributes (`onclick`, etc)
 - No JSX - uses template literals
 - No CSS-in-JS - uses template literals
-- ...and more
 
 ## Quickstart
 
@@ -130,25 +132,26 @@ See [examples/usage-in-node.js](examples/usage-in-node.js)
 
 ### Styling your component
 
-Use `App.style()` to define some styles for your components view (optional):
+Use `.style()` to define some styles for your components view (optional):
 
 ```js
 App.style = (props) => `
   #${props.id} {
-    background-color: #eee;
     border: 2px solid ${props.borderColor || 'red'};
     margin: 0 auto;
-    max-width: 360px;
-    padding: 0 18px 18px 18px;
+    max-width: ${props.maxWidth};
   }
-  .btn {
+  #${props.id} .btn {
     background-color: ${props.btnColor || 'red'};
-    border: 0;
-    color: white;
     padding: 6px;
   }
 `
 ```
+
+Note: in the example above, we name-spaced or "scoped" the CSS so it will affect the current component only, by using `props.id` (passed in from the state).
+
+To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
+
 ### Using "actions"
 
 Define "actions" to update your state in specific ways.
@@ -215,7 +218,7 @@ App.setState(snapshot)
 
 If running a NodeJS server, you can render the components as HTML strings or JSON.
 
-Just define a view - a function which receives the state as `props` and can returns the view as a string, object, etc.
+Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
 
 ```js
 // create an HTML view, using template literals
@@ -253,41 +256,89 @@ res.send(App.render())
 
 ```
 
+If rendering a component with `.view()` and `.style()` defined in Node, or calling `.renderToString()` directly, the output will be a string like this one:
+
+```
+"<style>
+#foo-id {
+  border: 2px solid grey;
+  margin: 0 auto;
+  max-width: 360px;
+}
+#foo-id .btn {
+  background-color: black;
+  color: white;
+  padding: 6px;
+}
+</style>
+<div id=\"foo-id\">
+  <h1>Total so far = 101</h1>
+  <ul><li>First</li><li>two</li><li>three</li></ul>
+  <button class=\"btn\" onclick=App.clickBtn(5)>Click here</button>
+</div>"
+```
+
+^ any styles are wrapped in a `<style>` tag, and your view is rendered after that.
+
 ## Making changes to `Component`
 
 Look in `src/component.js`, make any changes you like.
 
 Rebuild the bundles in `dist/` using this command: `npm run build`
 
+## Future improvements
+
+- Performance:
+  - DOM diffing: real DOM, not VDOM (only needed in browser, NodeJS would use HTML template strings)
+  - Batched rendering: only needed in browser, use requestAnimationFrame. See [main-loop](https://github.com/Raynos/main-loop)
+  - Memoize state updates: so we can return cached states and views
+
+- Usability:
+  - Better CSS-in-JS: 
+    - define a components CSS using regular JS objects (alternative to template strings)
+    - auto-scoped CSS, with namespaced/prefixed classes 
+    - see [twirl](https://github.com/benjamminj/twirl-js)
+  - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
+    - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
+
 ## Related projects:
 
-- [microbundle](https://github.com/developit/microbundle) - used to create various builds, that end up in `dist/`
+- [microbundle](https://github.com/developit/microbundle) - used by this project to create the bundled & compressed builds in `dist/`
 
-### Other tiny component libraries
+### DOM and DOM diffing
 
-- [choojs](http://github.com/choojs/) - A 4kb framework for creating sturdy frontend applications
-- [yo-yo](https://github.com/maxogden/yo-yo/) - tiny UI library, with DOM diffing and ES6 tagged template literals 
-- [hyperapp](https://github.com/jorgebucaran/hyperapp) - The tiny framework for building web interfaces.
-- [preact](https://github.com/preactjs/preact) - a faster, smaller alternative to React.js
-
-### DOM and VDOM diffing
-
-- [developit/htm](https://github.com/developit/htm) - JSX alternative, using ES6 tagged templates, compiler support
 - [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
-- [snabbdom](https://github.com/snabbdom/snabbdom) - the vdom diffing library used by Vue.js
-- [snabby](https://github.com/mreinstein/snabby) - HTML template strings with snabbdom
-- [hyperx](https://github.com/choojs/hyperx) - tagged template string virtual dom builder 
+- [set-dom](https://github.com/DylanPiercey/set-dom) - tiny dom diffing library
+- [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function
 
-### Other 
+### Template strings to real DOM nodes
+
+- [domify-template-strings](https://github.com/loilo-archive/domify-template-strings) - creates real DOM nodes from HTML template strings
+- [genel](https://github.com/capsidjs/genel) - create real DOM nodes from template string, 639 bytes
+
+### CSS in JS
+
+- [twirl](https://github.com/benjamminj/twirl-js) - a tag for template literals, turns CSS into objects 
+- `str.replace(/([A-Z])/g, "-$1").toLowerCase()` - camelCase to hyphen-case converter
+- `var cssClassMatchRegex = new RegExp(/\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/g)` - regex to match all classes in a string (maybe useful for "scoping")
+- `Math.random().toString(36).split(".")[1]` - unique ID generator (create a unique id for each new component)
+- `cssString.replace(/\n/g, '').replace(/\s\s+/g, ' ')` - minify string of CSS
+
+### VDOM and VDOM diffing
+
+- [snabbdom](https://github.com/snabbdom/snabbdom) - the vdom diffing library used by Vue.js
+- [snabby](https://github.com/mreinstein/snabby) - use HTML template strings to generate vdom, use with snabbdom
+- [petit-dom](https://github.com/yelouafi/petit-dom) - tiny vdom diffing and patching library
+- [developit/htm](https://github.com/developit/htm) - JSX alternative, using ES6 tagged templates to generate vdom trees
+- [hyperx](https://github.com/choojs/hyperx) - use tagged template string to build virtual dom trees, which then need diffing/patching
+
+### Routers
 
 - [router](https://github.com/sc0ttj/router) - a tiny, simple isomorphic router
 
-## Future plans
+### Other tiny component libraries
 
-None really... memoize state updates?
-
-Maybe write some examples that use add-ons:
-
-- VDOM or DOM diffing
-- proper CSS-in-JS
-- ...?
+- [yo-yo](https://github.com/maxogden/yo-yo/) - tiny UI library, DOM diffing (morphdom), Event handling, ES6 tagged template literals 
+- [hyperapp](https://github.com/jorgebucaran/hyperapp) - The tiny framework for building web interfaces
+- [preact](https://github.com/preactjs/preact) - a 3.1kb alternative to React.js
+- [choojs](http://github.com/choojs/) - A 4kb framework for creating sturdy frontend applications

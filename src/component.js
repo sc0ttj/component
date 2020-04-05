@@ -10,6 +10,8 @@
 //  * ability to "time travel" to prev/next states
 //  * update states using simple "actions"
 
+"use strict"
+
 /**
  * A stateful component creator
  * @constructor
@@ -25,7 +27,11 @@ function Component(state) {
     process.versions !== null &&
     process.versions.node !== null
 
-  this.state = state // the main state/model of the component
+  this.state = state || {} // the main state/model of the component
+
+  this.state.uid = Math.random()
+    .toString(36)
+    .split(".")[1]
 
   if (!this.isNode) {
     // the <style> elem into which we put our component CSS
@@ -65,6 +71,16 @@ function Component(state) {
     return obj
   }
 
+  this.deepEqual = (x, y) => {
+    const ok = Object.keys,
+      tx = typeof x,
+      ty = typeof y
+    return x && y && tx === "object" && tx === ty
+      ? ok(x).length === ok(y).length &&
+          ok(x).every(key => this.deepEqual(x[key], y[key]))
+      : String(x) === String(y)
+  }
+
   /**
    * Set the component state
    * @param {object} newState - the new state to update to
@@ -73,8 +89,15 @@ function Component(state) {
     // update previous and current state
     this.previousState = this.state
     this.state = { ...this.state, ...newState }
+
+    if (this.deepEqual(this.state, this.previousState)) {
+      console.warn("No changes to render.")
+      return this
+    }
+
     // re-render component
     if (this.reactive) this.render(this.container)
+
     // update history and move along index
     if (this.currentIndex === this.history.length) {
       // we are not traversing state history, so add the new state to history
@@ -85,6 +108,7 @@ function Component(state) {
       })
     }
     this.currentIndex = this.history.length
+
     // log state changes
     if (this.log) console.log(this.currentIndex, [this.state, ...this.history])
 
@@ -92,7 +116,6 @@ function Component(state) {
 
     // freeze state so it can only be changed through setState()
     this.deepFreeze(this.state)
-
     return this
   }
 
@@ -167,9 +190,13 @@ function Component(state) {
    */
   this.setStyles = function() {
     if (typeof document !== "undefined" && document.querySelector) {
-      // add our styles
       if (this.styleEl) {
-        this.styleEl.innerHTML = this.style(this.state) || ""
+        var minifiedCss = this.style(this.state)
+          .replace(/\n/g, "")
+          .replace(/\s\s+/g, " ")
+        if (this.styleEl.innerHTML !== minifiedCss) {
+          this.styleEl.innerHTML = minifiedCss || ""
+        }
       }
     }
   }
@@ -184,7 +211,7 @@ function Component(state) {
     var style
 
     if (typeof this.style === "function") {
-      style = this.style(this.state)
+      style = this.style(this.state).replace(/^ {4}/gm, "")
     }
 
     if (typeof view === "string") {
@@ -194,8 +221,8 @@ function Component(state) {
         // return the view as prettified JSON
         str = JSON.stringify(str, null, 2)
       } catch (err) {
-        if (style) str = `<style>${style}\n</style>\n`
-        str += `${view}`
+        if (style) str = `<style>${style}\n</style>`
+        str += `${view}`.replace(/^ {4}/gm, "")
       }
     } else if (typeof view === "object" || typeof view === "array") {
       // return the view as prettified JSON
@@ -242,9 +269,6 @@ function Component(state) {
   return this
 }
 
-if (typeof module === "undefined") {
-  module = {}
-  module.exports = {}
+if (typeof module !== "undefined") {
+  module.exports = Component
 }
-
-module.exports = Component

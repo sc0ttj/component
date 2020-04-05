@@ -6,10 +6,12 @@
 </head>
 
 <body>
-  <p class="container">I will be replaced when the JS is loaded</p>
+  <p class="container">Open this file in a browser. I will be replaced when the JS is loaded</p>
 
   <script src="../src/component.js"></script>
   <script>
+
+  "use strict"
 
   // ------------------------------------------------
   // USAGE: Defining components
@@ -36,7 +38,18 @@
   // Define a stateful main component
   var App = new Component(state);
 
-  // Define some styles for the view (optional)
+  // IMPORTANT -  Define a view
+  App.view = (props) => `
+    <div id=${props.id}>
+      ${Heading('Total so far = ' + props.count)}
+      ${List(props.items)}
+      ${Button('Click here', `App.clickBtn(${props.incrementBy})`)}
+    </div>`
+
+  // OPTIONAL - Define some events
+  App.clickBtn = (props) => App.setState({ count: App.state.count + props})
+
+  // OPTIONAL - Define some styles for the view
   App.style = (props) => `
     #${props.id} {
       background-color: #eee;
@@ -45,23 +58,12 @@
       max-width: 360px;
       padding: 0 18px 18px 18px;
     }
-    .btn {
+    #${props.id} .btn {
       background-color: ${props.btnColor || 'red'};
       border: 0;
       color: white;
       padding: 6px;
     }`
-
-  // Define a view - include our sub-components
-  App.view = (props) => `
-    <div id=${props.id}>
-      ${Heading('Total so far = ' + props.count)}
-      ${List(props.items)}
-      ${Button('Click here', `App.clickBtn(${props.incrementBy})`)}
-    </div>`
-
-  // Define some events (optional)
-  App.clickBtn = (props) => App.setState({ count: App.state.count + props})
 
 
 
