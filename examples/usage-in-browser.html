@@ -6,12 +6,13 @@
 </head>
 
 <body>
-  <p class="container">Open this file in a browser. I will be replaced when the JS is loaded</p>
 
-  <script src="../src/component.js"></script>
+  <div>
+    <p class="container">You component will end up in here!</p>
+  </div>
+
+  <script src="../dist/component.min.js"></script>
   <script>
-
-  "use strict"
 
   // ------------------------------------------------
   // USAGE: Defining components
@@ -71,8 +72,8 @@
   // USAGE: Using the component
   // ------------------------------------------------
 
-  App.log = false      // disable logging of state changes in console/DevTools
-  App.log = true       // enable logging of state changes in console/DevTools
+  App.debug = false      // disable logging of state changes in console/DevTools
+  App.debug = true       // enable logging of state changes in console/DevTools
   App.reactive = false // disable auto re-render on state changes
   App.reactive = true  // enable auto re-render on state changes
 
@@ -137,15 +138,13 @@
   // Take a "snapshot" (we'll use it later)
   var snapshot = App.state
 
-  App.rewind()         // go to initial state
-  App.forward()        // go to latest state
-  App.rewind(2)        // rewind two steps to a previous state
-  App.forward(2)       // fast-forward two steps to a more current state
-  App.undo()           // same as App.rewind(1)
-  App.redo()           // same as App.forward(1)
+  App.rw()         // go to initial state
+  App.ff()        // go to latest state
+  App.rw(2)        // rewind two steps to a previous state
+  App.ff(2)       // fast-forward two steps to a more current state
 
   // Set a previous state
-  App.setState(App.history[2].state)
+  App.setState(App.log[2].state)
   // Set a "named" state, from a previous point in time
   App.setState(snapshot)
 

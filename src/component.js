@@ -2,15 +2,108 @@
 
 // Note:   This is just a demo/experiment
 // Goals:  Super easy to setup, small code base, automatic re-renders on state update
-//
-// Component() features:
-//  * a state managent thing
-//  * a state history
-//  * automatic re-rendering on state change (no diffing!)
-//  * ability to "time travel" to prev/next states
-//  * update states using simple "actions"
 
 "use strict"
+
+// from https://codepen.io/tevko/pen/LzXjKE?editors=0010
+var domDiff = (target, source) => {
+  const worker = {
+    cfg: {
+      orig: target
+    },
+    replace(target, source = target) {
+      const v = document.createElement("template")
+      v.innerHTML = source
+      const vHTML = v.content.firstChild.nextElementSibling
+      if (vHTML.nodeName !== target.nodeName) {
+        target.parentElement.replaceChild(vHTML, target)
+        return
+      }
+      this.iterate(target, vHTML)
+    },
+    iterate(targetNode, sourceNode, tOrig) {
+      if (targetNode || sourceNode) {
+        this.checkAdditions(targetNode, sourceNode, tOrig)
+        if (
+          targetNode &&
+          sourceNode &&
+          targetNode.nodeName !== sourceNode.nodeName
+        ) {
+          this.checkNodeName(targetNode, sourceNode)
+        } else if (
+          targetNode &&
+          sourceNode &&
+          targetNode.nodeName === sourceNode.nodeName
+        ) {
+          this.checkTextContent(targetNode, sourceNode)
+          targetNode.nodeType !== 3 &&
+            target.nodeType !== 8 &&
+            this.checkAttributes(targetNode, sourceNode)
+        }
+      }
+      if (targetNode && sourceNode) {
+        if (targetNode.childNodes && sourceNode.childNodes) {
+          this.cfg.lengthDifferentiator = [
+            ...target.childNodes,
+            ...sourceNode.childNodes
+          ]
+        } else {
+          this.cfg.lengthDifferentiator = null
+        }
+        Array.apply(null, this.cfg.lengthDifferentiator).forEach(
+          (node, idx) => {
+            this.cfg.lengthDifferentiator &&
+              this.iterate(
+                targetNode.childNodes[idx],
+                sourceNode.childNodes[idx],
+                targetNode,
+                sourceNode
+              )
+          }
+        )
+      }
+    },
+    checkNodeName(targetNode, sourceNode) {
+      const n = sourceNode.cloneNode(true)
+      targetNode.parentElement.replaceChild(n, targetNode)
+    },
+    checkAttributes(targetNode, sourceNode) {
+      const attributes = targetNode.attributes || []
+      const filteredAttrs = Object.keys(attributes).map(n => attributes[n])
+      const attributesNew = sourceNode.attributes || []
+      const filteredAttrsNew = Object.keys(attributesNew).map(
+        n => attributesNew[n]
+      )
+      filteredAttrs.forEach(o => {
+        return sourceNode.getAttribute(o.name) !== null
+          ? targetNode.setAttribute(o.name, sourceNode.getAttribute(o.name))
+          : targetNode.removeAttribute(o.name)
+      })
+      filteredAttrsNew.forEach(a => {
+        return (
+          targetNode.getAttribute(a.name) !== sourceNode.getAttribute(a.name) &&
+          targetNode.setAttribute(a.name, sourceNode.getAttribute(a.name))
+        )
+      })
+    },
+    checkTextContent(targetNode, sourceNode) {
+      if (targetNode.nodeValue !== sourceNode.nodeValue) {
+        targetNode.textContent = sourceNode.textContent
+      }
+    },
+    checkAdditions(targetNode, sourceNode, tParent = this.cfg.orig) {
+      if (sourceNode && targetNode === undefined) {
+        const newNode = sourceNode.cloneNode(true)
+        tParent.nodeType !== 3 &&
+          tParent.nodeType !== 8 &&
+          tParent.appendChild(newNode)
+      } else if (targetNode && sourceNode === undefined) {
+        targetNode.parentElement.removeChild(targetNode)
+      }
+    }
+  }
+  Object.create(worker).replace(target, source)
+}
 
 /**
  * A stateful component creator
@@ -19,7 +112,7 @@
  */
 function Component(state) {
   this.reactive = true // if true, re-render on every state change
-  this.log = false //  if true, print state history to console on re-render
+  this.debug = false //  if true, print state history to console on re-render
 
   this.isNode =
     typeof process !== "undefined" &&
@@ -27,20 +120,16 @@ function Component(state) {
     process.versions !== null &&
     process.versions.node !== null
 
-  this.state = state || {} // the main state/model of the component
-
-  this.state.uid = Math.random()
-    .toString(36)
-    .split(".")[1]
+  this.state = state // the main state/model of the component
 
   if (!this.isNode) {
     // the <style> elem into which we put our component CSS
-    this.styleEl = document.createElement("style")
-    document.head.appendChild(this.styleEl)
+    this.css = document.createElement("style")
+    document.head.appendChild(this.css)
   }
 
   // on init, add our initial state to the state history
-  this.history = [{ id: 0, state: state, action: "init" }]
+  this.log = [{ id: 0, state: state, action: "init" }]
 
   /**
    * Define chainable named "actions" that will update our
@@ -49,10 +138,7 @@ function Component(state) {
   this.actions = actions => {
     // convert each key/value to set state function:
     Object.keys(actions).forEach(action => {
-      if (typeof this[action] !== "undefined") {
-        console.warn("Warning! Not replacing " + this[action])
-        return false
-      }
+      if (typeof this[action] !== "undefined") return false
       this[action] = newState => {
         this.action = action
         return actions[action](newState)
@@ -62,22 +148,22 @@ function Component(state) {
     return this
   }
 
-  this.deepFreeze = obj => {
-    if (!Object.isFrozen(obj)) {
+  this.freeze = o => {
+    if (!Object.isFrozen(o)) {
       // Recusively call until all child objects are frozen
-      Object.keys(obj).forEach(name => this.deepFreeze(obj[name]))
-      Object.freeze(obj)
+      Object.keys(o).forEach(k => this.freeze(o[k]))
+      Object.freeze(o)
     }
-    return obj
+    return o
   }
 
-  this.deepEqual = (x, y) => {
+  this.eq = (x, y) => {
     const ok = Object.keys,
       tx = typeof x,
       ty = typeof y
     return x && y && tx === "object" && tx === ty
       ? ok(x).length === ok(y).length &&
-          ok(x).every(key => this.deepEqual(x[key], y[key]))
+          ok(x).every(key => this.eq(x[key], y[key]))
       : String(x) === String(y)
   }
 
@@ -87,36 +173,33 @@ function Component(state) {
    */
   this.setState = newState => {
     // update previous and current state
-    this.previousState = this.state
+    this.prev = this.state
     this.state = { ...this.state, ...newState }
 
-    if (this.deepEqual(this.state, this.previousState)) {
-      console.warn("No changes to render.")
+    if (!this.eq(this.state, this.prev)) {
+      // re-render component
+      if (this.reactive) this.render(this.container)
+
+      // update history and move along index
+      if (this.i === this.log.length) {
+        // we are not traversing state history, so add the new state to history
+        this.log.push({
+          id: this.log.length,
+          state: this.prev,
+          action: this.action || "setState"
+        })
+      }
+      this.i = this.log.length
+
+      // log state changes
+      if (this.debug) console.log(this.i, [this.state, ...this.log])
+
+      this.action = undefined
+
+      // freeze state so it can only be changed through setState()
+      this.freeze(this.state)
       return this
     }
-
-    // re-render component
-    if (this.reactive) this.render(this.container)
-
-    // update history and move along index
-    if (this.currentIndex === this.history.length) {
-      // we are not traversing state history, so add the new state to history
-      this.history.push({
-        id: this.history.length,
-        state: this.previousState,
-        action: this.action || "setState"
-      })
-    }
-    this.currentIndex = this.history.length
-
-    // log state changes
-    if (this.log) console.log(this.currentIndex, [this.state, ...this.history])
-
-    this.action = undefined
-
-    // freeze state so it can only be changed through setState()
-    this.deepFreeze(this.state)
-    return this
   }
 
   /**
@@ -124,15 +207,15 @@ function Component(state) {
    * @param {number} num - the number of steps through the history to take
    * @param {string} direction - 'f' for forward, 'b' for backwards
    */
-  this.travel = function(num, direction) {
-    var newIndex
-    if (direction === "f") {
-      newIndex = this.currentIndex + num
+  this.go = function(num, dir) {
+    var i
+    if (dir === "f") {
+      i = this.i + num
     } else {
-      newIndex = this.currentIndex - num
+      i = this.i - num
     }
-    this.setState(this.history[newIndex].state)
-    this.currentIndex = newIndex
+    this.setState(this.log[i].state)
+    this.i = i
 
     return this
   }
@@ -141,13 +224,13 @@ function Component(state) {
    * Go to previous (or first) state in the state history
    * @param {number} num - the number of steps through the history to take, 0 if 'num' not given
    */
-  this.rewind = function(num) {
+  this.rw = function(num) {
     if (!num) {
-      this.setState(this.history[0].state)
-      this.currentIndex = 0
+      this.setState(this.log[0].state)
+      this.i = 0
       return true
     }
-    this.travel(num, "b")
+    this.go(num, "b")
 
     return this
   }
@@ -156,47 +239,27 @@ function Component(state) {
    * Go to more recent state in the state history
    * @param {number} num - the number of steps through the history to take, most recent if 'num' not given
    */
-  this.forward = function(num) {
+  this.ff = function(num) {
     if (!num) {
-      this.setState(this.history[this.history.length - 1].state)
-      this.currentIndex = this.history.length - 1
+      this.setState(this.log[this.log.length - 1].state)
+      this.i = this.log.length - 1
       return true
     }
-    this.travel(num, "f")
+    this.go(num, "f")
 
     return this
   }
 
   /**
-   * Go go back one step in the state history
+   * If in browser, puts our component styles in this.css
    */
-  this.undo = function() {
-    this.rewind(1)
-
-    return this
-  }
-
-  /**
-   * Go go forward one step in the state history
-   */
-  this.redo = function() {
-    this.forward(1)
-
-    return this
-  }
-
-  /**
-   * If in browser, puts our component styles in this.styleEl
-   */
-  this.setStyles = function() {
+  this.setCss = function() {
     if (typeof document !== "undefined" && document.querySelector) {
-      if (this.styleEl) {
-        var minifiedCss = this.style(this.state)
+      if (this.css) {
+        var minCss = this.style(this.state)
           .replace(/\n/g, "")
           .replace(/\s\s+/g, " ")
-        if (this.styleEl.innerHTML !== minifiedCss) {
-          this.styleEl.innerHTML = minifiedCss || ""
-        }
+        if (this.css.innerHTML !== minCss) this.css.innerHTML = minCss || ""
       }
     }
   }
@@ -205,7 +268,7 @@ function Component(state) {
   * Render the current view as a string, including
   * our component styling, in a <style> tag
   */
-  this.renderToString = function() {
+  this.toString = function() {
     var str = ""
     var view = this.view(this.state)
     var style
@@ -228,7 +291,7 @@ function Component(state) {
       // return the view as prettified JSON
       str = JSON.stringify(view, null, 2)
     }
-    //if (this.log) console.log(str)
+    //if (this.debug) console.log(str)
     return str
   }
 
@@ -236,20 +299,26 @@ function Component(state) {
    * Re-render the component and add it to the page
    * @param {string|element} container - the element which holds the component
    */
-  this.render = function(container) {
+  this.render = function(el) {
     var view = this.view(this.state)
     if (this.isNode) {
-      return this.renderToString()
+      return this.toString()
     } else {
-      var el = container
-      if (this.styleEl) this.setStyles()
-      if (typeof el === "string") el = document.querySelector(el)
-      this.container = el
+      // initial render
+      if (!this.container) {
+        if (typeof el === "string") el = document.querySelector(el)
+        this.container = el
+      }
+      if (this.css) this.setCss()
       //
       // For diffing of real DOM nodes:
       //
-      // here is where you would diff this.view this el.innerHTML
-      // and apply only the differences.. see nanohtml and nanomorph
+      // here is where you would diff this.view with el.innerHTML
+      // and apply only the differences.. see set-dom, BAD-DOM, nanohtml
+      // and nanomorph in README.md
+      domDiff(el.firstChild, view) //bug domDiff eats the parent container elem too!
+      //el.innerHTML = view
+
       //
       // For diffing of VDOM:
       //
@@ -261,11 +330,9 @@ function Component(state) {
       // requestAnimationFrame (see Raynos/main-loop)
       //
       // ... we have no diffing setup, lets just replace the whole thing :/
-      el.innerHTML = view
     }
     return this.container
   }
-
   return this
 }
 

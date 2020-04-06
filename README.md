@@ -17,9 +17,10 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- Less than 1kb, minified and gzipped
+- Just 1.2kb, minified and gzipped
 - No build tools or transpiler needed
 - Simple syntax, easy to use, easy to learn
+- Pure JavaScript wherever possible
 - Works **client-side**, in browsers:
   - add your component to the page as you would a normal Element
 - Works **server-side**, in Node:
@@ -29,23 +30,24 @@ A "state" is a snapshot of your application data at a specific time.
 
 Your components will support:
 
-- Automatic re-rendering on state change
+- Auto re-render on state change
+- DOM diffing for fast re-renders
 - Scoped CSS styling, with re-rendering on CSS changes
 - Event attributes like `onclick`, `onchange`, `onkeyup`, etc, etc
 - Easy state management:
   - define "actions" to easily update the state in specific ways 
   - a state timeline:
-    - a history of all changes to the component state
+    - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
 - Simple, stateless "child" components
+- Server side rendering
 - ...and more
 
 ## Limitations
 
 Currently, the most important limitations are:
 
-- No DOM diffing - re-renders just replace your component containers innerHTML
 - No Event objects passed into components events attributes (`onclick`, etc)
 - No JSX - uses template literals
 - No CSS-in-JS - uses template literals
@@ -66,7 +68,7 @@ var App = new Component(state)
 App.view = (props) => `<h1>${props.title}</h1>`
 
 // 3. render into the given elem
-App.render('body')
+App.render('.container')
 
 // ...later
 
@@ -80,7 +82,7 @@ An overview:
 - **App.view(props)**: receives a state and sets the component view to (re)render
 - **App.style(props)**: receives a state and sets the `<style>` to (re)render
 - **App.render(el)**: (re)render to the given element on state change (browser)
-- **App.renderToString()**: render your component as a string on state change (NodeJS)
+- **App.toString()**: render your component as a string on state change (NodeJS)
 - **App.setState(props)**: update the component state (`obj`), triggers a re-render
 - ...and many more
 
@@ -200,15 +202,13 @@ Here is how to "time travel" to previous states, or jump forward to more recent 
 // Take a "snapshot" (we'll use it later)
 var snapshot = App.state
 
-App.rewind()         // go to initial state
-App.forward()        // go to latest state
-App.rewind(2)        // rewind two steps to a previous state
-App.forward(2)       // fast-forward two steps to a more current state
-App.undo()           // same as App.rewind(1)
-App.redo()           // same as App.forward(1)
+App.rw()         // go to initial state
+App.ff()         // go to latest state
+App.rw(2)        // rewind two steps to a previous state
+App.ff(2)        // fast-forward two steps to a more current state
 
 // Set a previous state
-App.setState(App.history[2].state)
+App.setState(App.log[2].state)
 
 // Set a "named" state, from a previous point in time
 App.setState(snapshot)
@@ -256,7 +256,7 @@ res.send(App.render())
 
 ```
 
-If rendering a component with `.view()` and `.style()` defined in Node, or calling `.renderToString()` directly, the output will be a string like this one:
+If rendering a component with `.view()` and `.style()` defined in Node, or calling `.toString()` directly, the output will be a string like this one:
 
 ```
 "<style>
@@ -280,16 +280,37 @@ If rendering a component with `.view()` and `.style()` defined in Node, or calli
 
 ^ any styles are wrapped in a `<style>` tag, and your view is rendered after that.
 
+## Changelog
+
+**1.1.0**
+- improved performance:
+  - added DOM diffing, using [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010)
+  - only re-render `.view()` if needed
+  - only re-render `<style>` if needed
+- smaller filesize:
+  - smaller method names: 
+    - `.forward()` => `.ff()`
+    - `.rewind()`  => `.rw()`
+    - `.history`   => `.log`
+  - removed:
+    - `.undo()` and `.redo()` (use `.rw(1)`, and `.ff(1)`)
+- better indentation for server-side rendering
+- minify CSS added to components `<style>` tag
+- updated examples
+- updated README
+
+**1.0.0**
+- initial release
+
 ## Making changes to `Component`
 
 Look in `src/component.js`, make any changes you like.
 
-Rebuild the bundles in `dist/` using this command: `npm run build`
+Minify it (your choice how), and save the minified version to `dist/component.min.js`
 
 ## Future improvements
 
 - Performance:
-  - DOM diffing: real DOM, not VDOM (only needed in browser, NodeJS would use HTML template strings)
   - Batched rendering: only needed in browser, use requestAnimationFrame. See [main-loop](https://github.com/Raynos/main-loop)
   - Memoize state updates: so we can return cached states and views
 
@@ -303,13 +324,11 @@ Rebuild the bundles in `dist/` using this command: `npm run build`
 
 ## Related projects:
 
-- [microbundle](https://github.com/developit/microbundle) - used by this project to create the bundled & compressed builds in `dist/`
-
 ### DOM and DOM diffing
 
 - [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
 - [set-dom](https://github.com/DylanPiercey/set-dom) - tiny dom diffing library
-- [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function
+- [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function (used by this project)
 
 ### Template strings to real DOM nodes
 
@@ -338,7 +357,7 @@ Rebuild the bundles in `dist/` using this command: `npm run build`
 
 ### Other tiny component libraries
 
-- [yo-yo](https://github.com/maxogden/yo-yo/) - tiny UI library, DOM diffing (morphdom), Event handling, ES6 tagged template literals 
-- [hyperapp](https://github.com/jorgebucaran/hyperapp) - The tiny framework for building web interfaces
+- [yo-yo](https://github.com/maxogden/yo-yo/) - tiny UI library, DOM diffing (uses `morphdom`), Event handling, ES6 tagged template literals 
+- [choojs](http://github.com/choojs/) - A 4kb framework for creating sturdy frontend applications, uses `yo-yo`
+- [hyperapp](https://github.com/jorgebucaran/hyperapp) - The tiny framework for building web interfaces, React-like, uses h(), VDOM, etc
 - [preact](https://github.com/preactjs/preact) - a 3.1kb alternative to React.js
-- [choojs](http://github.com/choojs/) - A 4kb framework for creating sturdy frontend applications

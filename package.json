@@ -1,6 +1,6 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Simple components with state management",
 	"author": "sc0ttj",
 	"license": "MIT",
@@ -9,17 +9,14 @@
 		"url": "git+https://github.com/sc0ttj/component.git"
 	},
 	"homepage": "https://github.com/sc0ttj/component",
-	"main": "dist/component.js",
-	"module": "dist/component.es6.js",
-	"es2015": "dist/component.es6.js",
-	"main:umd": "dist/component.umd.js",
-	"browser": "dist/component.umd.js",
-	"unpkg": "dist/component.umd.js",
+	"main": "src/component.js",
+	"main:umd": "dist/component.min.js",
+	"browser": "dist/component.min.js",
+	"unpkg": "dist/component.min.js",
 	"source": "src/component.js",
 	"scripts": {
-		"build": "microbundle --name component --compress",
-		"dev": "microbundle watch",
-		"test": "microbundle --name component --compress && echo 'Build complete... No tests yet!'"
+		"build": "echo 'todo: minify src/component.js into dist/component.min.js'",
+		"test": "echo 'Build complete... nothing to do, yet..'"
 	},
 	"keywords": [
 		"vanilla-js",
@@ -30,14 +27,10 @@
 		"component"
 	],
 	"files": [
-		"dist/component.js",
-		"dist/component.es6.js",
-		"dist/component.umd.js"
+		"dist/component.min.js"
 	],
 	"dependencies": {},
-	"devDependencies": {
-		"microbundle": "^0.11.0"
-	},
+	"devDependencies": {},
 	"bugs": {
 		"url": "https://github.com/sc0ttj/component/issues"
 	},

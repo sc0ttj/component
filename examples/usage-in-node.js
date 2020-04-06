@@ -1,4 +1,4 @@
-var Component = require("../src/component.js")
+var Component = require("../dist/component.min.js")
 
 // ------------------------------------------------
 // USAGE: Defining components
@@ -125,14 +125,12 @@ console.log(App.render())
 // Take a "snapshot" (we'll use it later)
 var snapshot = App.state
 
-App.rewind() // go to initial state
-App.forward() // go to latest state
-App.rewind(2) // rewind two steps to a previous state
-App.forward(2) // fast-forward two steps to a more current state
-App.undo() // same as App.rewind(1)
-App.redo() // same as App.forward(1)
+App.rw() // go to initial state
+App.ff() // go to latest state
+App.rw(2) // rewind two steps to a previous state
+App.ff(2) // fast-forward two steps to a more current state
 
 // Set a previous state
-App.setState(App.history[2].state)
+App.setState(App.log[2].state)
 // Set a "named" state, from a previous point in time
 App.setState(snapshot)
