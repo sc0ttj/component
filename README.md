@@ -17,7 +17,7 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- Just 1.2kb, minified and gzipped
+- Just 1.4kb, minified and gzipped
 - No build tools or transpiler needed
 - Simple syntax, easy to use, easy to learn
 - Pure JavaScript wherever possible
