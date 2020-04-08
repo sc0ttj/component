@@ -255,7 +255,7 @@ function Component(state) {
    */
   this.setCss = function() {
     if (typeof document !== "undefined" && document.querySelector) {
-      if (this.css) {
+      if (this.css && typeof this.style === "function") {
         var minCss = this.style(this.state)
           .replace(/\n/g, "")
           .replace(/\s\s+/g, " ")
@@ -287,7 +287,7 @@ function Component(state) {
         if (style) str = `<style>${style}\n</style>`
         str += `${view}`.replace(/^ {4}/gm, "")
       }
-    } else if (typeof view === "object" || typeof view === "array") {
+    } else if (typeof view === "object" || Array.isArray(view)) {
       // return the view as prettified JSON
       str = JSON.stringify(view, null, 2)
     }
@@ -300,25 +300,27 @@ function Component(state) {
    * @param {string|element} container - the element which holds the component
    */
   this.render = function(el) {
-    var view = this.view(this.state)
+    var view = typeof this.view === "function" ? this.view(this.state) : null
     if (this.isNode) {
       return this.toString()
     } else {
       // initial render
-      if (!this.container) {
-        if (typeof el === "string") el = document.querySelector(el)
-        this.container = el
-      }
-      if (this.css) this.setCss()
+      if (typeof el === "string") el = document.querySelector(`${el}`)
+      this.container = el
+      if (this.css && this.style) this.setCss()
       //
       // For diffing of real DOM nodes:
       //
       // here is where you would diff this.view with el.innerHTML
       // and apply only the differences.. see set-dom, BAD-DOM, nanohtml
       // and nanomorph in README.md
-      domDiff(el.firstChild, view) //bug domDiff eats the parent container elem too!
-      //el.innerHTML = view
-
+      if (this.container && view) {
+        try {
+          domDiff(this.container.firstChild, view)
+        } catch (err) {
+          this.container.innerHTML = view
+        }
+      }
       //
       // For diffing of VDOM:
       //

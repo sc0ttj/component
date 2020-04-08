@@ -23,6 +23,7 @@ A "state" is a snapshot of your application data at a specific time.
 - Pure JavaScript wherever possible
 - Works **client-side**, in browsers:
   - add your component to the page as you would a normal Element
+  - auto re-render on state change, with DOM-diffing
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
@@ -282,6 +283,17 @@ If rendering a component with `.view()` and `.style()` defined in Node, or calli
 
 ## Changelog
 
+**1.1.2**
+- fix: can re-render component to new container
+- fix: can render multiple components to page
+- fix: can call `setstate()` before defining `.view()`
+- fix: can call `render()` before defining `.view()` (pointless for now)
+- fix: don't attempt any styling if `.style()` not defined
+
+
+**1.1.1**
+- README fixes
+
 **1.1.0**
 - improved performance:
   - added DOM diffing, using [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010)
@@ -321,6 +333,27 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
     - see [twirl](https://github.com/benjamminj/twirl-js)
   - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
     - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
+    - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
+
+- Better SSR
+  - server-side: 
+    - render as streams/chunks (deliver page to clients in bits, soon as its ready):
+     - see [almost/stream-template](https://github.com/almost/stream-template)
+     - see [bogas04/marinate](https://github.com/bogas04/marinate)
+  - client-side: 
+    - ability to "hydrate" or takeover a view that already exists in the page:
+      - simply don't define a view, and call `App.render('.container')`:
+        - any `id` or `class` attributes will become items in `App.state`
+        - the contents will be grabbed and used for a new `.view()`
+      - for (re)attaching events, see [yo-yo](https://github.com/maxogden/yo-yo)
+  
+- Universal rendering (add-on):
+  - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from HTML strings to:
+    - virtual DOM (see `htm`, `hyperx`, `snabby`)
+    - real DOM (see `bel`, `genel`, ...)
+    - ANSI console markup (?)
+    - markdown (?)
+    - files (?)
 
 ## Related projects:
 
@@ -332,8 +365,10 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 
 ### Template strings to real DOM nodes
 
-- [domify-template-strings](https://github.com/loilo-archive/domify-template-strings) - creates real DOM nodes from HTML template strings
-- [genel](https://github.com/capsidjs/genel) - create real DOM nodes from template string, 639 bytes
+- [htl](https://observablehq.com/@observablehq/htl)- by Mike Bostock, events, attr/styles as object, other syntactic sugar, 2kb
+- [nanohtml](https://github.com/choojs/nanohtml) - uses vdom, can attach event listers, can do SSR, 8kb
+- [domify-template-strings](https://github.com/loilo-archive/domify-template-strings) - get real DOM nodes from HTML template strings, browser only, no SSR
+- [genel](https://github.com/capsidjs/genel) - create real DOM nodes from template string, browser only (no SSR), 639 bytes
 
 ### CSS in JS
 
@@ -345,11 +380,11 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 
 ### VDOM and VDOM diffing
 
+- [developit/htm](https://github.com/developit/htm) - JSX like syntax in ES6 templates, generates vdom
 - [snabbdom](https://github.com/snabbdom/snabbdom) - the vdom diffing library used by Vue.js
 - [snabby](https://github.com/mreinstein/snabby) - use HTML template strings to generate vdom, use with snabbdom
 - [petit-dom](https://github.com/yelouafi/petit-dom) - tiny vdom diffing and patching library
-- [developit/htm](https://github.com/developit/htm) - JSX alternative, using ES6 tagged templates to generate vdom trees
-- [hyperx](https://github.com/choojs/hyperx) - use tagged template string to build virtual dom trees, which then need diffing/patching
+- [hyperx](https://github.com/choojs/hyperx) - tagged templates to vdom (used by [nanohtml](https://github.com/choojs/nanohtml)
 
 ### Routers
 
