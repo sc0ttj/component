@@ -21,6 +21,7 @@
   // Define our app state
   var state = {
     count: 0,
+    x: 0,
     incrementBy: 5,
     id: "foo-id",
     items: [
@@ -64,6 +65,8 @@
       border: 0;
       color: white;
       padding: 6px;
+      position: relative;
+      left: ${props.x}px;
     }`
 
 
@@ -72,8 +75,8 @@
   // USAGE: Using the component
   // ------------------------------------------------
 
-  App.debug = false      // disable logging of state changes in console/DevTools
   App.debug = true       // enable logging of state changes in console/DevTools
+  App.debug = false      // disable logging of state changes in console/DevTools
   App.reactive = false // disable auto re-render on state changes
   App.reactive = true  // enable auto re-render on state changes
 
@@ -115,6 +118,8 @@
 
     addItems:   (props) => App.setState({ items: [ ...App.state.items, ...props ] }),
 
+    animate:    (props) => App.setState({ x: App.state.x + 1 }),
+
   });
 
   // If you defined some "actions", you can use them
@@ -144,7 +149,7 @@
   App.ff(2)       // fast-forward two steps to a more current state
 
   // Set a previous state
-  App.setState(App.log[2].state)
+  App.setState(App.log[0].state)
   // Set a "named" state, from a previous point in time
   App.setState(snapshot)
 

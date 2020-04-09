@@ -181,7 +181,7 @@ function Component(state) {
       if (this.reactive) this.render(this.container)
 
       // update history and move along index
-      if (this.i === this.log.length) {
+      if (this.debug && this.i === this.log.length) {
         // we are not traversing state history, so add the new state to history
         this.log.push({
           id: this.log.length,
@@ -214,7 +214,7 @@ function Component(state) {
     } else {
       i = this.i - num
     }
-    this.setState(this.log[i].state)
+    if (this.log[i]) this.setState(this.log[i].state)
     this.i = i
 
     return this
@@ -226,7 +226,7 @@ function Component(state) {
    */
   this.rw = function(num) {
     if (!num) {
-      this.setState(this.log[0].state)
+      if (this.log[0]) this.setState(this.log[0].state)
       this.i = 0
       return true
     }
@@ -241,7 +241,8 @@ function Component(state) {
    */
   this.ff = function(num) {
     if (!num) {
-      this.setState(this.log[this.log.length - 1].state)
+      if (this.log[this.log.length - 1])
+        this.setState(this.log[this.log.length - 1].state)
       this.i = this.log.length - 1
       return true
     }
@@ -304,34 +305,21 @@ function Component(state) {
     if (this.isNode) {
       return this.toString()
     } else {
-      // initial render
-      if (typeof el === "string") el = document.querySelector(`${el}`)
       this.container = el
-      if (this.css && this.style) this.setCss()
-      //
-      // For diffing of real DOM nodes:
-      //
-      // here is where you would diff this.view with el.innerHTML
-      // and apply only the differences.. see set-dom, BAD-DOM, nanohtml
-      // and nanomorph in README.md
-      if (this.container && view) {
-        try {
-          domDiff(this.container.firstChild, view)
-        } catch (err) {
-          this.container.innerHTML = view
+      // only interact with the DOM once every animation frame (usually 60fps)
+      requestAnimationFrame(() => {
+        // get the container element if needed
+        if (typeof el === "string") el = document.querySelector(`${el}`)
+        this.container = el
+        if (this.css && this.style) this.setCss()
+        if (this.container && view) {
+          try {
+            domDiff(this.container.firstChild, view)
+          } catch (err) {
+            this.container.innerHTML = view
+          }
         }
-      }
-      //
-      // For diffing of VDOM:
-      //
-      // here you would generate VDOM from the `this.view` template string
-      // (see snabby, nano-byte, vel, etc), then do VDOM diffing (see main-loop, etc),
-      // then do VDOM to real DOM (nano-byte, jsx-pragmatic, etc)
-      //
-      // For better performance, through batched rendering, we can use
-      // requestAnimationFrame (see Raynos/main-loop)
-      //
-      // ... we have no diffing setup, lets just replace the whole thing :/
+      })
     }
     return this.container
   }

@@ -17,13 +17,13 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- Just 1.4kb, minified and gzipped
+- 1.4kb, minified and gzipped
 - No build tools or transpiler needed
 - Simple syntax, easy to use, easy to learn
 - Plain JavaScript wherever possible
 - Works **client-side**, in browsers:
   - add your component to the page as you would a normal Element
-  - auto re-render on state change, with DOM-diffing
+  - auto re-render on state change, using `requestAnimationFrame` and DOM-diffing
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
@@ -31,8 +31,8 @@ A "state" is a snapshot of your application data at a specific time.
 
 Your components will support:
 
-- Auto re-render on state change
-- DOM diffing for fast re-renders
+- Auto re-render to page on state change
+- DOM diffing, with all DOM reads/writes performed inside `requestAnimationFrame` 
 - Scoped CSS styling, with re-rendering on CSS changes
 - Event attributes like `onclick`, `onchange`, `onkeyup`, etc, etc
 - Easy state management:
@@ -41,8 +41,9 @@ Your components will support:
     - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
+- Server side rendering:
+  - render component views as a String, JSON, or Buffer
 - Simple, stateless "child" components
-- Server side rendering
 - ...and more
 
 ## Limitations
@@ -77,15 +78,30 @@ App.render('.container')
 App.setState({ title: "Hello again!" })
 ```
 
-An overview:
+## Component overview
 
-- **App.state**: an object, contains your app data, read-only - cannot be modified directly
+Methods:
+
 - **App.view(props)**: receives a state and sets the component view to (re)render
 - **App.style(props)**: receives a state and sets the `<style>` to (re)render
 - **App.render(el)**: (re)render to the given element on state change (browser)
 - **App.toString()**: render your component as a string on state change (NodeJS)
-- **App.setState(props)**: update the component state (`obj`), triggers a re-render
-- ...and many more
+- **App.setState(obj)**: update the component state, triggers a re-render
+- **App.actions(obj)**: creates chainable methods that simplify updating the state
+- ...and more
+
+Properties:
+
+- **App.state**: an object, contains your app data, read-only - cannot be modified directly
+- **App.log**: an array containing a history of all component states
+- **App.css**: the `<style>` element which holds the component styles
+- **App.container**: the HTML element into which the components view is rendered
+- ...and more
+
+Settings:
+
+- **App.reactive**: if false, disables auto re-rendering on state change
+- **App.debug**: if true, a record of states changes are kept in `.log`
 
 ## Installation
 
@@ -209,7 +225,7 @@ App.rw(2)        // rewind two steps to a previous state
 App.ff(2)        // fast-forward two steps to a more current state
 
 // Set a previous state
-App.setState(App.log[2].state)
+App.setState(App.log[0].state)
 
 // Set a "named" state, from a previous point in time
 App.setState(snapshot)
@@ -283,13 +299,21 @@ If rendering a component with `.view()` and `.style()` defined in Node, or calli
 
 ## Changelog
 
+**1.1.3**
+- better performance:
+  - only access/update the DOM from inside a `requestAnimationFrame`
+  - only record state history if `.debug` is true
+  - set `.debug` to false by default
+- improved README:
+  - added info about component settings (`reactive`, `debug`)
+
+
 **1.1.2**
 - fix: can re-render component to new container
 - fix: can render multiple components to page
 - fix: can call `setstate()` before defining `.view()`
 - fix: can call `render()` before defining `.view()` (pointless for now)
 - fix: don't attempt any styling if `.style()` not defined
-
 
 **1.1.1**
 - README fixes
@@ -352,7 +376,7 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 - Universal rendering (add-on):
   - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from HTML strings to:
     - virtual DOM (see `htm`, `hyperx`, `snabby`)
-    - real DOM (see `bel`, `genel`, ...)
+    - real DOM (see `htl`, `fast-html-parser`, `bel`, `genel`, ...)
     - ANSI console markup (?)
     - markdown (?)
     - files (?)
