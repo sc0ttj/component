@@ -20,7 +20,7 @@ A "state" is a snapshot of your application data at a specific time.
 - Just 1.4kb, minified and gzipped
 - No build tools or transpiler needed
 - Simple syntax, easy to use, easy to learn
-- Pure JavaScript wherever possible
+- Plain JavaScript wherever possible
 - Works **client-side**, in browsers:
   - add your component to the page as you would a normal Element
   - auto re-render on state change, with DOM-diffing
@@ -323,7 +323,9 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 ## Future improvements
 
 - Performance:
-  - Batched rendering: only needed in browser, use requestAnimationFrame. See [main-loop](https://github.com/Raynos/main-loop)
+  - Batched rendering: only needed in browser, use requestAnimationFrame:
+    - [main-loop](https://github.com/Raynos/main-loop)
+    - [Animation loops - gist](https://gist.github.com/louisremi/1114293)
   - Memoize state updates: so we can return cached states and views
 
 - Usability:
@@ -359,9 +361,10 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 
 ### DOM and DOM diffing
 
+- [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function (used by this project)
 - [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
 - [set-dom](https://github.com/DylanPiercey/set-dom) - tiny dom diffing library
-- [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function (used by this project)
+- [fast-html-parser](https://www.npmjs.com/package/fast-html-parser) - generate a simplified DOM tree from string, with basic element querying
 
 ### Template strings to real DOM nodes
 
@@ -373,6 +376,8 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 ### CSS in JS
 
 - [twirl](https://github.com/benjamminj/twirl-js) - a tag for template literals, turns CSS into objects 
+- `/(^|,)[\.#a-z][a-zA-Z0-9_\-:]*/gm` - match first part of CSS selector in a CSS string, useful for scoping (see https://regexr.com/524pu)
+- `document.styleSheets[0].cssRules[0].style.cssText.split(/\;[\s.]/).slice(0,-1)` - convert cssText to array containing CSS proprties and values, like "margin:0 auto;"
 - `str.replace(/([A-Z])/g, "-$1").toLowerCase()` - camelCase to hyphen-case converter
 - `var cssClassMatchRegex = new RegExp(/\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/g)` - regex to match all classes in a string (maybe useful for "scoping")
 - `Math.random().toString(36).split(".")[1]` - unique ID generator (create a unique id for each new component)
@@ -388,7 +393,7 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 
 ### Routers
 
-- [router](https://github.com/sc0ttj/router) - a tiny, simple isomorphic router
+- [router](https://github.com/sc0ttj/router) - a tiny, simple isomorphic router, should play nice with this project
 
 ### Other tiny component libraries
 
@@ -396,3 +401,13 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 - [choojs](http://github.com/choojs/) - A 4kb framework for creating sturdy frontend applications, uses `yo-yo`
 - [hyperapp](https://github.com/jorgebucaran/hyperapp) - The tiny framework for building web interfaces, React-like, uses h(), VDOM, etc
 - [preact](https://github.com/preactjs/preact) - a 3.1kb alternative to React.js
+
+
+## Further reading
+
+- [get root selectors in CSS string](https://regexr.com/524pu)
+- [regex to match css class name](https://stackoverflow.com/questions/6329090/regex-to-match-a-css-class-name/6329126#6329126)
+- [2ality - ES6 template strings](https://2ality.com/2015/01/template-strings-html.html)
+- [Tagged template literals - more than you think](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761)
+- [Exploring JS - Template literals](https://exploringjs.com/es6/ch_template-literals.html)
+
