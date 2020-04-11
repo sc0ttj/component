@@ -17,7 +17,7 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- 1.4kb, minified and gzipped
+- 1.7kb, minified and gzipped
 - No build tools or transpiler needed
 - Simple syntax, easy to use, easy to learn
 - Plain JavaScript wherever possible
@@ -31,13 +31,14 @@ A "state" is a snapshot of your application data at a specific time.
 
 Your components will support:
 
-- Auto re-render to page on state change
+- Auto re-render to page on state change (_optional_)
 - DOM diffing, with all DOM reads/writes performed inside `requestAnimationFrame` 
-- Scoped CSS styling, with re-rendering on CSS changes
+- Automatic "scoping"/prefixing of your component CSS (_optional_)
+- Re-render styles on component CSS change (_optional_)
 - Event attributes like `onclick`, `onchange`, `onkeyup`, etc, etc
 - Easy state management:
   - define "actions" to easily update the state in specific ways 
-  - a state timeline:
+  - a state timeline for debugging (_optional_):
     - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
@@ -92,6 +93,7 @@ Methods:
 
 Properties:
 
+- **App.uid**: a unique string, generated once, on creation of a component
 - **App.state**: an object, contains your app data, read-only - cannot be modified directly
 - **App.log**: an array containing a history of all component states
 - **App.css**: the `<style>` element which holds the component styles
@@ -100,7 +102,8 @@ Properties:
 
 Settings:
 
-- **App.reactive**: if false, disables auto re-rendering on state change
+- **App.reactive**: if `false`, disables auto re-rendering on state change
+- **App.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${App.uid}`
 - **App.debug**: if true, a record of states changes are kept in `.log`
 
 ## Installation
@@ -155,19 +158,27 @@ Use `.style()` to define some styles for your components view (optional):
 
 ```js
 App.style = (props) => `
-  #${props.id} {
+  #myapp {
     border: 2px solid ${props.borderColor || 'red'};
     margin: 0 auto;
     max-width: ${props.maxWidth};
   }
-  #${props.id} .btn {
+  .btn {
     background-color: ${props.btnColor || 'red'};
     padding: 6px;
   }
 `
 ```
 
-Note: in the example above, we name-spaced or "scoped" the CSS so it will affect the current component only, by using `props.id` (passed in from the state).
+When your component is added to the page using `render()`, the CSS above will be prefixed with a unique class. That same unique class is also added to your components container element.
+
+This prevents your component styles affecting other parts of the page.
+
+It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself.
+
+You can disable this CSS "scoping"/prefixing by using `App.scopedCss = false`.
+
+When rendering your component in NodeJS, or using `toString()`, your CSS will **not** be auto "scoped"/prefixed.
 
 To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
 
@@ -214,10 +225,17 @@ App
 
 Here is how to "time travel" to previous states, or jump forward to more recent ones.
 
+Note: To enable the state history, `App.debug` must be `true`.
+
 ```js
+
+// enable logging of state history
+App.debug = true
 
 // Take a "snapshot" (we'll use it later)
 var snapshot = App.state
+
+// ...later
 
 App.rw()         // go to initial state
 App.ff()         // go to latest state
@@ -273,16 +291,16 @@ res.send(App.render())
 
 ```
 
-If rendering a component with `.view()` and `.style()` defined in Node, or calling `.toString()` directly, the output will be a string like this one:
+If rendering a component in NodeJS that has a `.view()` and `.style()`, or if calling `.toString()` directly, the output will be a string like this one:
 
 ```
 "<style>
-#foo-id {
+#myapp {
   border: 2px solid grey;
   margin: 0 auto;
   max-width: 360px;
 }
-#foo-id .btn {
+.btn {
   background-color: black;
   color: white;
   padding: 6px;
@@ -295,9 +313,20 @@ If rendering a component with `.view()` and `.style()` defined in Node, or calli
 </div>"
 ```
 
-^ any styles are wrapped in a `<style>` tag, and your view is rendered after that.
+^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
+
+Note: your component CSS is not auto-prefixed or "scoped" with a unique class until/unless it's added to a container element, client-side, using `.render('.container')`.
 
 ## Changelog
+
+**1.1.4**
+- new: automatic "scoping" of component CSS
+ - prevents component styles affecting other parts of page
+ - simplifies writing CSS for your components:
+   - removes the need to define unique namespaces (IDs, classes) in your component CSS
+ - you can disable automatic CSS scoping like so: `App.scopedCss = false`
+ - see [examples/usage-in-browser.html](examples/usage-in-browser.html)
+ - README and example updates
 
 **1.1.3**
 - better performance:
@@ -381,6 +410,10 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
     - markdown (?)
     - files (?)
 
+- Support for custom elements/Web Components
+  - so you can use `<my-custom-app></my-custom-app>` in your HTML
+  - see [Custom Element patterns](https://gist.github.com/WebReflection/ec9f6687842aa385477c4afca625bbf4)
+
 ## Related projects:
 
 ### DOM and DOM diffing
@@ -434,4 +467,7 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
 - [2ality - ES6 template strings](https://2ality.com/2015/01/template-strings-html.html)
 - [Tagged template literals - more than you think](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761)
 - [Exploring JS - Template literals](https://exploringjs.com/es6/ch_template-literals.html)
-
+- [How to put a string in a JS regex](https://stackoverflow.com/questions/4029109/javascript-regex-how-to-put-a-variable-inside-a-regular-expression)
+- [Using "handleEvent()"](https://medium.com/@WebReflection/dom-handleevent-a-cross-platform-standard-since-year-2000-5bf17287fd38)
+- [handleEvent gist](https://gist.github.com/WebReflection/35ca0e2ef2fb929143ea725f55bc0d63)
+- [Custom Element patterns](https://gist.github.com/WebReflection/ec9f6687842aa385477c4afca625bbf4)

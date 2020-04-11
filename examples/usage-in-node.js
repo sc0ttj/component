@@ -88,7 +88,7 @@ App.actions({
 //
 
 // Using setState() to trigger a full re-render
-App.setState({ items: [{ name: "First" }] })
+setState({ items: [{ name: "First" }] })
 
 // ...Or directly call any methods you defined
 clickBtn(1)
@@ -106,18 +106,6 @@ App.minus(1)
   .addItems([{ name: "two" }, { name: "three" }])
 
 //
-//
-//
-// Now return the component...
-
-// Returns the current view (and any App styles you
-// defined) as a string, or a JS object
-//
-// (for demo purposes we console log it, so you can see
-// the component rendered to the terminal)
-console.log(App.render())
-
-//
 // ------------------------------------------------
 // OPTIONAL: Using the state "timeline"
 // ------------------------------------------------
@@ -131,6 +119,23 @@ App.rw(2) // rewind two steps to a previous state
 App.ff(2) // fast-forward two steps to a more current state
 
 // Set a previous state
-App.setState(App.log[2].state)
+App.setState(App.log[0].state)
 // Set a "named" state, from a previous point in time
 App.setState(snapshot)
+
+//
+//
+//
+// Now return the component...
+
+// Returns the current view (and any App styles you
+// defined) as a string, or a JS object
+//
+// (for demo purposes we console log it, so you can see
+// the component rendered to the terminal)
+console.log(App.render())
+
+// Or render the component as an HTTP response,
+// using something like express.js:
+//
+// res.send(App.render())
