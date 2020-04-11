@@ -113,6 +113,7 @@ var domDiff = (target, source) => {
 function Component(state) {
   this.reactive = true // if true, re-render on every state change
   this.debug = false //  if true, print state history to console on re-render
+  this.scopedCss = true // auto prefix component css with a unique id
 
   this.isNode =
     typeof process !== "undefined" &&
@@ -121,6 +122,11 @@ function Component(state) {
     process.versions.node !== null
 
   this.state = state // the main state/model of the component
+
+  // a unique ID, used for scoping component CSS
+  this.uid = Math.random()
+    .toString(36)
+    .split(".")[1]
 
   if (!this.isNode) {
     // the <style> elem into which we put our component CSS
@@ -252,15 +258,41 @@ function Component(state) {
   }
 
   /**
-   * If in browser, puts our component styles in this.css
+   * If in browser, puts scoped component styles in this.css
    */
   this.setCss = function() {
-    if (typeof document !== "undefined" && document.querySelector) {
+    // if in browser
+    if (!this.isNode) {
+      // if a style is defined
       if (this.css && typeof this.style === "function") {
-        var minCss = this.style(this.state)
-          .replace(/\n/g, "")
-          .replace(/\s\s+/g, " ")
-        if (this.css.innerHTML !== minCss) this.css.innerHTML = minCss || ""
+        // get the latest component style
+        var c = this.style(this.state) // the css
+
+        // auto-prefix CSS styles with a unique id,to "scope" the
+        // styles to the component only
+        if (this.scopedCss) {
+          var u = this.uid // the unique id
+          var fix1 = new RegExp("" + u + " ,\\s*\\.", "gm")
+          var fix2 = new RegExp("" + u + " ,\\s*#", "gm")
+          var fix3 = new RegExp("" + u + " ,\\s*([a-z\\.#])", "gmi")
+
+          c = c
+            .replace(/}/g, "}\n")
+            .replace(/\;\s*\n/g, ";")
+            .replace(/{\s*\n/g, "{ ")
+            .replace(/^\s+|\s+$/gm, "\n")
+            .replace(/(^[\.#\w][\w\-]*|\s*,[\.#\w][\w\-]*)/gm, "." + u + " $1")
+            .replace(fix1, ", ." + u + " ")
+            .replace(fix2, ", ." + u + " #")
+            .replace(fix3, ", ." + u + " $1")
+            .replace(/\n/g, "")
+            .replace(/\s\s+/g, " ")
+        }
+
+        // minify the CSS
+        var minCss = c.replace(/\n/g, "").replace(/\s\s+/g, " ")
+        // if the new CSS is changed from previous, re-render it
+        if (this.css.innerHTML !== minCss) this.css.innerHTML = minCss
       }
     }
   }
@@ -274,6 +306,7 @@ function Component(state) {
     var view = this.view(this.state)
     var style
 
+    // get component styles, nicely indented
     if (typeof this.style === "function") {
       style = this.style(this.state).replace(/^ {4}/gm, "")
     }
@@ -311,6 +344,10 @@ function Component(state) {
         // get the container element if needed
         if (typeof el === "string") el = document.querySelector(`${el}`)
         this.container = el
+        if (this.container.className.indexOf(this.uid) === -1) {
+          this.container.className += " " + this.uid
+        }
+
         if (this.css && this.style) this.setCss()
         if (this.container && view) {
           try {

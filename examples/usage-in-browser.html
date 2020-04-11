@@ -42,7 +42,7 @@
 
   // IMPORTANT -  Define a view
   App.view = (props) => `
-    <div id=${props.id}>
+    <div id="myapp">
       ${Heading('Total so far = ' + props.count)}
       ${List(props.items)}
       ${Button('Click here', `App.clickBtn(${props.incrementBy})`)}
@@ -53,14 +53,14 @@
 
   // OPTIONAL - Define some styles for the view
   App.style = (props) => `
-    #${props.id} {
+    #myapp {
       background-color: #eee;
       border: 2px solid ${props.borderColor || 'red'};
       margin: 0 auto;
       max-width: 360px;
       padding: 0 18px 18px 18px;
     }
-    #${props.id} .btn {
+    .btn {
       background-color: ${props.btnColor || 'red'};
       border: 0;
       color: white;
