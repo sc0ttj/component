@@ -170,15 +170,17 @@ App.style = (props) => `
 `
 ```
 
-When your component is added to the page using `render()`, the CSS above will be prefixed with a unique class. That same unique class is also added to your components container element.
+When your component is added to the page using `render('.container')`, the CSS above will be prefixed with the `id` or `className` of your container. 
 
-This prevents your component styles affecting other parts of the page.
+_This CSS automatic "scoping"/prefixing will prevent your component styles affecting other parts of the page_.
 
 It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself.
 
-You can disable this CSS "scoping"/prefixing by using `App.scopedCss = false`.
+If your container has no class or id attributes, then a unique string, `App.uid`, will be used instead.
 
-When rendering your component in NodeJS, or using `toString()`, your CSS will **not** be auto "scoped"/prefixed.
+You can disable automatic CSS "scoping"/prefixing by using `App.scopedCss = false`.
+
+When rendering your component in NodeJS, or using `toString()`, your CSS will **not** be auto prefixed.
 
 To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
 
@@ -315,10 +317,22 @@ If rendering a component in NodeJS that has a `.view()` and `.style()`, or if ca
 
 ^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
 
-Note: your component CSS is not auto-prefixed or "scoped" with a unique class until/unless it's added to a container element, client-side, using `.render('.container')`.
+Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
 
 ## Changelog
 
+**1.1.5**
+- fixed: scoped CSS sometimes not applied on page load:
+  - here is the new implementation:
+    - prefix component CSS with the containers existing `id` or `class`, if any
+    - fall back to previous behaviour only if container has no `id` or `class`:
+      - add unique class to container
+      - prefix component CSS with that same unique class
+- better performance:
+  - when `debug` is true,  _don't_ console log state history on state change
+  - to see the state history, access `App.log` yourself instead
+ - see [examples/usage-in-browser.html](examples/usage-in-browser.html)
+  
 **1.1.4**
 - new: automatic "scoping" of component CSS
  - prevents component styles affecting other parts of page

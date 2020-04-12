@@ -112,7 +112,7 @@ var domDiff = (target, source) => {
  */
 function Component(state) {
   this.reactive = true // if true, re-render on every state change
-  this.debug = false //  if true, print state history to console on re-render
+  this.debug = false //  if true, maintain a history of state changes in `.log`
   this.scopedCss = true // auto prefix component css with a unique id
 
   this.isNode =
@@ -188,7 +188,7 @@ function Component(state) {
 
       // update history and move along index
       if (this.debug && this.i === this.log.length) {
-        // we are not traversing state history, so add the new state to history
+        // we are not traversing state history, so add the new state to the log
         this.log.push({
           id: this.log.length,
           state: this.prev,
@@ -197,8 +197,8 @@ function Component(state) {
       }
       this.i = this.log.length
 
-      // log state changes
-      if (this.debug) console.log(this.i, [this.state, ...this.log])
+      // log state changes if dubeg = true
+      //if (this.debug) console.log(this.i, [this.state, ...this.log])
 
       this.action = undefined
 
@@ -271,20 +271,29 @@ function Component(state) {
         // auto-prefix CSS styles with a unique id,to "scope" the
         // styles to the component only
         if (this.scopedCss) {
-          var u = this.uid // the unique id
-          var fix1 = new RegExp("" + u + " ,\\s*\\.", "gm")
-          var fix2 = new RegExp("" + u + " ,\\s*#", "gm")
-          var fix3 = new RegExp("" + u + " ,\\s*([a-z\\.#])", "gmi")
+          // get container id, or class if no id
+          var u = this.container.id
+            ? this.container.id
+            : this.container.className
+
+          // if container has no class or id, use uid
+          u = !!u ? u : this.uid
+
+          var p = this.container.id ? "#" : "."
+
+          var fix1 = new RegExp(u + " ,\\s*\\.", "gm")
+          var fix2 = new RegExp(u + " ,\\s*#", "gm")
+          var fix3 = new RegExp(u + " ,\\s*([a-z\\.#])", "gmi")
 
           c = c
             .replace(/}/g, "}\n")
             .replace(/\;\s*\n/g, ";")
             .replace(/{\s*\n/g, "{ ")
             .replace(/^\s+|\s+$/gm, "\n")
-            .replace(/(^[\.#\w][\w\-]*|\s*,[\.#\w][\w\-]*)/gm, "." + u + " $1")
-            .replace(fix1, ", ." + u + " ")
-            .replace(fix2, ", ." + u + " #")
-            .replace(fix3, ", ." + u + " $1")
+            .replace(/(^[\.#\w][\w\-]*|\s*,[\.#\w][\w\-]*)/gm, p + u + " $1")
+            .replace(fix1, ", " + p + u + " ")
+            .replace(fix2, ", " + p + u + " #")
+            .replace(fix3, ", " + p + u + " $1")
             .replace(/\n/g, "")
             .replace(/\s\s+/g, " ")
         }
@@ -344,10 +353,6 @@ function Component(state) {
         // get the container element if needed
         if (typeof el === "string") el = document.querySelector(`${el}`)
         this.container = el
-        if (this.container.className.indexOf(this.uid) === -1) {
-          this.container.className += " " + this.uid
-        }
-
         if (this.css && this.style) this.setCss()
         if (this.container && view) {
           try {

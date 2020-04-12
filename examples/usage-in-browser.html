@@ -8,7 +8,7 @@
 <body>
 
   <div class="main">
-    <p class="container">You component will end up in here!</p>
+    <p class="container" id="a-unique-string">You component will end up in here!</p>
   </div>
 
   <script src="../src/component.js"></script>
@@ -75,10 +75,10 @@
   // USAGE: Using the component
   // ------------------------------------------------
 
-  App.debug = true       // enable logging of state changes in console/DevTools
-  App.debug = false      // disable logging of state changes in console/DevTools
-  App.reactive = false // disable auto re-render on state changes
-  App.reactive = true  // enable auto re-render on state changes
+  App.debug = false     // disable logging of state changes in console/DevTools
+  App.debug = true      // enable logging of state changes in console/DevTools
+  App.reactive = false  // disable auto re-render on state changes
+  App.reactive = true   // enable auto re-render on state changes
 
   // Add our app to the page
   App.render('.container')
@@ -153,6 +153,9 @@
   // Set a "named" state, from a previous point in time
   App.setState(snapshot)
 
+  // show the history of state changes
+  console.log('App.log')
+  console.log(App.log)
 
   </script>
 </body>
