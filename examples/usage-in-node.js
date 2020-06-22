@@ -1,4 +1,4 @@
-var Component = require("../dist/component.min.js")
+var { Component } = require("../dist/index.min.js")
 
 // ------------------------------------------------
 // USAGE: Defining components

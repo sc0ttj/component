@@ -1,7 +1,7 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.1.5",
-	"description": "Simple components with state management",
+	"version": "1.1.6",
+	"description": "Simple component library with state management, DOM diffing, tweening, server-side rendering and more.",
 	"author": "sc0ttj",
 	"license": "MIT",
 	"repository": {
@@ -9,13 +9,13 @@
 		"url": "git+https://github.com/sc0ttj/component.git"
 	},
 	"homepage": "https://github.com/sc0ttj/component",
-	"main": "src/component.js",
+	"main": "src/index.js",
 	"main:umd": "dist/component.min.js",
 	"browser": "dist/component.min.js",
 	"unpkg": "dist/component.min.js",
-	"source": "src/component.js",
+	"source": "src/index.js",
 	"scripts": {
-		"build": "echo 'todo: minify src/component.js into dist/component.min.js'",
+		"build": "rollup -c rollup.config.js",
 		"test": "echo 'Build complete... nothing to do, yet..'"
 	},
 	"keywords": [
@@ -24,13 +24,22 @@
 		"stateful",
 		"functional",
 		"reactive",
-		"component"
+		"component",
+		"dom-diff",
+		"server-side-rendering",
+		"tween"
 	],
 	"files": [
-		"dist/component.min.js"
+		"dist/component.min.js",
+		"dist/tweenState.min.js"
 	],
 	"dependencies": {},
-	"devDependencies": {},
+	"devDependencies": {
+		"@rollup/plugin-commonjs": "^13.0.0",
+		"@rollup/plugin-node-resolve": "^8.0.1",
+		"rollup": "^2.17.0",
+		"rollup-plugin-terser": "^6.1.0"
+	},
 	"bugs": {
 		"url": "https://github.com/sc0ttj/component/issues"
 	},
@@ -38,7 +47,7 @@
 		"example": "examples"
 	},
 	"engines": {
-		"node": ">=8.0.0",
+		"node": ">=10.0.0",
 		"npm": ">=6.0.0"
 	}
 }

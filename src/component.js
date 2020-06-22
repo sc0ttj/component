@@ -2,8 +2,7 @@
 
 // Note:   This is just a demo/experiment
 // Goals:  Super easy to setup, small code base, automatic re-renders on state update
-
-"use strict"
+;("use strict")
 
 // from https://codepen.io/tevko/pen/LzXjKE?editors=0010
 var domDiff = (target, source) => {
@@ -115,6 +114,8 @@ function Component(state) {
   this.debug = false //  if true, maintain a history of state changes in `.log`
   this.scopedCss = true // auto prefix component css with a unique id
 
+  var self = this
+
   this.isNode =
     typeof process !== "undefined" &&
     process !== null &&
@@ -206,6 +207,20 @@ function Component(state) {
       this.freeze(this.state)
       return this
     }
+  }
+
+  /**
+   * Tween from the current state to the given state, then set the given
+   * state as the new state.
+   *
+   * @param {object} cfg - the settings used for the tweening
+   *
+   */
+  this.tweenState = (newState, cfg) => {
+    typeof Component.tweenState !== "undefined"
+      ? Component.tweenState(self, newState, cfg)
+      : this.setState(newState)
+    return this
   }
 
   /**
@@ -368,6 +383,4 @@ function Component(state) {
   return this
 }
 
-if (typeof module !== "undefined") {
-  module.exports = Component
-}
+export default Component
