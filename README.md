@@ -401,7 +401,7 @@ App.tweenState(
     delay: 0,
     duration: 500,
     ease: "linear",
-    paused: false
+    paused: false,
     // called on first frame:
     onStart: tweenProps => tweenProps,
     // called on every frame:
