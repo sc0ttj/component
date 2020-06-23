@@ -323,19 +323,21 @@ Note: your component CSS is not auto-prefixed or "scoped" with containers class/
 
 ### Using the `tweenState` module
 
-The `tweenState()` method allows you to call `setState()` on every frame of a tweened animation.
-
 It gives you an easy way to do component animations that use `requestAnimationFrame` and DOM diffing.
 Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
+
+By default, the `tweenState()` method calls `setState()` on every frame of a tweened animation. 
+
+You can override this behaviour by defining a `shouldSetState()` callback in your tween config, which is called on every frame - `setState()` will only be called on that frame if `shouldSetState()` returns true.
 
 Using `tweenState()` is much like using `setState()`, except:
 
 - you only pass in the state values you want to tween
-- you can pass in the tween settings as a second parameter (delay, duration, easing function, etc)
+- you can pass in the tween settings as a second parameter (delay, duration, easing function, callbacks, etc)
 
 How it works:
 
-- the tweened state values will be passed to `setState` on each frame
+- the tweened state values will be passed to `setState` on each frame (or whenever you choose, if using the `shouldSetState()` callback)
 - the state you passed in will be passed to `setState` on the final frame
 
 To use `tweenState`, import it along with Component, like so:
@@ -399,9 +401,17 @@ App.tweenState(
     delay: 0,
     duration: 500,
     ease: "linear",
-    onUpdate: tweenProps => console.log(tweenProps),
-    onComplete: tweenProps => console.log("\nApp.state:\n", App.state),
     paused: false
+    // called on first frame:
+    onStart: tweenProps => tweenProps,
+    // called on every frame:
+    onUpdate: tweenProps => tweenProps,
+    // called on last frame:
+    onComplete: tweenProps => tweenProps,
+    // called on every frame, choose to set state or not (must return true or false)
+    shouldSetState: tweenProps => tweenProps.frame % 2 > 0, // for example, this will set state only on odd frame numbers
+    // called only on the frames where the state was updated:
+    onSetState: tweenProps => tweenProps
   }
 )
 ```
@@ -410,12 +420,24 @@ The tween config (2nd param) takes the following properties:
 
 - `delay` in milliseconds (default: `0`)
 - `duration` in milliseconds (default: `0`)
-- `ease` timing function  (default: `linear`, see `src/easings.js` for the full list)
+- `ease` - the name of a timing function  (default: `linear`, see `src/easings.js` for the full list)
 - `paused` - true or false (default: `false`)
-- `onUpdate` function called on every frame, receives tween `props` on each frame
-- `onComplete` function called after last frame, receives final tween `props` 
+- `shouldSetState` - function called on every frame, receives `tweenProps`, should return true or false
+- `onSetState` - function called only on frames where the state is updated
+- `onStart` function called on the first frame, receives `tweenProps`
+- `onUpdate` function called on every frame, receives `tweenProps` on each frame
+- `onComplete` function called after last frame, receives final `tweenProps` 
 
-The `tweenProps` object includes all tweening values used, including the state of your component for each frame (`tweenProps.tweenedState`).
+The `tweenProps` object returned to callbacks provides the tweening values of the current frame, and includes:
+
+- `progress` - a number from `0` to `1` (so `0.5` is half-way through the tween)
+- `frame` - the current frame number
+- `frameTotal` - the total number of frames
+- `values` - an array of the tweened values
+- `tweenedState` - the state of your component on the current frame
+- and more...
+
+Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 ## Changelog
 

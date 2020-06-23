@@ -28,9 +28,8 @@ App.view = props => props
 // Tween (animate) from one state to the next
 //
 
-console.log("App.state", App.state)
+console.log("App.state\n", App.state)
 console.log("")
-console.log("Tweening of the 'count', 'foo' and 'bar.zzz' properties, start:\n")
 
 // give the state to tween to, with some tween options as the (optional) 2nd param
 
@@ -41,10 +40,18 @@ App.tweenState(
   // 2nd param - object - the tween settings
   {
     delay: 0,
-    duration: 500,
+    duration: 300,
     ease: "linear",
+    paused: false,
+    // called on first frame:
+    onStart: tweenProps => console.log("Start tween:"),
+    // called on every frame:
     onUpdate: tweenProps => console.log(tweenProps.values),
+    // called on last frame:
     onComplete: tweenProps => console.log("\nApp.state:\n", App.state),
-    paused: false
+    // called on every frame, choose to set state or not (return true or false)
+    shouldSetState: tweenProps => tweenProps.frame % 2 > 0, // for example, this will set state only on odd frame numbers
+    // called only on the frames where the state was updated:
+    onSetState: tweenProps => tweenProps
   }
 )

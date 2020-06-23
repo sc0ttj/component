@@ -42,14 +42,18 @@ var step = function step(context) {
   var elapsed = currentTime - startTime
 
   if (delay >= elapsed) {
-    context.frame = requestAnimationFrame(function() {
-      return step(context)
-    })
+    context.frame =
+      requestAnimationFrame(function() {
+        return step(context)
+      }) + 1
     return
   }
 
   // calculate progress according to time and and easing
   var progress = Math.min(1, (elapsed - delay) / duration)
+
+  // add progress to tween props
+  context.progress = progress
 
   var values = from.length
     ? from.map(function(val, index) {
@@ -73,9 +77,10 @@ var step = function step(context) {
   // EDIT by @sc0ttj - pass in the whole context, with values
   if (progress === 1) onComplete({ ...context, values })
   else
-    context.frame = requestAnimationFrame(function() {
-      return step(context)
-    })
+    context.frame =
+      requestAnimationFrame(function() {
+        return step(context)
+      }) + 1
 }
 
 var Tween = /*#__PURE__*/ (function() {
@@ -85,6 +90,7 @@ var Tween = /*#__PURE__*/ (function() {
     this._c.onUpdate = context.onUpdate || noop
     this._c.onComplete = context.onComplete || noop
     this._c.delay = context.delay || 0
+    this._c.duration = context.duration || 200
     if (!context.paused) this.start()
   }
 
@@ -104,8 +110,14 @@ var Tween = /*#__PURE__*/ (function() {
 
 var tweenState = (self, newState, cfg) => {
   // define default callbacks
-  var onUpdate = cfg.onUpdate ? cfg.onUpdate : props => props
-  var onComplete = cfg.onComplete ? cfg.onComplete : () => null
+  var onStart = cfg.onStart ? cfg.onStart : noop
+  var onUpdate = cfg.onUpdate ? cfg.onUpdate : noop
+  var onComplete = cfg.onComplete ? cfg.onComplete : noop
+  var shouldSetState = cfg.shouldSetState ? cfg.shouldSetState : true
+  var onSetState = cfg.onSetState ? cfg.onSetState : noop
+
+  cfg.frame = 1
+  cfg.frameTotal = Math.ceil((60 / 1000) * (cfg.delay + cfg.duration)) + 2
 
   // for each property in newState, get the value from the given state
   function getStateToTween(state) {
@@ -125,10 +137,10 @@ var tweenState = (self, newState, cfg) => {
     Object.keys(state).forEach((key, index) => {
       if (typeof state[key] !== "undefined") {
         if (typeof state[key] !== "object") {
-          if (!Number.isNaN(state[key])) array.push(state[key])
+          array.push(state[key])
           return
         }
-        if (!Number.isNaN(state[key])) addValues(state[key], array)
+        addValues(state[key], array)
       }
     })
   }
@@ -160,17 +172,22 @@ var tweenState = (self, newState, cfg) => {
     to: endValuesArr || 1,
     paused: cfg.paused || false,
     delay: cfg.delay || 0,
-    duration: cfg.duration || 250,
-    ease: cfg.ease || "none",
+    duration: cfg.duration || 200,
+    ease: cfg.ease || "linear",
+    frame: 1,
+    frameTotal: cfg.frameTotal || 1,
     onUpdate: props => {
       // make sure values is an array
       var tweenedState = setTweenedValues(newState, [...props.values])
+      if (props.frame === 1) onStart(props)
       // set current tween properties as the new state
-      self.setState(tweenedState)
+      if (shouldSetState(props)) {
+        self.setState(tweenedState)
+        onSetState(props)
+      }
       return onUpdate({ ...props, tweenedState })
     },
     onComplete: props => {
-      var newState = {}
       self.setState(newState)
       return onComplete(props)
     }
