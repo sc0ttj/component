@@ -17,8 +17,7 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- 1.7kb, minified and gzipped
-- No build tools or transpiler needed
+- 1.8kb, minified and gzipped
 - Simple syntax, easy to use, easy to learn
 - Plain JavaScript wherever possible
 - Works **client-side**, in browsers:
@@ -27,6 +26,7 @@ A "state" is a snapshot of your application data at a specific time.
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
+- An optional add-on called `tweenState`, for easy animations
 - ...and more
 
 Your components will support:
@@ -42,6 +42,7 @@ Your components will support:
     - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
+- An add-on `tweenState` method to animate/tween up to the next state
 - Server side rendering:
   - render component views as a String, JSON, or Buffer
 - Simple, stateless "child" components
@@ -88,6 +89,7 @@ Methods:
 - **App.render(el)**: (re)render to the given element on state change (browser)
 - **App.toString()**: render your component as a string on state change (NodeJS)
 - **App.setState(obj)**: update the component state, triggers a re-render
+- **App.tweenState(obj[, cfg])**: set state on each animation frame, supports various easing functions
 - **App.actions(obj)**: creates chainable methods that simplify updating the state
 - ...and more
 
@@ -126,7 +128,7 @@ npm i @scottjarvis/component
 Then add it to your project:
 
 ```js
-var Component = require('@scottjarvis/component');
+var { Component } = require('@scottjarvis/component');
 
 // use it here
 
@@ -319,7 +321,136 @@ If rendering a component in NodeJS that has a `.view()` and `.style()`, or if ca
 
 Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
 
+### Using the `tweenState` module
+
+It gives you an easy way to do component animations that use `requestAnimationFrame` and DOM diffing.
+Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
+
+By default, the `tweenState()` method calls `setState()` on every frame of a tweened animation. 
+
+You can override this behaviour by defining a `shouldSetState()` callback in your tween config, which is called on every frame - `setState()` will only be called on that frame if `shouldSetState()` returns true.
+
+Using `tweenState()` is much like using `setState()`, except:
+
+- you only pass in the state values you want to tween
+- you can pass in the tween settings as a second parameter (delay, duration, easing function, callbacks, etc)
+
+How it works:
+
+- the tweened state values will be passed to `setState` on each frame (or whenever you choose, if using the `shouldSetState()` callback)
+- the state you passed in will be passed to `setState` on the final frame
+
+To use `tweenState`, import it along with Component, like so:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/tweenState.min.js"></script>
+<script>
+  Component.tweenState = tweenState
+
+  // use it here
+</script>
+```
+
+#### In NodeJS:
+
+```js
+var { Component, tweenState } = require('@scottjarvis/component');
+Component.tweenState = tweenState
+
+// use it here
+
+```
+
+Example usage of `tweenState`, in NodeJS:
+
+```js
+var { Component, tweenState } = require('@scottjarvis/component');
+Component.tweenState = tweenState
+
+// Define our app state
+var state = {
+  ignore: "me",
+  count: 199,
+  foo: 1,
+  dontTween: "this property",
+  bar: {
+    zzz: 100
+  }
+}
+
+// Define a stateful main component
+var App = new Component(state)
+
+// Define a view (just do an example view - return props)
+App.view = props => props
+
+// Tween (animate) from one state to the next:
+// Give the state to tween to, with some tween options as the (optional) 2nd param
+
+console.log("Tweening of the 'count', 'foo' and 'bar.zzz' properties, start:\n")
+
+App.tweenState(
+  // 1st param - object - the new state values to tween to...
+  // pass in only the properties that you want to tween!
+  { count: 200, foo: 10, bar: { zzz: 999 } },
+  // 2nd param - object - the tween settings
+  {
+    delay: 0,
+    duration: 500,
+    ease: "linear",
+    paused: false
+    // called on first frame:
+    onStart: tweenProps => tweenProps,
+    // called on every frame:
+    onUpdate: tweenProps => tweenProps,
+    // called on last frame:
+    onComplete: tweenProps => tweenProps,
+    // called on every frame, choose to set state or not (must return true or false)
+    shouldSetState: tweenProps => tweenProps.frame % 2 > 0, // for example, this will set state only on odd frame numbers
+    // called only on the frames where the state was updated:
+    onSetState: tweenProps => tweenProps
+  }
+)
+```
+
+The tween config (2nd param) takes the following properties:
+
+- `delay` in milliseconds (default: `0`)
+- `duration` in milliseconds (default: `0`)
+- `ease` - the name of a timing function  (default: `linear`, see `src/easings.js` for the full list)
+- `paused` - true or false (default: `false`)
+- `shouldSetState` - function called on every frame, receives `tweenProps`, should return true or false
+- `onSetState` - function called only on frames where the state is updated
+- `onStart` function called on the first frame, receives `tweenProps`
+- `onUpdate` function called on every frame, receives `tweenProps` on each frame
+- `onComplete` function called after last frame, receives final `tweenProps` 
+
+The `tweenProps` object returned to callbacks provides the tweening values of the current frame, and includes:
+
+- `progress` - a number from `0` to `1` (so `0.5` is half-way through the tween)
+- `frame` - the current frame number
+- `frameTotal` - the total number of frames
+- `values` - an array of the tweened values
+- `tweenedState` - the state of your component on the current frame
+- and more...
+
+Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
+
 ## Changelog
+
+**1.1.6**
+- added `src/tweenState.js` and related support files (`src/raf.js`, `src/easings.js`)
+- new build process: 
+  - added `rollup` to bundle the source files into dist/ (see `rollup.config.js`)
+  - added `src/index.js` to allow easier importing of multiple modules, if desired
+- updated package.json: `index.js` is the file imported in Node by default
+- now requires Node 10 or later (was Node 8)
+- updated README 
+  - updated install instructions
+  - added `tweenState` usage info
 
 **1.1.5**
 - fixed: scoped CSS sometimes not applied on page load:
@@ -383,11 +514,15 @@ Note: your component CSS is not auto-prefixed or "scoped" with containers class/
 
 ## Making changes to `Component`
 
-Look in `src/component.js`, make any changes you like.
+Look in `src/`, make any changes you like.
 
-Minify it (your choice how), and save the minified version to `dist/component.min.js`
+Rebuild to `dist/` using the command `npm run build`
 
 ## Future improvements
+
+- Better state management:
+  - actions should emit an event/pubsub/message when run
+  - components should be able to listen/subscribe to these events and fire a callback
 
 - Performance:
   - Batched rendering: only needed in browser, use requestAnimationFrame:
@@ -405,6 +540,12 @@ Minify it (your choice how), and save the minified version to `dist/component.mi
     - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
 
 - Better SSR
+  - pass in config to `toString()`, to choose what to render:
+    - Component lib itself
+    - actions
+    - methods
+    - styles
+    - views
   - server-side: 
     - render as streams/chunks (deliver page to clients in bits, soon as its ready):
      - see [almost/stream-template](https://github.com/almost/stream-template)

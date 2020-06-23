@@ -11,8 +11,14 @@
     <p class="container" id="a-unique-string">You component will end up in here!</p>
   </div>
 
-  <script src="../src/component.js"></script>
+  <!-- required -->
+  <script src="../dist/component.min.js"></script>
+  <!-- optional -->
+  <script src="../dist/tweenState.min.js"></script>
   <script>
+
+  // if using tweenState, you need to set it up:
+  Component.tweenState = tweenState
 
   // ------------------------------------------------
   // USAGE: Defining components
