@@ -1,11 +1,6 @@
-// ES5-loose (transpiled) version of https://github.com/jeremenichelli/phena/blob/master/src/index.js
-
+import raf from "./raf.js"
+import easing from "./easings.js"
 ;("use strict")
-
-if (typeof exports !== "undefined") {
-  exports.__esModule = true
-  exports.Tween = void 0
-}
 
 // if no window.performance, use 'perf_hooks' module
 // (from https://stackoverflow.com/questions/23003252/window-performance-now-equivalent-in-nodejs)
@@ -14,8 +9,6 @@ var performance =
     ? require("perf_hooks").performance
     : window.performance
 
-import raf from "./raf.js"
-
 // if no requestAnimationFrame, use the 'raf' polyfill
 var requestAnimationFrame =
   typeof window !== "undefined" &&
@@ -23,13 +16,17 @@ var requestAnimationFrame =
     ? window.requestAnimationFrame
     : raf
 
+//
+//
+// ES5-loose (transpiled) version of
+// https://github.com/jeremenichelli/phena/blob/master/src/index.js
+//
+
 var noop = function noop() {}
 
 var now = function now() {
   return performance && performance.now ? performance.now() : Date.now()
 }
-
-import easing from "./easings.js"
 
 var step = function step(context) {
   var delay = context.delay,
