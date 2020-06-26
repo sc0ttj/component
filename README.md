@@ -225,6 +225,105 @@ App
   .addItems([ { name: "two" }, { name: "three" } ])
 ```
 
+### Using the `emitter` module
+
+Any time a components state is changed via an "action", it can emit an event that other components can listen for.
+
+To achieve this, just include the emitter like so:
+
+```js
+
+var { Component, emitter } = require("@scottjarvis/component");
+Component.emitter = emitter;
+```
+
+The emitter provides the following methods:
+
+- `App.on(eventName, props => { ... })` - every time `eventName` is emitted, run the given func
+- `App.once(eventName, props => { ... })` - run `func` only the first time `eventName` is emitted
+- `App.off(eventName)` - stop listening to `eventName`
+
+Note, `props` is the latest state of the component that emitted the event.
+
+Here's how to use the emitter:
+
+```js
+var { Component, emitter } = require("../dist/index.min.js")
+Component.emitter = emitter
+
+// Define our app
+var state = {
+  count: 0,
+  items: [{ name: "one" }]
+}
+var App = new Component(state)
+
+// Define some other component
+var state2 = { foo: "bar" }
+var Foo = new Component(state2)
+
+// Define chainable "actions", to update the state more easily
+
+App.actions({
+  count:    props => App.setState({ count: props }),
+
+  plus:     props => App.setState({ count: App.state.count + props }),
+
+  minus:    props => App.setState({ count: App.state.count - props }),
+
+  addItems: props => App.setState({ items: [...App.state.items, ...props] })
+})
+
+// ---------------------------------------------------
+// Using the "Event emitter"
+// ---------------------------------------------------
+
+// If you included the "emitter", then any "actions" you define will emit its
+// name as an event. You can listen to these with the "on" method.
+
+// Example:
+//  - Log the first time the "minus" action is called
+//  - Log every time the "plus" and "addItems" actions are called
+
+Foo
+  .once("minus",  props => console.log("Foo: action 'minus'", props.count))
+  .on("plus",     props => console.log("Foo: action 'plus'", props.count))
+  .on("addItems", props => console.log("Foo: action 'addItems'", props.items))
+
+//
+//
+// ...now we're ready to run the program..
+//
+//
+
+// Log initial state
+console.log("")
+console.log("App initial state:")
+console.log(App.render())
+console.log("")
+
+// If you defined some "actions", you can use them
+// to update specific parts of your state
+App.plus(105)
+App.minus(5)
+
+// stop listening to the "plus" action
+Foo.off("plus")
+
+// A components "actions" can be chained
+App.minus(1)
+  .minus(1)
+  .minus(1)
+  .plus(3)
+  .addItems([{ name: "two" }, { name: "three" }])
+
+
+// Log final app state
+console.log("")
+console.log("App state:")
+console.log(App.render())
+```
+
 ### Using the "state history"
 
 Here is how to "time travel" to previous states, or jump forward to more recent ones.
@@ -441,6 +540,17 @@ Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 ## Changelog
 
+**1.1.7**
+- new feature: added an event emitter
+  - if emitter is installed, component "actions" will emit an event
+  - other components can listen to it with `myComponent.on('actionName', (props) => { ... }`
+    - props will contain the latest state of the component that emitted the event
+- added `src/emitter.js`, implemented as an optional, extra module
+- updated build process to also build `dist/emitter.min.js`
+- added examples and updated README
+  - added `examples/usage-emitter.js`
+
+
 **1.1.6**
 - added `src/tweenState.js` and related support files (`src/raf.js`, `src/easings.js`)
 - new build process: 
@@ -521,8 +631,8 @@ Rebuild to `dist/` using the command `npm run build`
 ## Future improvements
 
 - Better state management:
-  - actions should emit an event/pubsub/message when run
-  - components should be able to listen/subscribe to these events and fire a callback
+  - allow use of middleware:
+    - allow user to add more functions that get executed on every state change
 
 - Performance:
   - Batched rendering: only needed in browser, use requestAnimationFrame:
@@ -533,7 +643,6 @@ Rebuild to `dist/` using the command `npm run build`
 - Usability:
   - Better CSS-in-JS: 
     - define a components CSS using regular JS objects (alternative to template strings)
-    - auto-scoped CSS, with namespaced/prefixed classes 
     - see [twirl](https://github.com/benjamminj/twirl-js)
   - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
     - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
@@ -557,13 +666,20 @@ Rebuild to `dist/` using the command `npm run build`
         - the contents will be grabbed and used for a new `.view()`
       - for (re)attaching events, see [yo-yo](https://github.com/maxogden/yo-yo)
   
+- Better animations: 
+  - create a physics based timing functions module:
+    - like current easings, but more flexible/dynamic
+    - can pass params like friction, magnitude, etc, to make the anims more/less "pronounced"
+    - see `react-motion`, `react-spring`, `react-move`, `pose`, etc
+
 - Universal rendering (add-on):
   - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from HTML strings to:
     - virtual DOM (see `htm`, `hyperx`, `snabby`)
     - real DOM (see `htl`, `fast-html-parser`, `bel`, `genel`, ...)
     - ANSI console markup (?)
     - markdown (?)
-    - files (?)
+    - pdf (?)
+    - files/binary/buffer (?)
 
 - Support for custom elements/Web Components
   - so you can use `<my-custom-app></my-custom-app>` in your HTML
@@ -602,6 +718,14 @@ Rebuild to `dist/` using the command `npm run build`
 - [snabby](https://github.com/mreinstein/snabby) - use HTML template strings to generate vdom, use with snabbdom
 - [petit-dom](https://github.com/yelouafi/petit-dom) - tiny vdom diffing and patching library
 - [hyperx](https://github.com/choojs/hyperx) - tagged templates to vdom (used by [nanohtml](https://github.com/choojs/nanohtml)
+
+### Animation
+
+- [react-tween-state](https://github.com/chenglou/react-tween-state) - tween from one state to another (where I got `tweenState` idea from)
+- [phena](https://github.com/jeremenichelli/phena/) - a petit tweening engine based on requestAnimationFrame (adapted version inside `src/tweenState.js`)
+- [easing functions](https://gist.github.com/gre/1650294) - excellent set of easing functions (used by this project in `src/easings.js`)
+- [react-tweenful](https://github.com/teodosii/react-tweenful) - tweening and animation for React
+- [react-state-stream](https://github.com/chenglou/react-state-stream) - instead of one state, set all the states that will ever be, aka a lazy state stream
 
 ### Routers
 

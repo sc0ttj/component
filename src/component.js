@@ -124,6 +124,8 @@ function Component(state) {
 
   this.state = state // the main state/model of the component
 
+  this.view = props => props // the default view (just return the props)
+
   // a unique ID, used for scoping component CSS
   this.uid = Math.random()
     .toString(36)
@@ -201,10 +203,19 @@ function Component(state) {
       // log state changes if dubeg = true
       //if (this.debug) console.log(this.i, [this.state, ...this.log])
 
-      this.action = undefined
-
       // freeze state so it can only be changed through setState()
       this.freeze(this.state)
+      this.freeze(this.prev)
+
+      // if we updated using an "action" method, and emitter is avail,
+      // then emit an event with same name as the "action" called,
+      // passing in the current state
+      if (typeof Component.emitter !== "undefined" && !!this.action) {
+        Component.emitter.emit(`${this.action}`, this.state)
+      }
+
+      this.action = undefined
+
       return this
     }
   }
@@ -220,6 +231,30 @@ function Component(state) {
     typeof Component.tweenState !== "undefined"
       ? Component.tweenState(self, newState, cfg)
       : this.setState(newState)
+    return this
+  }
+
+  this.on = (ev, fn) => {
+    typeof Component.emitter !== "undefined"
+      ? Component.emitter.on(ev, fn)
+      : false
+    return this
+  }
+
+  this.once = (ev, fn) => {
+    if (typeof Component.emitter !== "undefined") {
+      Component.emitter.on(ev, props => {
+        fn(props)
+        Component.emitter.off(ev, fn)
+      })
+    }
+    return this
+  }
+
+  this.off = (ev, fn) => {
+    typeof Component.emitter !== "undefined"
+      ? Component.emitter.off(ev, fn)
+      : false
     return this
   }
 
