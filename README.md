@@ -280,7 +280,6 @@ var state2 = { foo: "bar" }
 var Foo = new Component(state2)
 
 // Define chainable "actions", to update the state more easily
-
 App.actions({
   plus:     props => App.setState({ count: App.state.count + props }),
 
@@ -289,17 +288,9 @@ App.actions({
   addItems: props => App.setState({ items: [...App.state.items, ...props] })
 })
 
-// ---------------------------------------------------
-// Using the "Event emitter"
-// ---------------------------------------------------
-
-// If you included the "emitter", then any "actions" you define will emit its
-// name as an event. You can listen to these with the "on" and "once" methods.
-
-// Example:
+// Listen for the actions above:
 //  - Log the first time the "minus" action is called
 //  - Log every time the "plus" and "addItems" actions are called
-
 Foo
   .once("minus",  props => console.log("Foo: action 'minus'", props.count))
   .on("plus",     props => console.log("Foo: action 'plus'", props.count))
@@ -309,7 +300,6 @@ Foo
 // ...now we're ready to run the program..
 
 // Log initial state
-console.log("App initial state:")
 console.log(App.render())
 
 // If you defined some "actions", you can use them
@@ -323,15 +313,15 @@ Foo.off("plus")
 // A components "actions" can be chained
 App.minus(1)
   .minus(1)
-  .minus(1)
   .plus(3)
   .addItems([{ name: "two" }, { name: "three" }])
 
 
 // Log final app state
-console.log("App state:")
 console.log(App.render())
 ```
+
+Also see [examples/usage-emitter.js](examples/usage-emitter.js)
 
 ### Using the "state history"
 
