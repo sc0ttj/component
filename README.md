@@ -423,23 +423,19 @@ Also see [examples/usage-emitter.js](examples/usage-emitter.js)
 
 ### Using the `tweenState` module
 
-The `tweenState` module provides an easy way to create animations that use `requestAnimationFrame` and DOM diffing.
-
-By default, the `tweenState()` method calls `setState()` on every frame of a tweened animation. 
-
-You can override this behaviour by defining a `shouldSetState()` callback in your tween config, which is called on every frame - `setState()` will only be called on that frame if `shouldSetState()` returns true.
+The `tweenState` module makes it super easy to do animations that use `requestAnimationFrame` and DOM diffing.
 
 Using `tweenState()` is much like using `setState()`, except:
 
 - you only pass in the state values you want to tween
-- you can pass in the tween settings as a second parameter (delay, duration, easing function, callbacks, etc)
+- you can pass in tween settings as a 2nd param (delay, duration, easing, callbacks)
 
 How it works:
 
-- the tweened state values will be passed to `setState` on each frame (or whenever you choose, if using the `shouldSetState()` callback)
-- the state you passed in will be passed to `setState` on the final frame
+- the tweened state values are passed to `setState()` on each frame (or whenever you choose, if using the `shouldSetState()` callback)
+- the state you passed in will be passed to `setState()` on the final frame
 
-Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
+By default, `tweenState()` calls `setState()` on every frame of the tweened animation. You can override this behaviour by defining a `shouldSetState()` callback in your tween config, which is called on every frame - `setState()` will only be called on that frame if `shouldSetState()` returns true.
 
 To use `tweenState`, import it along with Component, like so:
 
@@ -456,6 +452,8 @@ To use `tweenState`, import it along with Component, like so:
 ```
 
 #### In NodeJS:
+
+Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
 
 ```js
 var { Component, tweenState } = require('@scottjarvis/component');
@@ -485,13 +483,8 @@ var state = {
 // Define a stateful main component
 var App = new Component(state)
 
-// Define a view (just do an example view - return props)
-App.view = props => props
-
 // Tween (animate) from one state to the next:
 // Give the state to tween to, with some tween options as the (optional) 2nd param
-
-console.log("Tweening of the 'count', 'foo' and 'bar.zzz' properties, start:\n")
 
 App.tweenState(
   // 1st param - object - the new state values to tween to...
@@ -523,11 +516,11 @@ The tween config (2nd param) takes the following properties:
 - `duration` in milliseconds (default: `0`)
 - `ease` - the name of a timing function  (default: `linear`, see `src/easings.js` for the full list)
 - `paused` - true or false (default: `false`)
-- `shouldSetState` - function called on every frame, receives `tweenProps`, should return true or false
-- `onSetState` - function called only on frames where the state is updated
-- `onStart` function called on the first frame, receives `tweenProps`
-- `onUpdate` function called on every frame, receives `tweenProps` on each frame
-- `onComplete` function called after last frame, receives final `tweenProps` 
+- `shouldSetState()` - called on every frame, receives `tweenProps`, should return true or false
+- `onSetState()` - called only on frames where the state is updated, receives `tweenProps`
+- `onStart()` called on the first frame, receives `tweenProps`
+- `onUpdate()` called on every frame, receives `tweenProps` on each frame
+- `onComplete()` called after last frame, receives final `tweenProps` 
 
 The `tweenProps` object returned to callbacks provides the tweening values of the current frame, and includes:
 
