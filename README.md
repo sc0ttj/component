@@ -29,6 +29,7 @@ A "state" is a snapshot of your application data at a specific time.
 - A small list of optional add-on modules:
   - `tweenState`: animate from one state to the next
   - `emitter`: an event emitter, for sharing updates between components
+- Use "middleware" to easily customise component re-render behaviour 
 - ...and more
 
 Your components will support:
