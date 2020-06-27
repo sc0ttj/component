@@ -32,6 +32,7 @@
 		"emit"
 	],
 	"files": [
+		"dist/index.min.js",
 		"dist/component.min.js",
 		"dist/tweenState.min.js",
 		"dist/emitter.min.js"
