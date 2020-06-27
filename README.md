@@ -552,7 +552,7 @@ Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 **1.1.7**
 - new feature: added an event emitter
   - if emitter is installed, component "actions" will emit an event
-  - other components can listen to it with `myComponent.on('actionName', (props) => { ... }`
+  - other components can listen to it with `myComponent.on('actionName', (props) => { ... })`
     - props will contain the latest state of the component that emitted the event
 - added `src/emitter.js`, implemented as an optional, extra module
 - updated build process to also build `dist/emitter.min.js`
