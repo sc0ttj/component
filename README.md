@@ -256,8 +256,8 @@ Component.emitter = emitter;
 
 The emitter provides the following methods:
 
-- `App.on(eventName, props => { ... })` - every time `eventName` is emitted, run the given func
-- `App.once(eventName, props => { ... })` - run `func` only the first time `eventName` is emitted
+- `App.on(eventName, props => { ... })` - every time `eventName` is emitted, run the given function
+- `App.once(eventName, props => { ... })` - run the given function only the first time `eventName` is emitted
 - `App.off(eventName)` - stop listening to `eventName`
 
 Note, `props` is the latest state of the component that emitted the event.
