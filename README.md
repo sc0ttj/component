@@ -228,7 +228,7 @@ App
   .addItems([ { name: "two" }, { name: "three" } ])
 ```
 
-Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This provides a very easy to share states between components, and for components to "talk to each other".
+Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
 
 ### Using the "state history"
 
