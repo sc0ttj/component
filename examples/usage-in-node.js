@@ -77,6 +77,21 @@ App.actions({
 })
 
 //
+// ------------------------------------------------
+// OPTIONAL: using "middleware" functions to enhance setState behaviour
+// ------------------------------------------------
+
+// Define some "middleware" functions - these are called right after setState().
+// Note that "props" will contain the latest state (that was just set)
+var countLog = props => console.log("middleware -> count logger", props.count)
+var itemsLog = props => console.log("middleware -> items logger", props.items)
+
+// Add your "middleware" to a component as an array of functions
+App.middleware = [countLog, itemsLog]
+
+// ...now, every time setState() is called, each middleware function
+// in the array will run too.
+
 //
 // ------------------------------------------------
 // USAGE: Using the component

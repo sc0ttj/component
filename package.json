@@ -1,6 +1,6 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.1.8",
+	"version": "1.1.9",
 	"description": "Simple component library with state management, DOM diffing, tweening, server-side rendering and more.",
 	"author": "sc0ttj",
 	"license": "MIT",
@@ -29,7 +29,8 @@
 		"server-side-rendering",
 		"tween",
 		"pubsub",
-		"emit"
+		"emit",
+		"middleware"
 	],
 	"files": [
 		"dist/index.min.js",

@@ -126,6 +126,8 @@ function Component(state) {
 
   this.view = props => props // the default view (just return the props)
 
+  this.middleware = []
+
   // a unique ID, used for scoping component CSS
   this.uid = Math.random()
     .toString(36)
@@ -213,6 +215,10 @@ function Component(state) {
         Component.emitter.emit(`${this.action}`, this.state)
       }
 
+      // run any middlware functions that were defined by the user
+      this.middleware.forEach(fn => fn({ ...this.state }))
+
+      // unset any action that may have called this invocation of setState()
       this.action = undefined
 
       return this
