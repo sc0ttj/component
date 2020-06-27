@@ -566,7 +566,7 @@ Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 **1.1.9**
 - new feature: "middleware"
-  - define an array of functions as `myComponent.middlware = [ someFunc, otherFunc ]`
+  - define an array of functions as `myComponent.middleware = [ someFunc, otherFunc ]`
   - each function will be run at the end of `setState()`
 - updated README, package.json, etc 
 
