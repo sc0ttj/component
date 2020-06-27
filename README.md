@@ -423,7 +423,7 @@ Also see [examples/usage-emitter.js](examples/usage-emitter.js)
 
 ### Using the `tweenState` module
 
-The `tweenState` module makes it super easy to do animations that use `requestAnimationFrame` and DOM diffing.
+With `tweenState` it's super easy to do animations that use `requestAnimationFrame` and DOM diffing.
 
 Using `tweenState()` is much like using `setState()`, except:
 
