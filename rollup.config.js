@@ -22,6 +22,15 @@ export default [
     plugins: [resolve(), commonjs(), terser()]
   },
   {
+    input: "src/emitter.js",
+    output: {
+      file: "dist/emitter.min.js",
+      name: "emitter",
+      format: "umd"
+    },
+    plugins: [resolve(), commonjs(), terser()]
+  },
+  {
     input: "src/index.js",
     output: {
       file: "dist/index.min.js",

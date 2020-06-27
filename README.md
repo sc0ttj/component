@@ -26,7 +26,9 @@ A "state" is a snapshot of your application data at a specific time.
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
-- An optional add-on called `tweenState`, for easy animations
+- A small list of optional add-on modules:
+  - `tweenState`: animate from one state to the next
+  - `emitter`: an event emitter, for sharing updates between components
 - ...and more
 
 Your components will support:
@@ -42,7 +44,8 @@ Your components will support:
     - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
-- An add-on `tweenState` method to animate/tween up to the next state
+- Tweening/animating from the current state to the next state
+- Event emitting - publish & subscribe to state changes between components
 - Server side rendering:
   - render component views as a String, JSON, or Buffer
 - Simple, stateless "child" components
@@ -172,7 +175,7 @@ App.style = (props) => `
 `
 ```
 
-When your component is added to the page using `render('.container')`, the CSS above will be prefixed with the `id` or `className` of your container. 
+When a component is added to the page using `render('.container')`, the CSS above is prefixed with the `id` or `className` of your container. 
 
 _This CSS automatic "scoping"/prefixing will prevent your component styles affecting other parts of the page_.
 
@@ -190,7 +193,7 @@ To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-
 
 Define "actions" to update your state in specific ways.
 
-These are like regular methods, except they're always chainable and tagged by name in your components state history
+These are like regular methods, except they're always chainable and tagged by name in your components state history. 
 
 ```js
 App.actions({
@@ -224,6 +227,8 @@ App
   .plus(3)
   .addItems([ { name: "two" }, { name: "three" } ])
 ```
+
+Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
 
 ### Using the "state history"
 
@@ -321,24 +326,116 @@ If rendering a component in NodeJS that has a `.view()` and `.style()`, or if ca
 
 Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
 
+### Using the `emitter` module
+
+Any time a components state is changed via an "action", it can emit an event that other components can listen for.
+
+To achieve this, just include the emitter like so:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/emitter.min.js"></script>
+<script>
+  Component.emitter = emitter
+
+  // use it here
+</script>
+```
+
+#### In NodeJS:
+
+```js
+
+var { Component, emitter } = require("@scottjarvis/component");
+Component.emitter = emitter;
+```
+
+The emitter provides the following methods:
+
+- `App.on("eventName", props => { ... })` - every time `eventName` is emitted, run the given function
+- `App.once("eventName", props => { ... })` - run the given function only once
+- `App.off("eventName")` - stop listening to `eventName`
+
+Note, `props` is the latest state of the component that emitted the event.
+
+Here's how to use the emitter:
+
+```js
+var { Component, emitter } = require("../dist/index.min.js")
+Component.emitter = emitter
+
+// Define our app
+var state = {
+  count: 0,
+  items: [{ name: "one" }]
+}
+var App = new Component(state)
+
+// Define some other component
+var state2 = { foo: "bar" }
+var Foo = new Component(state2)
+
+// Define chainable "actions", to update the state more easily
+App.actions({
+  plus:     props => App.setState({ count: App.state.count + props }),
+
+  minus:    props => App.setState({ count: App.state.count - props }),
+
+  addItems: props => App.setState({ items: [...App.state.items, ...props] })
+})
+
+// Listen for the actions above:
+//  - Log the first time the "minus" action is called
+//  - Log every time the "plus" and "addItems" actions are called
+Foo
+  .once("minus",  props => console.log("Foo: action 'minus'", props.count))
+  .on("plus",     props => console.log("Foo: action 'plus'", props.count))
+  .on("addItems", props => console.log("Foo: action 'addItems'", props.items))
+
+
+// ...now we're ready to run the program..
+
+// Log initial state
+console.log(App.render())
+
+// If you defined some "actions", you can use them
+// to update specific parts of your state
+App.plus(105)
+App.minus(5)
+
+// stop listening to the "plus" action
+Foo.off("plus")
+
+// A components "actions" can be chained
+App.minus(1)
+  .minus(1)
+  .plus(3)
+  .addItems([{ name: "two" }, { name: "three" }])
+
+
+// Log final app state
+console.log(App.render())
+```
+
+Also see [examples/usage-emitter.js](examples/usage-emitter.js)
+
 ### Using the `tweenState` module
 
-It gives you an easy way to do component animations that use `requestAnimationFrame` and DOM diffing.
-Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
-
-By default, the `tweenState()` method calls `setState()` on every frame of a tweened animation. 
-
-You can override this behaviour by defining a `shouldSetState()` callback in your tween config, which is called on every frame - `setState()` will only be called on that frame if `shouldSetState()` returns true.
+With `tweenState` it's super easy to do animations that use `requestAnimationFrame` and DOM diffing.
 
 Using `tweenState()` is much like using `setState()`, except:
 
 - you only pass in the state values you want to tween
-- you can pass in the tween settings as a second parameter (delay, duration, easing function, callbacks, etc)
+- you can pass in tween settings as a 2nd param (delay, duration, easing, callbacks)
 
 How it works:
 
-- the tweened state values will be passed to `setState` on each frame (or whenever you choose, if using the `shouldSetState()` callback)
-- the state you passed in will be passed to `setState` on the final frame
+- the tweened state values are passed to `setState()` on each frame (or whenever you choose, if using the `shouldSetState()` callback)
+- the state you passed in will be passed to `setState()` on the final frame
+
+By default, `tweenState()` calls `setState()` on every frame of the tweened animation. You can override this behaviour by defining a `shouldSetState()` callback in your tween config, which is called on every frame - `setState()` will only be called on that frame if `shouldSetState()` returns true.
 
 To use `tweenState`, import it along with Component, like so:
 
@@ -355,6 +452,8 @@ To use `tweenState`, import it along with Component, like so:
 ```
 
 #### In NodeJS:
+
+Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
 
 ```js
 var { Component, tweenState } = require('@scottjarvis/component');
@@ -384,13 +483,8 @@ var state = {
 // Define a stateful main component
 var App = new Component(state)
 
-// Define a view (just do an example view - return props)
-App.view = props => props
-
 // Tween (animate) from one state to the next:
 // Give the state to tween to, with some tween options as the (optional) 2nd param
-
-console.log("Tweening of the 'count', 'foo' and 'bar.zzz' properties, start:\n")
 
 App.tweenState(
   // 1st param - object - the new state values to tween to...
@@ -422,11 +516,11 @@ The tween config (2nd param) takes the following properties:
 - `duration` in milliseconds (default: `0`)
 - `ease` - the name of a timing function  (default: `linear`, see `src/easings.js` for the full list)
 - `paused` - true or false (default: `false`)
-- `shouldSetState` - function called on every frame, receives `tweenProps`, should return true or false
-- `onSetState` - function called only on frames where the state is updated
-- `onStart` function called on the first frame, receives `tweenProps`
-- `onUpdate` function called on every frame, receives `tweenProps` on each frame
-- `onComplete` function called after last frame, receives final `tweenProps` 
+- `shouldSetState()` - called on every frame, receives `tweenProps`, should return true or false
+- `onSetState()` - called only on frames where the state is updated, receives `tweenProps`
+- `onStart()` called on the first frame, receives `tweenProps`
+- `onUpdate()` called on every frame, receives `tweenProps` on each frame
+- `onComplete()` called after last frame, receives final `tweenProps` 
 
 The `tweenProps` object returned to callbacks provides the tweening values of the current frame, and includes:
 
@@ -440,6 +534,17 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 ## Changelog
+
+**1.1.7**
+- new feature: added an event emitter
+  - if emitter is installed, component "actions" will emit an event
+  - other components can listen to it with `myComponent.on('actionName', (props) => { ... })`
+    - props will contain the latest state of the component that emitted the event
+- added `src/emitter.js`, implemented as an optional, extra module
+- updated build process to also build `dist/emitter.min.js`
+- added examples and updated README
+  - added `examples/usage-emitter.js`
+
 
 **1.1.6**
 - added `src/tweenState.js` and related support files (`src/raf.js`, `src/easings.js`)
@@ -521,8 +626,8 @@ Rebuild to `dist/` using the command `npm run build`
 ## Future improvements
 
 - Better state management:
-  - actions should emit an event/pubsub/message when run
-  - components should be able to listen/subscribe to these events and fire a callback
+  - allow use of middleware:
+    - allow user to add more functions that get executed on every state change
 
 - Performance:
   - Batched rendering: only needed in browser, use requestAnimationFrame:
@@ -533,7 +638,6 @@ Rebuild to `dist/` using the command `npm run build`
 - Usability:
   - Better CSS-in-JS: 
     - define a components CSS using regular JS objects (alternative to template strings)
-    - auto-scoped CSS, with namespaced/prefixed classes 
     - see [twirl](https://github.com/benjamminj/twirl-js)
   - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
     - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
@@ -557,13 +661,20 @@ Rebuild to `dist/` using the command `npm run build`
         - the contents will be grabbed and used for a new `.view()`
       - for (re)attaching events, see [yo-yo](https://github.com/maxogden/yo-yo)
   
+- Better animations: 
+  - create a physics based timing functions module:
+    - like current easings, but more flexible/dynamic
+    - can pass params like friction, magnitude, etc, to make the anims more/less "pronounced"
+    - see `react-motion`, `react-spring`, `react-move`, `pose`, etc
+
 - Universal rendering (add-on):
   - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from HTML strings to:
     - virtual DOM (see `htm`, `hyperx`, `snabby`)
     - real DOM (see `htl`, `fast-html-parser`, `bel`, `genel`, ...)
     - ANSI console markup (?)
     - markdown (?)
-    - files (?)
+    - pdf (?)
+    - files/binary/buffer (?)
 
 - Support for custom elements/Web Components
   - so you can use `<my-custom-app></my-custom-app>` in your HTML
@@ -602,6 +713,14 @@ Rebuild to `dist/` using the command `npm run build`
 - [snabby](https://github.com/mreinstein/snabby) - use HTML template strings to generate vdom, use with snabbdom
 - [petit-dom](https://github.com/yelouafi/petit-dom) - tiny vdom diffing and patching library
 - [hyperx](https://github.com/choojs/hyperx) - tagged templates to vdom (used by [nanohtml](https://github.com/choojs/nanohtml)
+
+### Animation
+
+- [react-tween-state](https://github.com/chenglou/react-tween-state) - tween from one state to another (where I got `tweenState` idea from)
+- [phena](https://github.com/jeremenichelli/phena/) - a petit tweening engine based on requestAnimationFrame (adapted version inside `src/tweenState.js`)
+- [easing functions](https://gist.github.com/gre/1650294) - excellent set of easing functions (used by this project in `src/easings.js`)
+- [react-tweenful](https://github.com/teodosii/react-tweenful) - tweening and animation for React
+- [react-state-stream](https://github.com/chenglou/react-state-stream) - instead of one state, set all the states that will ever be, aka a lazy state stream
 
 ### Routers
 
