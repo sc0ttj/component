@@ -228,101 +228,6 @@ App
   .addItems([ { name: "two" }, { name: "three" } ])
 ```
 
-### Using the `emitter` module
-
-Any time a components state is changed via an "action", it can emit an event that other components can listen for.
-
-To achieve this, just include the emitter like so:
-
-#### In browsers:
-
-```html
-<script src="https://unpkg.com/@scottjarvis/component"></script>
-<script src="https://unpkg.com/@scottjarvis/component/dist/emitter.min.js"></script>
-<script>
-  Component.emitter = emitter
-
-  // use it here
-</script>
-```
-
-#### In NodeJS:
-
-```js
-
-var { Component, emitter } = require("@scottjarvis/component");
-Component.emitter = emitter;
-```
-
-The emitter provides the following methods:
-
-- `App.on("eventName", props => { ... })` - every time `eventName` is emitted, run the given function
-- `App.once("eventName", props => { ... })` - run the given function only once
-- `App.off("eventName")` - stop listening to `eventName`
-
-Note, `props` is the latest state of the component that emitted the event.
-
-Here's how to use the emitter:
-
-```js
-var { Component, emitter } = require("../dist/index.min.js")
-Component.emitter = emitter
-
-// Define our app
-var state = {
-  count: 0,
-  items: [{ name: "one" }]
-}
-var App = new Component(state)
-
-// Define some other component
-var state2 = { foo: "bar" }
-var Foo = new Component(state2)
-
-// Define chainable "actions", to update the state more easily
-App.actions({
-  plus:     props => App.setState({ count: App.state.count + props }),
-
-  minus:    props => App.setState({ count: App.state.count - props }),
-
-  addItems: props => App.setState({ items: [...App.state.items, ...props] })
-})
-
-// Listen for the actions above:
-//  - Log the first time the "minus" action is called
-//  - Log every time the "plus" and "addItems" actions are called
-Foo
-  .once("minus",  props => console.log("Foo: action 'minus'", props.count))
-  .on("plus",     props => console.log("Foo: action 'plus'", props.count))
-  .on("addItems", props => console.log("Foo: action 'addItems'", props.items))
-
-
-// ...now we're ready to run the program..
-
-// Log initial state
-console.log(App.render())
-
-// If you defined some "actions", you can use them
-// to update specific parts of your state
-App.plus(105)
-App.minus(5)
-
-// stop listening to the "plus" action
-Foo.off("plus")
-
-// A components "actions" can be chained
-App.minus(1)
-  .minus(1)
-  .plus(3)
-  .addItems([{ name: "two" }, { name: "three" }])
-
-
-// Log final app state
-console.log(App.render())
-```
-
-Also see [examples/usage-emitter.js](examples/usage-emitter.js)
-
 ### Using the "state history"
 
 Here is how to "time travel" to previous states, or jump forward to more recent ones.
@@ -419,10 +324,104 @@ If rendering a component in NodeJS that has a `.view()` and `.style()`, or if ca
 
 Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
 
+### Using the `emitter` module
+
+Any time a components state is changed via an "action", it can emit an event that other components can listen for.
+
+To achieve this, just include the emitter like so:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/emitter.min.js"></script>
+<script>
+  Component.emitter = emitter
+
+  // use it here
+</script>
+```
+
+#### In NodeJS:
+
+```js
+
+var { Component, emitter } = require("@scottjarvis/component");
+Component.emitter = emitter;
+```
+
+The emitter provides the following methods:
+
+- `App.on("eventName", props => { ... })` - every time `eventName` is emitted, run the given function
+- `App.once("eventName", props => { ... })` - run the given function only once
+- `App.off("eventName")` - stop listening to `eventName`
+
+Note, `props` is the latest state of the component that emitted the event.
+
+Here's how to use the emitter:
+
+```js
+var { Component, emitter } = require("../dist/index.min.js")
+Component.emitter = emitter
+
+// Define our app
+var state = {
+  count: 0,
+  items: [{ name: "one" }]
+}
+var App = new Component(state)
+
+// Define some other component
+var state2 = { foo: "bar" }
+var Foo = new Component(state2)
+
+// Define chainable "actions", to update the state more easily
+App.actions({
+  plus:     props => App.setState({ count: App.state.count + props }),
+
+  minus:    props => App.setState({ count: App.state.count - props }),
+
+  addItems: props => App.setState({ items: [...App.state.items, ...props] })
+})
+
+// Listen for the actions above:
+//  - Log the first time the "minus" action is called
+//  - Log every time the "plus" and "addItems" actions are called
+Foo
+  .once("minus",  props => console.log("Foo: action 'minus'", props.count))
+  .on("plus",     props => console.log("Foo: action 'plus'", props.count))
+  .on("addItems", props => console.log("Foo: action 'addItems'", props.items))
+
+
+// ...now we're ready to run the program..
+
+// Log initial state
+console.log(App.render())
+
+// If you defined some "actions", you can use them
+// to update specific parts of your state
+App.plus(105)
+App.minus(5)
+
+// stop listening to the "plus" action
+Foo.off("plus")
+
+// A components "actions" can be chained
+App.minus(1)
+  .minus(1)
+  .plus(3)
+  .addItems([{ name: "two" }, { name: "three" }])
+
+
+// Log final app state
+console.log(App.render())
+```
+
+Also see [examples/usage-emitter.js](examples/usage-emitter.js)
+
 ### Using the `tweenState` module
 
-It gives you an easy way to do component animations that use `requestAnimationFrame` and DOM diffing.
-Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
+The `tweenState` module provides an easy way to create animations that use `requestAnimationFrame` and DOM diffing.
 
 By default, the `tweenState()` method calls `setState()` on every frame of a tweened animation. 
 
@@ -437,6 +436,8 @@ How it works:
 
 - the tweened state values will be passed to `setState` on each frame (or whenever you choose, if using the `shouldSetState()` callback)
 - the state you passed in will be passed to `setState` on the final frame
+
+Note that `tweenState` includes polyfills for NodeJS, so works in Node too.
 
 To use `tweenState`, import it along with Component, like so:
 
