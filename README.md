@@ -255,7 +255,7 @@ App.middleware = [countLog, itemsLog]
 
 In the above example, every time `App.setState({ ... })` is called, the `countLog` and `itemsLog` functions will be called at the end of `setState()`.
 
-Note that your middlware functions receive the latest state of the host component, as `props`.
+Note that your middleware functions receive the latest state of the host component, as `props`.
 
 See [examples/usage-in-node.js](examples/usage-in-node.js) for the complete example.
 
