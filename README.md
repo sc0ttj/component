@@ -193,7 +193,7 @@ To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-
 
 Define "actions" to update your state in specific ways.
 
-These are like regular methods, except they're always chainable and tagged by name in your components state history
+These are like regular methods, except they're always chainable and tagged by name in your components state history. 
 
 ```js
 App.actions({
@@ -228,7 +228,7 @@ App
   .addItems([ { name: "two" }, { name: "three" } ])
 ```
 
-Components can listen for and react to these actions, using the add-on [emitter](#using-the-emitter-module) module.
+Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This provides a very easy to share states between components, and for components to "talk to each other".
 
 ### Using the "state history"
 
