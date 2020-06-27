@@ -205,7 +205,6 @@ function Component(state) {
 
       // freeze state so it can only be changed through setState()
       this.freeze(this.state)
-      this.freeze(this.prev)
 
       // if we updated using an "action" method, and emitter is avail,
       // then emit an event with same name as the "action" called,
