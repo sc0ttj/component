@@ -1,6 +1,6 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.1.7",
+	"version": "1.1.8",
 	"description": "Simple component library with state management, DOM diffing, tweening, server-side rendering and more.",
 	"author": "sc0ttj",
 	"license": "MIT",
@@ -9,7 +9,7 @@
 		"url": "git+https://github.com/sc0ttj/component.git"
 	},
 	"homepage": "https://github.com/sc0ttj/component",
-	"main": "src/index.js",
+	"main": "dist/index.js",
 	"main:umd": "dist/component.min.js",
 	"browser": "dist/component.min.js",
 	"unpkg": "dist/component.min.js",
