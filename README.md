@@ -256,9 +256,9 @@ Component.emitter = emitter;
 
 The emitter provides the following methods:
 
-- `App.on(eventName, props => { ... })` - every time `eventName` is emitted, run the given function
-- `App.once(eventName, props => { ... })` - run the given function only the first time `eventName` is emitted
-- `App.off(eventName)` - stop listening to `eventName`
+- `App.on("eventName", props => { ... })` - every time `eventName` is emitted, run the given function
+- `App.once("eventName", props => { ... })` - run the given function only once
+- `App.off("eventName")` - stop listening to `eventName`
 
 Note, `props` is the latest state of the component that emitted the event.
 
@@ -282,8 +282,6 @@ var Foo = new Component(state2)
 // Define chainable "actions", to update the state more easily
 
 App.actions({
-  count:    props => App.setState({ count: props }),
-
   plus:     props => App.setState({ count: App.state.count + props }),
 
   minus:    props => App.setState({ count: App.state.count - props }),
@@ -296,7 +294,7 @@ App.actions({
 // ---------------------------------------------------
 
 // If you included the "emitter", then any "actions" you define will emit its
-// name as an event. You can listen to these with the "on" method.
+// name as an event. You can listen to these with the "on" and "once" methods.
 
 // Example:
 //  - Log the first time the "minus" action is called
@@ -307,17 +305,12 @@ Foo
   .on("plus",     props => console.log("Foo: action 'plus'", props.count))
   .on("addItems", props => console.log("Foo: action 'addItems'", props.items))
 
-//
-//
+
 // ...now we're ready to run the program..
-//
-//
 
 // Log initial state
-console.log("")
 console.log("App initial state:")
 console.log(App.render())
-console.log("")
 
 // If you defined some "actions", you can use them
 // to update specific parts of your state
@@ -336,7 +329,6 @@ App.minus(1)
 
 
 // Log final app state
-console.log("")
 console.log("App state:")
 console.log(App.render())
 ```
