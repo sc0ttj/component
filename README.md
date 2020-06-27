@@ -29,6 +29,7 @@ A "state" is a snapshot of your application data at a specific time.
 - A small list of optional add-on modules:
   - `tweenState`: animate from one state to the next
   - `emitter`: an event emitter, for sharing updates between components
+- Use "middleware" to easily customise component re-render behaviour 
 - ...and more
 
 Your components will support:
@@ -44,6 +45,7 @@ Your components will support:
     - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
+- Use "middleware" to customise your components "on state change" behaviour
 - Tweening/animating from the current state to the next state
 - Event emitting - publish & subscribe to state changes between components
 - Server side rendering:
@@ -229,6 +231,35 @@ App
 ```
 
 Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
+
+### Using "middleware"
+
+When you call `myComponent.setState()`, the page is re-rendered (in browser) and a history of state updates are kept.
+
+Using "middleware" functions you can extend this behaviour further, and make other stuff happen at the end of the `setState()` method.
+
+Middleware functions can be re-used across lots of components and, unlike "actions", are not tied to one component.
+
+Here's how to use "middleware" functions to customise your components `setState()` behaviour:
+
+1. Define some "middleware" functions - these will be called at the end of `setState()`
+  - Note that "props" will contain the latest state (that was just set)
+2. Add your "middleware" to a component as an array of functions:
+
+```js
+// Define the middleware functions
+var countLog = props => console.log("middleware -> count logger", props.count)
+var itemsLog = props => console.log("middleware -> items logger", props.items)
+
+// Add the middleware to your component
+App.middleware = [countLog, itemsLog]
+```
+
+In the above example, every time `App.setState({ ... })` is called, the `countLog` and `itemsLog` functions will be called at the end of `setState()`.
+
+Note that your middleware functions receive the latest state of the host component, as `props`.
+
+See [examples/usage-in-node.js](examples/usage-in-node.js) for the complete example.
 
 ### Using the "state history"
 
@@ -534,6 +565,15 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 ## Changelog
+
+**1.1.9**
+- new feature: "middleware"
+  - define an array of functions as `myComponent.middleware = [ someFunc, otherFunc ]`
+  - each function will be run at the end of `setState()`
+- updated README, package.json, etc 
+
+**1.1.8**
+  - fixes in package.json
 
 **1.1.7**
 - new feature: added an event emitter
