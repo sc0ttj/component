@@ -1,11 +1,8 @@
 // from https://raw.githubusercontent.com/jeromeetienne/microevent.js/master/microevent.js
 
 // This is basically "MicroEvent", renamed to "emitter", with
-// some improvements:
+// some changes:
 //  - use "on", "off", "emit", instead of "bind", "unbind", "trigger"
-//  - added "once" method
-//  - added chainable methods
-//  - fixed: check function passed to "off" was registered before splicing
 
 // @TODO
 //  1. update "on" and "off" methods:

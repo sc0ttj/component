@@ -228,6 +228,8 @@ App
   .addItems([ { name: "two" }, { name: "three" } ])
 ```
 
+Components can listen for and react to these actions, using the add-on [emitter](#using-the-emitter-module) module.
+
 ### Using the "state history"
 
 Here is how to "time travel" to previous states, or jump forward to more recent ones.
