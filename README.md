@@ -26,7 +26,9 @@ A "state" is a snapshot of your application data at a specific time.
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
-- An optional add-on called `tweenState`, for easy animations
+- A small list of optional add-on modules:
+  - `tweenState`: animate from one state to the next
+  - `emitter`: an event emitter, for sharing updates between components
 - ...and more
 
 Your components will support:
@@ -42,7 +44,8 @@ Your components will support:
     - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
-- An add-on `tweenState` method to animate/tween up to the next state
+- Tweening/animating from the current state to the next state
+- Event emitting - publish & subscribe to state changes between components
 - Server side rendering:
   - render component views as a String, JSON, or Buffer
 - Simple, stateless "child" components
@@ -172,7 +175,7 @@ App.style = (props) => `
 `
 ```
 
-When your component is added to the page using `render('.container')`, the CSS above will be prefixed with the `id` or `className` of your container. 
+When a component is added to the page using `render('.container')`, the CSS above is prefixed with the `id` or `className` of your container. 
 
 _This CSS automatic "scoping"/prefixing will prevent your component styles affecting other parts of the page_.
 
@@ -230,6 +233,20 @@ App
 Any time a components state is changed via an "action", it can emit an event that other components can listen for.
 
 To achieve this, just include the emitter like so:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/emitter.min.js"></script>
+<script>
+  Component.emitter = emitter
+
+  // use it here
+</script>
+```
+
+#### In NodeJS:
 
 ```js
 
