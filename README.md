@@ -44,6 +44,7 @@ Your components will support:
     - a log/history of all changes to the component state
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
+- Use "middleware" to customise your components "on state change" behaviour
 - Tweening/animating from the current state to the next state
 - Event emitting - publish & subscribe to state changes between components
 - Server side rendering:
