@@ -6,6 +6,7 @@
 
 // from https://codepen.io/tevko/pen/LzXjKE?editors=0010
 var domDiff = (target, source) => {
+  //console.log("updating DOM!")
   const worker = {
     cfg: {
       orig: target
@@ -115,6 +116,9 @@ function Component(state) {
   this.scopedCss = true // auto prefix component css with a unique id
 
   var self = this
+
+  // for debouncing render() calls
+  var timeout
 
   this.isNode =
     typeof process !== "undefined" &&
@@ -404,7 +408,13 @@ function Component(state) {
     } else {
       this.container = el
       // only interact with the DOM once every animation frame (usually 60fps)
-      requestAnimationFrame(() => {
+
+      // If there's a timer, cancel it
+      if (timeout) cancelAnimationFrame(timeout)
+
+      // Setup the new requestAnimationFrame()
+      timeout = requestAnimationFrame(() => {
+        //console.log("debounced")
         // get the container element if needed
         if (typeof el === "string") el = document.querySelector(`${el}`)
         this.container = el

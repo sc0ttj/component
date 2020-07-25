@@ -163,5 +163,13 @@
   console.log('App.log')
   console.log(App.log)
 
+  // Test debouncing of render():
+  // - call setState 10,000 times, fast as possible
+  // - setState calls render() each time
+  // - render() should only try to access/update DOM at 60fps
+  for (var i = 0; i < 10000; i++) {
+    App.plus(1)
+  }
+
   </script>
 </body>
