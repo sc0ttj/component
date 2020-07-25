@@ -566,6 +566,14 @@ Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 ## Changelog
 
+**1.1.10**
+- better rendering performance: debounce the `render()` function:
+  - `setState()` can be called 1000s of times a second
+  - `setState()` also calls the render() function
+  - `render()` will only update the DOM at 60fps
+- see https://gomakethings.com/debouncing-your-javascript-events/
+- updated README
+
 **1.1.9**
 - new feature: "middleware"
   - define an array of functions as `myComponent.middleware = [ someFunc, otherFunc ]`
