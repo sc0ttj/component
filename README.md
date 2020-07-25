@@ -566,6 +566,10 @@ Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 ## Changelog
 
+**1.1.11**
+- updated `rollup` deps and rebuilt in `dist/`
+- nothing else
+
 **1.1.10**
 - better rendering performance: debounce the `render()` function:
   - `setState()` can be called 1000s of times a second
