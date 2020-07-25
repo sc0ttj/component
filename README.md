@@ -564,6 +564,22 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
+## Using JSON-LD (linked data)
+
+Adding linked data to your components is easy - just define it as part of your view:
+
+```js
+App.view = props => `
+  <script type="application/ld+json">{ ... }</script>
+  <div> ... </div>
+`
+```
+
+- add a JSON-LD script before your component HTML
+- use the `props` passed in to define/update whatever you need
+- you JSON-LD will be updated along with your view whenever your component re-renders
+
+
 ## Changelog
 
 **1.1.11**
