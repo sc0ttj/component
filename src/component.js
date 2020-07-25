@@ -414,7 +414,7 @@ function Component(state) {
 
       // Setup the new requestAnimationFrame()
       timeout = requestAnimationFrame(() => {
-        console.log("debounced")
+        //console.log("debounced")
         // get the container element if needed
         if (typeof el === "string") el = document.querySelector(`${el}`)
         this.container = el
