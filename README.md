@@ -35,7 +35,9 @@ A "state" is a snapshot of your application data at a specific time.
 Your components will support:
 
 - Auto re-render to page on state change (_optional_)
-- DOM diffing, with all DOM reads/writes performed inside `requestAnimationFrame` 
+- good rendering/animation performance:
+  - DOM diffing
+  - all DOM reads/writes performed inside a debounced `requestAnimationFrame` 
 - Automatic "scoping"/prefixing of your component CSS (_optional_)
 - Re-render styles on component CSS change (_optional_)
 - Event attributes like `onclick`, `onchange`, `onkeyup`, etc, etc
@@ -693,23 +695,14 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Future improvements
 
-- Better state management:
-  - allow use of middleware:
-    - allow user to add more functions that get executed on every state change
-
-- Performance:
-  - Batched rendering: only needed in browser, use requestAnimationFrame:
-    - [main-loop](https://github.com/Raynos/main-loop)
-    - [Animation loops - gist](https://gist.github.com/louisremi/1114293)
-  - Memoize state updates: so we can return cached states and views
-
 - Usability:
-  - Better CSS-in-JS: 
-    - define a components CSS using regular JS objects (alternative to template strings)
-    - see [twirl](https://github.com/benjamminj/twirl-js)
   - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
     - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
     - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
+  - Better CSS-in-JS: 
+    - define a components CSS using regular JS objects (alternative to template strings)
+    - see [twirl](https://github.com/benjamminj/twirl-js)
+  - see `htl` or similar for wrappers around view HTML that provide syntactic sugar
 
 - Better SSR
   - pass in config to `toString()`, to choose what to render:
@@ -718,10 +711,6 @@ Rebuild to `dist/` using the command `npm run build`
     - methods
     - styles
     - views
-  - server-side: 
-    - render as streams/chunks (deliver page to clients in bits, soon as its ready):
-     - see [almost/stream-template](https://github.com/almost/stream-template)
-     - see [bogas04/marinate](https://github.com/bogas04/marinate)
   - client-side: 
     - ability to "hydrate" or takeover a view that already exists in the page:
       - simply don't define a view, and call `App.render('.container')`:
