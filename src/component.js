@@ -110,7 +110,7 @@ var domDiff = (target, source) => {
  * @constructor
  * @param {object} state - The component state (model).
  */
-function Component(state) {
+function Component(state, schema) {
   this.reactive = true // if true, re-render on every state change
   this.debug = false //  if true, maintain a history of state changes in `.log`
   this.scopedCss = true // auto prefix component css with a unique id
@@ -119,6 +119,8 @@ function Component(state) {
 
   // for debouncing render() calls
   var timeout
+
+  this.schema = schema
 
   this.isNode =
     typeof process !== "undefined" &&
@@ -187,6 +189,17 @@ function Component(state) {
    * @param {object} newState - the new state to update to
    */
   this.setState = newState => {
+    // enable schema validation using @scottjarvis/validator
+    if (Component.validator && this.schema) {
+      var err = Component.validator({ ...this.state, ...newState }, this.schema)
+      if (err.length > 0) {
+        var msg = "State doesn't match schema:"
+        console.error(msg, "\n", err, "\n")
+        throw new Error(msg + "\n" + JSON.stringify(err) + "\n")
+      }
+    }
+    // ...the new state is valid, lets continue
+
     // update previous and current state
     this.prev = this.state
     this.state = { ...this.state, ...newState }

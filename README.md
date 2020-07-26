@@ -581,8 +581,71 @@ App.view = props => `
 - use the `props` passed in to define/update whatever you need
 - you JSON-LD will be updated along with your view whenever your component re-renders
 
+## State validation
+
+To be safe, you can validate your component state against a schema, before you set it or render anything.
+
+This is a similar concept to `propTypes` in React, but simpler and dumber.
+
+First, you must install a tiny (~300 bytes) additional dependency:
+
+```js
+npm i @scottjarvis/validator
+```
+
+Then enable it:
+
+```js
+var { Component } = require("../dist/index.min.js")
+Component.validator = require("@scottjarvis/validator")
+```
+
+Define a schema. For each property it takes: 
+
+- a `typeof` type name, as a string
+- or a validator function, that returns true or false
+
+Then create your component, passing in the schema as the second parameter. 
+
+```js
+var state = { 
+  count: 0, 
+  age: 20 
+  items: [ "one", "two" ],
+  foo: {
+    bar: "string"
+  }
+}
+
+var schema = { 
+  count: "number",
+  age: age => typeof age === "number" && age > 17
+  items: "array",
+  foo: {
+    bar: "baz"
+  }
+}
+
+var App = new Component(state, schema)
+```
+
+If you try to set an invalid state, your component will `throw` an error:
+
+```js
+App.setState ({ count: "foo"}) // will throw an Error!
+```
+
+See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info.
 
 ## Changelog
+
+**1.1.12**
+- new feature: state validation
+  - simply set `myComponent.schema = { foo: "string", bar: "array", baz: "number" }`
+  - then call `setState()` as usual - Component will throw an error is the state isn't valid
+  - requires `@scottjarvis/validator` to be installed (~330 bytes minified & gzipped)
+  - see [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info
+- updated README
 
 **1.1.11**
 - updated `rollup` deps and rebuilt in `dist/`
