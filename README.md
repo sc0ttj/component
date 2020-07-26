@@ -613,7 +613,7 @@ var state = {
   age: 20 
   items: [ "one", "two" ],
   foo: {
-    bar: "string"
+    bar: "whatever"
   }
 }
 
@@ -622,7 +622,7 @@ var schema = {
   age: age => typeof age === "number" && age > 17
   items: "array",
   foo: {
-    bar: "baz"
+    bar: "string"
   }
 }
 
