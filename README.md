@@ -600,7 +600,7 @@ var { Component } = require("../dist/index.min.js")
 Component.validator = require("@scottjarvis/validator")
 ```
 
-Define a schema. For each property it takes: 
+Define a schema object. For each property included, the value should be:
 
 - a `typeof` type name, as a string
 - or a validator function, that returns true or false
