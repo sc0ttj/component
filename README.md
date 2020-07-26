@@ -596,7 +596,7 @@ npm i @scottjarvis/validator
 Then enable it:
 
 ```js
-var { Component } = require("../dist/index.min.js")
+var { Component } = require("@scottjarvis/component")
 Component.validator = require("@scottjarvis/validator")
 ```
 
