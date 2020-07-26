@@ -641,8 +641,8 @@ See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usa
 
 **1.1.12**
 - new feature: state validation
-  - simply set `myComponent.schema = { foo: "string", bar: "array", baz: "number" }`
-  - then call `setState()` as usual - Component will throw an error is the state isn't valid
+  - simply pass a schema as the 2nd param when creating a new component
+  - then call `setState()` as usual - Component will throw an error if the state isn't valid
   - requires `@scottjarvis/validator` to be installed (~330 bytes minified & gzipped)
   - see [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info
 - updated README
