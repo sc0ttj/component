@@ -245,7 +245,6 @@ Middleware functions can be re-used across lots of components and, unlike "actio
 Here's how to use "middleware" functions to customise your components `setState()` behaviour:
 
 1. Define some "middleware" functions - these will be called at the end of `setState()`
-  - Note that "props" will contain the latest state (that was just set)
 2. Add your "middleware" to a component as an array of functions:
 
 ```js
@@ -309,28 +308,16 @@ var htmlView = props => `
 // or return the state itself (pure headless component)
 var dataOnlyView = props => props
 
-// or a custom JS object view
-var jsonView = props => {
-  return { count: props.count, items: props.items }
-}
-
 // Choose a view to render
 App.view = htmlView
 
-
 // render the component
 App.render()
-
 
 // ..other rendering options...
 
 // print it to the terminal
 console.log(App.render())
-
-// Or render the component as an HTTP response,
-// using something like express.js
-res.send(App.render())
-
 ```
 
 If rendering a component in NodeJS that has a `.view()` and `.style()`, or if calling `.toString()` directly, the output will be a string like this one:
@@ -406,10 +393,6 @@ var state = {
 }
 var App = new Component(state)
 
-// Define some other component
-var state2 = { foo: "bar" }
-var Foo = new Component(state2)
-
 // Define chainable "actions", to update the state more easily
 App.actions({
   plus:     props => App.setState({ count: App.state.count + props }),
@@ -419,37 +402,27 @@ App.actions({
   addItems: props => App.setState({ items: [...App.state.items, ...props] })
 })
 
+// Define some other component
+var Foo = new Component({ foo: "bar" })
+
 // Listen for the actions above:
-//  - Log the first time the "minus" action is called
-//  - Log every time the "plus" and "addItems" actions are called
 Foo
   .once("minus",  props => console.log("Foo: action 'minus'", props.count))
   .on("plus",     props => console.log("Foo: action 'plus'", props.count))
   .on("addItems", props => console.log("Foo: action 'addItems'", props.items))
 
-
 // ...now we're ready to run the program..
 
-// Log initial state
-console.log(App.render())
-
-// If you defined some "actions", you can use them
-// to update specific parts of your state
 App.plus(105)
 App.minus(5)
 
 // stop listening to the "plus" action
 Foo.off("plus")
 
-// A components "actions" can be chained
 App.minus(1)
   .minus(1)
   .plus(3)
   .addItems([{ name: "two" }, { name: "three" }])
-
-
-// Log final app state
-console.log(App.render())
 ```
 
 Also see [examples/usage-emitter.js](examples/usage-emitter.js)
@@ -566,7 +539,7 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
-## Using JSON-LD (linked data)
+### Using JSON-LD (linked data)
 
 Adding linked data to your components is easy - just define it as part of your view:
 
@@ -581,8 +554,71 @@ App.view = props => `
 - use the `props` passed in to define/update whatever you need
 - you JSON-LD will be updated along with your view whenever your component re-renders
 
+### State validation
+
+You can validate your component state against a schema, before you set it or render anything.
+
+This is a similar concept to `propTypes` in React, but simpler and dumber.
+
+First, you must install a tiny (~300 bytes) additional dependency:
+
+```js
+npm i @scottjarvis/validator
+```
+
+Then enable it:
+
+```js
+var { Component } = require("@scottjarvis/component")
+Component.validator = require("@scottjarvis/validator")
+```
+
+Define a schema object. For each property included, the value should be:
+
+- a `typeof` type name, as a string
+- or a validator function, that returns true or false
+
+Then create your component, passing in the schema as the second parameter. 
+
+```js
+var state = { 
+  count: 0, 
+  age: 20 
+  items: [ "one", "two" ],
+  foo: {
+    bar: "whatever"
+  }
+}
+
+var schema = { 
+  count: "number",
+  age: age => typeof age === "number" && age > 17
+  items: "array",
+  foo: {
+    bar: "string"
+  }
+}
+
+var App = new Component(state, schema)
+```
+
+If you try to set an invalid state, your component will `throw` an error:
+
+```js
+App.setState ({ count: "foo" }) // this will throw an Error!
+```
+
+See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info.
 
 ## Changelog
+
+**1.1.12**
+- new feature: state validation
+  - simply pass a schema as the 2nd param when creating a new component
+  - then call `setState()` as usual - Component will throw an error if the state isn't valid
+  - requires `@scottjarvis/validator` to be installed (~330 bytes minified & gzipped)
+  - see [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info
+- updated README
 
 **1.1.11**
 - updated `rollup` deps and rebuilt in `dist/`

@@ -1,4 +1,5 @@
 var { Component } = require("../dist/index.min.js")
+Component.validator = require("@scottjarvis/validator")
 
 // ------------------------------------------------
 // USAGE: Defining components
@@ -10,7 +11,13 @@ var state = {
   incrementBy: 5,
   id: "foo-id",
   items: [{ name: "Item one" }, { name: "Item two" }],
-  btnColor: "green"
+  btnColor: "green",
+  foo: {
+    bar: 0,
+    bob: {
+      ppp: "foobar"
+    }
+  }
 }
 
 // Define some generic, re-usable, stateless "sub-components"
@@ -19,17 +26,24 @@ var Heading = text => `<h1>${text}</h1>`
 var List = items =>
   `<ul>${items.map(item => `<li>${item.name}</li>`).join("")}</ul>`
 
-var Button = (label, fn) =>
-  `<button class="btn" onclick=${fn}>${label}</button>`
+// OPTIONAL: Define the schema against which to validate state updates
+var schema = {
+  count: "number",
+  incrementBy: "number",
+  id: "string",
+  items: "array",
+  btnColor: "string",
+  foo: {
+    bar: "number",
+    bob: {
+      ppp: "string"
+    }
+  }
+}
 
-// Define a stateful main component
-var App = new Component(state)
-
-// OPTIONAL: call only 'setState()' instead of 'App.setState()'
-var setState = App.setState
-
-// OPTIONAL: Define some events
-clickBtn = props => setState({ count: App.state.count + props })
+// Define a stateful main component: pass in
+// a schema as an optional, second param
+var App = new Component(state, schema)
 
 // IMPORTANT: Define a view - a function which receives the
 // state as `props` and returns the view as a string or JSON
@@ -39,7 +53,6 @@ var htmlView = props => `
     <div id=${props.id}>
       ${Heading("Total so far = " + props.count)}
       ${List(props.items)}
-      ${Button("Click here", `clickBtn(${props.incrementBy})`)}
     </div>`
 
 // ...or a JS object view
@@ -56,6 +69,9 @@ App.view = dataOnlyView
 // ------------------------------------------------
 // OPTIONAL: Define chainable "actions", to update the state more easily
 // ------------------------------------------------
+
+// OPTIONAL: call only 'setState()' instead of 'App.setState()'
+var setState = App.setState
 
 // These "actions" are like regular methods, except
 // they're always chainable and tagged by name in
@@ -83,18 +99,18 @@ App.actions({
 
 // Define some "middleware" functions - these are called right after setState().
 // Note that "props" will contain the latest state (that was just set)
-var countLog = props => console.log("middleware -> count logger", props.count)
-var itemsLog = props => console.log("middleware -> items logger", props.items)
+var countLog = props => console.log("middleware -> count logger: ", props.count)
+var itemsLog = props => console.log("middleware -> items logger: ", props.items)
 
 // Add your "middleware" to a component as an array of functions
 App.middleware = [countLog, itemsLog]
 
-// ...now, every time setState() is called, each middleware function
+// ...now every time setState() is called, each middleware function
 // in the array will run too.
 
 //
 // ------------------------------------------------
-// USAGE: Using the component
+// USAGE: Using the component (setting state)
 // ------------------------------------------------
 
 //
@@ -104,9 +120,6 @@ App.middleware = [countLog, itemsLog]
 
 // Using setState() to trigger a full re-render
 setState({ items: [{ name: "First" }] })
-
-// ...Or directly call any methods you defined
-clickBtn(1)
 
 // If you defined some "actions", you can use them
 // to update specific parts of your state
@@ -139,18 +152,21 @@ App.setState(App.log[0].state)
 App.setState(snapshot)
 
 //
+// ------------------------------------------------
+// OPTIONAL: State validation:
+// ------------------------------------------------
 //
-//
-// Now return the component...
+// Uncomment below to cause an error, as "count" should be a number!
+// setState({ count: "one" })
 
+//
+// ------------------------------------------------
+// Now return or render the component:
+// ------------------------------------------------
+//
 // Returns the current view (and any App styles you
 // defined) as a string, or a JS object
 //
 // (for demo purposes we console log it, so you can see
 // the component rendered to the terminal)
 console.log(App.render())
-
-// Or render the component as an HTTP response,
-// using something like express.js:
-//
-// res.send(App.render())
