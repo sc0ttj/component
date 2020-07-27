@@ -17,9 +17,9 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- 1.8kb, minified and gzipped
+- 2kb, minified and gzipped
 - Simple syntax, easy to use, easy to learn
-- Plain JavaScript wherever possible
+- Plain JavaScript only
 - Works **client-side**, in browsers:
   - add your component to the page as you would a normal Element
   - auto re-render on state change, using `requestAnimationFrame` and DOM-diffing
@@ -29,6 +29,7 @@ A "state" is a snapshot of your application data at a specific time.
 - A small list of optional add-on modules:
   - `tweenState`: animate from one state to the next
   - `emitter`: an event emitter, for sharing updates between components
+  - `validator`: validate states against a schema (like a simple PropTypes)
 - Use "middleware" to easily customise component re-render behaviour 
 - ...and more
 
