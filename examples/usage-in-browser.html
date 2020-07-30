@@ -28,20 +28,16 @@
   var state = {
     count: 0,
     x: 0,
-    incrementBy: 5,
+    incrementBy: 1,
     id: "foo-id",
     items: [
-      { name: "Item one" },
-      { name: "Item two" },
+      { name: "One" },
+      { name: "Two" },
     ],
     btnColor: 'black',
     borderColor: 'grey',
+    text: "Text set by 'App'"
   }
-
-  // Define some generic, re-usable, stateless "sub-components"
-  var Heading = (text)      => `<h1>${text}</h1>`
-  var List    = (items)     => `<ul>${items.map(item => `<li>${item.name}</li>`).join('')}</ul>`
-  var Button  = (label, fn) => `<button class="btn" onclick=${fn}>${label}</button>`
 
   // Define a stateful main component
   var App = new Component(state);
@@ -50,12 +46,25 @@
   App.view = (props) => `
     <div id="myapp">
       ${Heading('Total so far = ' + props.count)}
+      <div class="child-container">
+        ${SubHeader({ text: props.text })}
+      </div>
       ${List(props.items)}
-      ${Button('Click here', `App.clickBtn(${props.incrementBy})`)}
+      ${Button('Add 1', `App.clickBtn(${props.incrementBy})`)}
+      ${Button('Reset to zero', `App.resetBtn()`)}
     </div>`
 
   // OPTIONAL - Define some events
   App.clickBtn = (props) => App.setState({ count: App.state.count + props})
+
+  // tween "count" back down to one
+  App.resetBtn = props => App.tweenState({ count: 1 },
+  {
+    ease: "outQuint",
+    duration: 1000,
+    shouldSetState: false,
+    onUpdate: props => App.setState({ count: Number.parseInt(props.values[0], 10) })
+  })
 
   // OPTIONAL - Define some styles for the view
   App.style = (props) => `
@@ -76,28 +85,41 @@
     }`
 
 
+  // ------------------------------------------------
+  // USAGE: Defining sub-components
+  // ------------------------------------------------
+
+  // Define stateless sub-components:
+  // these are just normal functions that return a string of HTML
+  var Heading = (text)      => `<h1>${text}</h1>`
+  var List    = (items)     => `<ul>${items.map(item => `<li>${item.name}</li>`).join('')}</ul>`
+  var Button  = (label, fn) => `<button class="btn" onclick=${fn}>${label}</button>`
+
+  // Define a stateful sub component:
+  // This is a proper component with setState() and render() methods, etc
+  var SubHeader = new Component({ text: "initial text here" });
+  SubHeader.view = props => `<h2>${props.text}</h2>`
 
   // ------------------------------------------------
   // USAGE: Using the component
   // ------------------------------------------------
-
   App.debug = false     // disable logging of state changes in console/DevTools
   App.debug = true      // enable logging of state changes in console/DevTools
   App.reactive = false  // disable auto re-render on state changes
   App.reactive = true   // enable auto re-render on state changes
 
-  // Add our app to the page
+  // IMPORTANT: Add our app to the page
   App.render('.container')
 
   // Using setState() to trigger a full re-render
-  App.setState({
-    items: [ { name: "First" } ],
-  })
+  App.setState({ items: [ ...App.state.items, { name: "Three" } ] })
+
+  // New in 1.2.0:
+  // Or set state through the components constructor (same as above)
+  App({ items: [ ...App.state.items, { name: "Four" } ] })
 
   // ...Or call any methods you defined directly
   App.clickBtn(1)
-
-
 
   // ------------------------------------------------
   // OPTIONAL: Define chainable "actions", to update the state more easily
@@ -130,22 +152,20 @@
 
   // If you defined some "actions", you can use them
   // to update specific parts of your state
-  App.plus(105)
-  App.minus(5)
+  App.plus(99)
 
   // A components "actions" can be chained
-  App
+  App.minus(1)
     .minus(1)
     .minus(1)
     .minus(1)
-    .plus(3)
-    .addItems([ { name: "two" }, { name: "three" } ])
-
+    .minus(1)
+    .plus(5)
+    .addItems([ { name: "Five" }, { name: "Six" } ])
 
   // ------------------------------------------------
   // OPTIONAL: Using the state "timeline"
   // ------------------------------------------------
-
   // Take a "snapshot" (we'll use it later)
   var snapshot = App.state
 
@@ -156,6 +176,7 @@
 
   // Set a previous state
   App.setState(App.log[0].state)
+
   // Set a "named" state, from a previous point in time
   App.setState(snapshot)
 
@@ -167,9 +188,26 @@
   // - call setState 10,000 times, fast as possible
   // - setState calls render() each time
   // - render() should only try to access/update DOM at 60fps
+  App.debug = false
   for (var i = 0; i < 10000; i++) {
     App.plus(1)
   }
+
+  // ------------------------------------------------
+  // OPTIONAL: Using the sub components
+  // ------------------------------------------------
+
+  // We can override the values set by App:
+  // 1. IMPORTANT: we must first re-render into our container to take control
+  //    of its re-rendering it away from App
+  // 2. then we can auto re-render changes directly from the sub-component
+
+  SubHeader.render('.child-container') // remove this and the line below fail!
+  SubHeader({ text: "This text is overwritten (by App) when it runs or you click the button" })
+
+  // Or, we can make SubHeader match whatever App tries to set (from App.state.text)
+  SubHeader({ text: App.state.text })
+  App.setState({ text: "Pointless list:" })
 
   </script>
 </body>

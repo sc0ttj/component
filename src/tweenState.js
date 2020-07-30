@@ -116,6 +116,8 @@ var tweenState = (self, newState, cfg) => {
   var shouldSetState = cfg.shouldSetState ? cfg.shouldSetState : true
   var onSetState = cfg.onSetState ? cfg.onSetState : noop
 
+  if (typeof shouldSetState === "boolean") shouldSetState = () => shouldSetState
+
   cfg.frame = 1
   cfg.frameTotal = Math.ceil((60 / 1000) * (cfg.delay + cfg.duration)) + 2
 

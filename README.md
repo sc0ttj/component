@@ -69,7 +69,7 @@ Currently, the most important limitations are:
 ```js
 
 // Define a state
-var state = { title: "Hello world!" }
+var state = { title: "Hello world" }
 
 // Define your component:
 
@@ -86,6 +86,9 @@ App.render('.container')
 
 // Update the state, the page will re-render for you
 App.setState({ title: "Hello again!" })
+
+// Or set state via the component constructor (since v1.2.0)
+App({ title: "Hello a 3rd time!" })
 ```
 
 ## Component overview

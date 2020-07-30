@@ -13,10 +13,6 @@ var state = {
 // Define a stateful main component
 var App = new Component(state)
 
-// Define our app state
-var state2 = { foo: "bar" }
-var Foo = new Component(state2)
-
 // ------------------------------------------------
 // OPTIONAL: Define chainable "actions", to update the state more easily
 // ------------------------------------------------
@@ -50,6 +46,9 @@ App.actions({
 // Example:
 //  - Log the first time the "minus" action is called
 //  - Log every time the "plus" and "addItems" actions are called
+
+// Define a "listening" component
+var Foo = new Component({})
 
 Foo.once("minus", props => console.log("Foo: action 'minus'", props.count))
   .on("plus", props => console.log("Foo: action 'plus'", props.count))

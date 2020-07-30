@@ -111,58 +111,64 @@ var domDiff = (target, source) => {
  * @param {object} state - The component state (model).
  */
 function Component(state, schema) {
-  this.reactive = true // if true, re-render on every state change
-  this.debug = false //  if true, maintain a history of state changes in `.log`
-  this.scopedCss = true // auto prefix component css with a unique id
+  var rt = function(state) {
+    rt.render(rt.container)
+    rt.setState(state)
+    return rt
+  }
 
-  var self = this
+  rt.state = state
+  rt.schema = schema
+
+  rt.reactive = true // if true, re-render on every state change
+  rt.debug = false //  if true, maintain a history of state changes in `.log`
+  rt.scopedCss = true // auto prefix component css with a unique id
+
+  var self = rt
 
   // for debouncing render() calls
   var timeout
 
-  this.schema = schema
-
-  this.isNode =
+  rt.isNode =
     typeof process !== "undefined" &&
     process !== null &&
     process.versions !== null &&
     process.versions.node !== null
 
-  this.state = state // the main state/model of the component
+  rt.view = props => props // the default view (just return the props)
 
-  this.view = props => props // the default view (just return the props)
-
-  this.middleware = []
+  rt.middleware = []
 
   // a unique ID, used for scoping component CSS
-  this.uid = Math.random()
+  rt.uid = Math.random()
     .toString(36)
     .split(".")[1]
 
-  if (!this.isNode) {
+  if (!rt.isNode) {
     // the <style> elem into which we put our component CSS
-    this.css = document.createElement("style")
-    document.head.appendChild(this.css)
+    rt.css = document.createElement("style")
+    document.head.appendChild(rt.css)
   }
 
   // on init, add our initial state to the state history
-  this.log = [{ id: 0, state: state, action: "init" }]
+  rt.log = [{ id: 0, state: state, action: "init" }]
 
   /**
    * Define chainable named "actions" that will update our
    * state in specific ways and register in our state history
    */
-  this.actions = actions => {
+  rt.actions = actions => {
     // convert each key/value to set state function:
     Object.keys(actions).forEach(action => {
-      if (typeof this[action] !== "undefined") return false
-      this[action] = newState => {
-        this.action = action
+      if (typeof rt[action] !== "undefined") {
+        return false
+      }
+      rt[action] = newState => {
+        rt.action = action
         return actions[action](newState)
       }
     })
-
-    return this
+    return rt
   }
 
   this.freeze = o => {
@@ -188,10 +194,10 @@ function Component(state, schema) {
    * Set the component state
    * @param {object} newState - the new state to update to
    */
-  this.setState = newState => {
+  rt.setState = newState => {
     // enable schema validation using @scottjarvis/validator
-    if (Component.validator && this.schema) {
-      var err = Component.validator({ ...this.state, ...newState }, this.schema)
+    if (Component.validator && rt.schema) {
+      var err = Component.validator({ ...rt.state, ...newState }, rt.schema)
       if (err.length > 0) {
         var msg = "State doesn't match schema:"
         console.error(msg, "\n", err, "\n")
@@ -201,44 +207,44 @@ function Component(state, schema) {
     // ...the new state is valid, lets continue
 
     // update previous and current state
-    this.prev = this.state
-    this.state = { ...this.state, ...newState }
+    rt.prev = rt.state
+    rt.state = { ...rt.state, ...newState }
 
-    if (!this.eq(this.state, this.prev)) {
+    if (!this.eq(rt.state, rt.prev)) {
       // re-render component
-      if (this.reactive) this.render(this.container)
+      if (rt.reactive) rt.render(rt.container)
 
       // update history and move along index
-      if (this.debug && this.i === this.log.length) {
+      if (rt.debug && this.i === rt.log.length) {
         // we are not traversing state history, so add the new state to the log
-        this.log.push({
-          id: this.log.length,
-          state: this.prev,
-          action: this.action || "setState"
+        rt.log.push({
+          id: rt.log.length,
+          state: rt.prev,
+          action: rt.action || "setState"
         })
       }
-      this.i = this.log.length
+      this.i = rt.log.length
 
       // log state changes if dubeg = true
-      //if (this.debug) console.log(this.i, [this.state, ...this.log])
+      //if (rt.debug) console.log(this.i, [rt.state, ...rt.log])
 
       // freeze state so it can only be changed through setState()
-      this.freeze(this.state)
+      this.freeze(rt.state)
 
       // if we updated using an "action" method, and emitter is avail,
       // then emit an event with same name as the "action" called,
       // passing in the current state
-      if (typeof Component.emitter !== "undefined" && !!this.action) {
-        Component.emitter.emit(`${this.action}`, this.state)
+      if (typeof Component.emitter !== "undefined" && !!rt.action) {
+        Component.emitter.emit(`${rt.action}`, rt.state)
       }
 
       // run any middlware functions that were defined by the user
-      this.middleware.forEach(fn => fn({ ...this.state }))
+      rt.middleware.forEach(fn => fn({ ...rt.state }))
 
       // unset any action that may have called this invocation of setState()
-      this.action = undefined
+      rt.action = undefined
 
-      return this
+      return rt
     }
   }
 
@@ -249,35 +255,35 @@ function Component(state, schema) {
    * @param {object} cfg - the settings used for the tweening
    *
    */
-  this.tweenState = (newState, cfg) => {
+  rt.tweenState = (newState, cfg) => {
     typeof Component.tweenState !== "undefined"
-      ? Component.tweenState(self, newState, cfg)
-      : this.setState(newState)
-    return this
+      ? Component.tweenState(rt, newState, cfg)
+      : rt.setState(newState)
+    return rt
   }
 
-  this.on = (ev, fn) => {
+  rt.on = (ev, fn) => {
     typeof Component.emitter !== "undefined"
       ? Component.emitter.on(ev, fn)
       : false
-    return this
+    return rt
   }
 
-  this.once = (ev, fn) => {
+  rt.once = (ev, fn) => {
     if (typeof Component.emitter !== "undefined") {
       Component.emitter.on(ev, props => {
         fn(props)
         Component.emitter.off(ev, fn)
       })
     }
-    return this
+    return rt
   }
 
-  this.off = (ev, fn) => {
+  rt.off = (ev, fn) => {
     typeof Component.emitter !== "undefined"
       ? Component.emitter.off(ev, fn)
       : false
-    return this
+    return rt
   }
 
   /**
@@ -285,14 +291,14 @@ function Component(state, schema) {
    * @param {number} num - the number of steps through the history to take
    * @param {string} direction - 'f' for forward, 'b' for backwards
    */
-  this.go = function(num, dir) {
+  rt.go = function(num, dir) {
     var i
     if (dir === "f") {
       i = this.i + num
     } else {
       i = this.i - num
     }
-    if (this.log[i]) this.setState(this.log[i].state)
+    if (rt.log[i]) rt.setState(rt.log[i].state)
     this.i = i
 
     return this
@@ -302,56 +308,54 @@ function Component(state, schema) {
    * Go to previous (or first) state in the state history
    * @param {number} num - the number of steps through the history to take, 0 if 'num' not given
    */
-  this.rw = function(num) {
+  rt.rw = function(num) {
     if (!num) {
-      if (this.log[0]) this.setState(this.log[0].state)
+      if (rt.log[0]) rt.setState(rt.log[0].state)
       this.i = 0
       return true
     }
     this.go(num, "b")
 
-    return this
+    return rt
   }
 
   /**
    * Go to more recent state in the state history
    * @param {number} num - the number of steps through the history to take, most recent if 'num' not given
    */
-  this.ff = function(num) {
+  rt.ff = function(num) {
     if (!num) {
-      if (this.log[this.log.length - 1])
-        this.setState(this.log[this.log.length - 1].state)
-      this.i = this.log.length - 1
+      if (rt.log[rt.log.length - 1])
+        this.setState(rt.log[rt.log.length - 1].state)
+      this.i = rt.log.length - 1
       return true
     }
-    this.go(num, "f")
+    rt.go(num, "f")
 
-    return this
+    return rt
   }
 
   /**
-   * If in browser, puts scoped component styles in this.css
+   * If in browser, puts scoped component styles in rt.css
    */
-  this.setCss = function() {
+  rt.setCss = function() {
     // if in browser
-    if (!this.isNode) {
+    if (!rt.isNode) {
       // if a style is defined
-      if (this.css && typeof this.style === "function") {
+      if (rt.css && typeof rt.style === "function") {
         // get the latest component style
-        var c = this.style(this.state) // the css
+        var c = rt.style(rt.state) // the css
 
         // auto-prefix CSS styles with a unique id,to "scope" the
         // styles to the component only
-        if (this.scopedCss) {
+        if (rt.scopedCss) {
           // get container id, or class if no id
-          var u = this.container.id
-            ? this.container.id
-            : this.container.className
+          var u = rt.container.id ? rt.container.id : rt.container.className
 
           // if container has no class or id, use uid
-          u = !!u ? u : this.uid
+          u = !!u ? u : rt.uid
 
-          var p = this.container.id ? "#" : "."
+          var p = rt.container.id ? "#" : "."
 
           var fix1 = new RegExp(u + " ,\\s*\\.", "gm")
           var fix2 = new RegExp(u + " ,\\s*#", "gm")
@@ -373,7 +377,7 @@ function Component(state, schema) {
         // minify the CSS
         var minCss = c.replace(/\n/g, "").replace(/\s\s+/g, " ")
         // if the new CSS is changed from previous, re-render it
-        if (this.css.innerHTML !== minCss) this.css.innerHTML = minCss
+        if (rt.css.innerHTML !== minCss) rt.css.innerHTML = minCss
       }
     }
   }
@@ -382,14 +386,14 @@ function Component(state, schema) {
   * Render the current view as a string, including
   * our component styling, in a <style> tag
   */
-  this.toString = function() {
+  rt.toString = function() {
     var str = ""
-    var view = this.view(this.state)
+    var view = rt.view(rt.state)
     var style
 
     // get component styles, nicely indented
-    if (typeof this.style === "function") {
-      style = this.style(this.state).replace(/^ {4}/gm, "")
+    if (typeof rt.style === "function") {
+      style = rt.style(rt.state).replace(/^ {4}/gm, "")
     }
 
     if (typeof view === "string") {
@@ -406,7 +410,7 @@ function Component(state, schema) {
       // return the view as prettified JSON
       str = JSON.stringify(view, null, 2)
     }
-    //if (this.debug) console.log(str)
+    //if (rt.debug) console.log(str)
     return str
   }
 
@@ -414,12 +418,12 @@ function Component(state, schema) {
    * Re-render the component and add it to the page
    * @param {string|element} container - the element which holds the component
    */
-  this.render = function(el) {
-    var view = typeof this.view === "function" ? this.view(this.state) : null
-    if (this.isNode) {
-      return this.toString()
+  rt.render = function(el) {
+    var view = typeof rt.view === "function" ? rt.view(rt.state) : null
+    if (rt.isNode) {
+      return rt.toString()
     } else {
-      this.container = el
+      rt.container = el
       // only interact with the DOM once every animation frame (usually 60fps)
 
       // If there's a timer, cancel it
@@ -430,20 +434,21 @@ function Component(state, schema) {
         //console.log("debounced")
         // get the container element if needed
         if (typeof el === "string") el = document.querySelector(`${el}`)
-        this.container = el
-        if (this.css && this.style) this.setCss()
-        if (this.container && view) {
+        rt.container = el
+        if (rt.css && rt.style) rt.setCss()
+        if (rt.container && view) {
           try {
-            domDiff(this.container.firstChild, view)
+            domDiff(rt.container.firstChild, view)
           } catch (err) {
-            this.container.innerHTML = view
+            rt.container.innerHTML = view
           }
         }
       })
     }
-    return this.container
+    return rt.container
   }
-  return this
+
+  return rt
 }
 
 export default Component
