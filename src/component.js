@@ -127,7 +127,7 @@ function Component(state, schema) {
   var self = rt
 
   // for debouncing render() calls
-  var timeout
+  var timeout = undefined
 
   rt.isNode =
     typeof process !== "undefined" &&
@@ -214,16 +214,21 @@ function Component(state, schema) {
       // re-render component
       if (rt.reactive) rt.render(rt.container)
 
-      // update history and move along index
-      if (rt.debug && this.i === rt.log.length) {
-        // we are not traversing state history, so add the new state to the log
-        rt.log.push({
-          id: rt.log.length,
-          state: rt.prev,
-          action: rt.action || "setState"
-        })
-      }
-      this.i = rt.log.length
+      if (t) cancelAnimationFrame(t)
+      // for debouncing logging
+      var t = undefined
+      t = requestAnimationFrame(() => {
+        // update history and move along index
+        if (rt.debug && this.i === rt.log.length) {
+          // we are not traversing state history, so add the new state to the log
+          rt.log.push({
+            id: rt.log.length,
+            state: rt.prev,
+            action: rt.action || "setState"
+          })
+        }
+        this.i = rt.log.length
+      })
 
       // log state changes if dubeg = true
       //if (rt.debug) console.log(this.i, [rt.state, ...rt.log])

@@ -62,7 +62,7 @@
   {
     ease: "outQuint",
     duration: 1000,
-    shouldSetState: false,
+    shouldSetState: () => false,
     onUpdate: props => App.setState({ count: Number.parseInt(props.values[0], 10) })
   })
 
@@ -184,7 +184,8 @@
   console.log('App.log')
   console.log(App.log)
 
-  // Test debouncing of render():
+
+  // Test debouncing of rendering (animation/render performance):
   // - call setState 10,000 times, fast as possible
   // - setState calls render() each time
   // - render() should only try to access/update DOM at 60fps
