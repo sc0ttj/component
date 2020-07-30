@@ -596,7 +596,7 @@ var state = {
 
 var schema = { 
   count: "number",
-  age: age => typeof age === "number" && age > 17
+  age: age => typeof age === "number" && age > 17,
   items: "array",
   foo: {
     bar: "string"
