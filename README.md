@@ -609,7 +609,7 @@ var App = new Component(state, schema)
 If you try to set an invalid state, your component will `throw` an error:
 
 ```js
-App.setState ({ count: "foo" }) // this will throw an Error!
+App.setState({ count: "foo" }) // this will throw an Error!
 ```
 
 See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info.
