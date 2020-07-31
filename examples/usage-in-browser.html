@@ -58,7 +58,7 @@
   App.clickBtn = (props) => App.setState({ count: App.state.count + props})
 
   // tween "count" back down to one
-  App.resetBtn = props => App.tweenState({ count: 1 },
+  App.resetBtn = props => App.tweenState({ count: 0 },
   {
     ease: "outQuint",
     duration: 1000,
