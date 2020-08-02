@@ -39,34 +39,44 @@
     text: "Text set by 'App'"
   }
 
-  // Define a stateful main component
+  //
+  // Define the stateful main component
+  //
   var App = new Component(state);
 
+  //
   // IMPORTANT -  Define a view
+  //
   App.view = (props) => `
     <div id="myapp">
-      ${Heading('Total so far = ' + props.count)}
+      ${Heading('Count = ' + props.count)}
       <div class="child-container">
         ${SubHeader({ text: props.text })}
       </div>
       ${List(props.items)}
       ${Button('Add 1', `App.clickBtn(${props.incrementBy})`)}
-      ${Button('Reset to zero', `App.resetBtn()`)}
+      ${Button('Reset counter', `App.resetBtn()`)}
     </div>`
 
+  //
   // OPTIONAL - Define some events
+  //
   App.clickBtn = (props) => App.setState({ count: App.state.count + props})
 
   // tween "count" back down to one
-  App.resetBtn = props => App.tweenState({ count: 0 },
+  App.resetBtn = props => App.tweenState({ count: 1 },
   {
     ease: "outQuint",
     duration: 1000,
+    // we want to show an integer on the page, so don't set state
+    // until we convert "count" to an integer
     shouldSetState: () => false,
     onUpdate: props => App.setState({ count: Number.parseInt(props.values[0], 10) })
   })
 
+  //
   // OPTIONAL - Define some styles for the view
+  //
   App.style = (props) => `
     #myapp {
       background-color: #eee;
@@ -114,8 +124,8 @@
   // Using setState() to trigger a full re-render
   App.setState({ items: [ ...App.state.items, { name: "Three" } ] })
 
-  // New in 1.2.0:
-  // Or set state through the components constructor (same as above)
+  // New in v1.2.0
+  // You can also set state through the components constructor:
   App({ items: [ ...App.state.items, { name: "Four" } ] })
 
   // ...Or call any methods you defined directly

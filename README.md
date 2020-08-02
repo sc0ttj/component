@@ -616,6 +616,15 @@ See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usa
 
 ## Changelog
 
+**1.2.0**
+- doing `Foo = new Component(someState)` now returns a function, not an object
+- the function returned calls `setState` in its constructor
+  - this means you can now set state using a new syntax - via the constructor: `Foo({ count: 1 })`
+  - this in turns allows for nicer nested stateful components:
+    - nested stateful components can now use the same syntax as stateless (plain function) components 
+- update in `tweenState`:  allow `shouldSetState` to be boolean (not only func that returns boolean)
+- updated examples, README, package.json, dist/, etc
+
 **1.1.12**
 - new feature: state validation
   - simply pass a schema as the 2nd param when creating a new component
