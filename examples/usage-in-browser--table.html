@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="../dist/component.min.js"></script>
+<script>
+  // html`foo`  -  allows easier HTML in template literals
+  // - auto joins arrays, without adding commas
+  // - hides falsey stuff, instead of printing false
+  var html = (strings, ...vals) => {
+    return strings.map((str, i) => {
+      var v = vals[i];
+      var val = Array.isArray(v) ? v.join('') : v;
+      return str ? str + (val || '') : '';
+    }).join('');
+  }
+
+  var state = {
+    title: "Title goes here",
+    subTitle: "Sub-title goes here",
+    description: "A description goes here",
+    locale: 'en',
+    headings: [ "Country", "0-10", "11-20", "21-30", "31-40", "older" ],
+    content: [
+      [ "England", 10, 20, 30, 20, 20 ],
+      [ "France",  10, 20, 30, 30, 10 ],
+      [ "Germany", 1, 2, 3, 3, 1 ],
+    ],
+    source: null
+  };
+
+  var Table = new Component(state);
+
+  var TableRows = props => props.content.map(row =>
+      html`<tr>
+        ${row.map((item, i) => `<td>${row[i]}</td>`)}
+      </tr>`);
+
+  Table.view = props => html`<div>
+    <h2>${props.title}</h2>
+    <p>${props.subTitle}</p>
+    <table>
+    <thead>
+      <tr>
+        ${props.headings.map(h => `<td>${h}</td>`)}
+      </tr>
+    </thead>
+    <tbody>
+      ${TableRows(props)}
+    </tbody>
+    </table>
+    ${props.source ? `<p>Source: ${props.source}</p>` : ''}
+  </div>`;
+
+  Table.style = props => `
+    table { display: table; }
+    thead { font-weight: bold; }
+    td { min-width: 50px; padding: 4px; border: 1px solid grey; }
+  `;
+
+  Table.actions({
+    add: props => {
+      Table.setState({ content: [ ...Table.state.content, props] })
+    }
+  });
+
+</script>
+</head>
+
+<body>
+  <div class="demo">
+    <div class="table"></div>
+    <button id="add-more" onclick="Table.addRow()">Add row</button>
+  </div>
+
+<script>
+  // use the component
+  Table.render('.table');
+  Table({ title: "Awesome Table" });
+  Table.add([ "USA", 61, 32, 83, 14, 56 ]);
+  Table.add([ "Japan", 1, 2, 3, 4, 5 ]);
+  Table.add([ "China", 12, 23, 344, 42, 245 ]);
+  // add our own methods to the component
+  Table.addRow = e => Table.add([ "Buttonland", 12, 23, 344, 42, 245 ]);
+</script>
+</body>
+
+</html>
