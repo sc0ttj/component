@@ -401,14 +401,17 @@ function Component(state, schema) {
       style = rt.style(rt.state).replace(/^ {4}/gm, "")
     }
 
-    if (typeof view === "string") {
+    if (view.outerHTML) {
+      if (style) str = `<style>${style}\n</style>\n`
+      str += `${view.outerHTML}`.replace(/^ {4}/gm, "")
+    } else if (typeof view === "string") {
       try {
         // if view is a JSON string
         str = JSON.parse(view)
         // return the view as prettified JSON
         str = JSON.stringify(str, null, 2)
       } catch (err) {
-        if (style) str = `<style>${style}\n</style>`
+        if (style) str = `<style>${style}\n</style>\n`
         str += `${view}`.replace(/^ {4}/gm, "")
       }
     } else if (typeof view === "object" || Array.isArray(view)) {
@@ -425,6 +428,8 @@ function Component(state, schema) {
    */
   rt.render = function(el) {
     var view = typeof rt.view === "function" ? rt.view(rt.state) : null
+    if (view.outerHTML) view = view.outerHTML
+
     if (rt.isNode) {
       return rt.toString()
     } else {
@@ -440,6 +445,7 @@ function Component(state, schema) {
         // get the container element if needed
         if (typeof el === "string") el = document.querySelector(`${el}`)
         rt.container = el
+        rt.html = el
         if (rt.css && rt.style) rt.setCss()
         if (rt.container && view) {
           try {
