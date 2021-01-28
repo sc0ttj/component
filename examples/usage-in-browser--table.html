@@ -4,22 +4,42 @@
 <meta charset="UTF-8">
 <script src="../dist/component.min.js"></script>
 <script>
-  // html`foo`  -  allows easier HTML in template literals
-  // - auto joins arrays, without adding commas
-  // - hides falsey stuff, instead of printing false
+  /*
+   * html`<div>...</div>`  -  allows easier HTML in template literals
+   * - auto joins arrays, without adding commas (so no need to keep using .join('') in your templates)
+   * - convert objects to strings (so you can use `style="${someObj}"` in your templates)
+   * - hides falsey stuff (instead of printing "false" [etc] in the output)
+   */
   var html = (strings, ...vals) => {
     return strings.map((str, i) => {
-      var v = vals[i];
-      var val = Array.isArray(v) ? v.join('') : v;
+      var v = vals[i] || '';
+      var val = v;
+      if (Array.isArray(v)) {
+        val = v.join('');
+      }
+      else if (typeof v === "object") {
+        var s = '';
+        for (var p in v) {
+          if (v.hasOwnProperty(p) && typeof v[p] !== "object") {
+            s += `${p}:${v[p]};`;
+          }
+        }
+        val = s;
+      }
       return str ? str + (val || '') : '';
     }).join('');
   }
-
+</script>
+<script>
   var state = {
     title: "Title goes here",
     subTitle: "Sub-title goes here",
-    description: "A description goes here",
-    locale: 'en',
+    css: {
+      "font-weight": "bold",
+      foo: {
+        bar: "baz",
+      },
+    },
     headings: [ "Country", "0-10", "11-20", "21-30", "31-40", "older" ],
     content: [
       [ "England", 10, 20, 30, 20, 20 ],
@@ -31,32 +51,31 @@
 
   var Table = new Component(state);
 
-  var TableRows = props => props.content.map(row =>
-      html`<tr>
-        ${row.map((item, i) => `<td>${row[i]}</td>`)}
-      </tr>`);
+  var TableRows = props => props.map(row =>
+    html`<tr>
+      ${row.map((item, i) => `<td>${row[i]}</td>`)}
+    </tr>`);
 
-  Table.view = props => html`<div>
-    <h2>${props.title}</h2>
-    <p>${props.subTitle}</p>
-    <table>
-    <thead>
-      <tr>
-        ${props.headings.map(h => `<td>${h}</td>`)}
-      </tr>
-    </thead>
-    <tbody>
-      ${TableRows(props)}
-    </tbody>
-    </table>
-    ${props.source ? `<p>Source: ${props.source}</p>` : ''}
-  </div>`;
+  Table.view = props =>
+    html`<div>
+      <h2>${props.title}</h2>
+      <p style="${props.css}">${props.subTitle}</p>
+      <table>
+      <thead>
+        <tr>${props.headings.map(h => `<td>${h}</td>`)}</tr>
+      </thead>
+      <tbody>
+        ${TableRows(props.content)}
+      </tbody>
+      </table>
+      ${props.source && `<p>Source: ${props.source}</p>`}
+    </div>`;
 
   Table.style = props => `
     table { display: table; }
     thead { font-weight: bold; }
     td { min-width: 50px; padding: 4px; border: 1px solid grey; }
-  `;
+    `;
 
   Table.actions({
     add: props => {

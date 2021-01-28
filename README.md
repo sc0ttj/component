@@ -754,6 +754,9 @@ Rebuild to `dist/` using the command `npm run build`
   - see `htl` or similar for wrappers around view HTML that provide syntactic sugar
 
 - Better SSR
+  - an `App.envelope()` add-on method, to render components as JSON envelopes:
+    - render as JSON
+    - include view, actions & style as stringified HTML, CSS and JS
   - pass in config to `toString()`, to choose what to render:
     - Component lib itself
     - actions
@@ -772,15 +775,21 @@ Rebuild to `dist/` using the command `npm run build`
     - like current easings, but more flexible/dynamic
     - can pass params like friction, magnitude, etc, to make the anims more/less "pronounced"
     - see `react-motion`, `react-spring`, `react-move`, `pose`, etc
+    - maybe do a `Component.motion` add-on that attaches extra info to component state:
+      - component positioning and motion info:
+        - (x,y, in view or not, scroll speed & direction, accel, current momentum, etc)
+        - is inside/outside other component/element
+        - collision detection
 
-- Universal rendering (add-on):
-  - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from HTML strings to:
+- Universal rendering (add-ons):
+  - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from `x` to HTML strings:
+    - markdown (see [YerkoPalma/marli](https://github.com/YerkoPalma/marli))
+    - files/binary/buffer (see [almost/stream-template](https://github.com/almost/stream-template))
+  - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from HTML strings to `x`:
     - virtual DOM (see `htm`, `hyperx`, `snabby`)
     - real DOM (see `htl`, `fast-html-parser`, `bel`, `genel`, ...)
-    - ANSI console markup (?)
-    - markdown (?)
+    - ANSI console markup, for coloured terminal output (like a JS/HTML-based `tput`) (?)
     - pdf (?)
-    - files/binary/buffer (?)
 
 - Support for custom elements/Web Components
   - so you can use `<my-custom-app></my-custom-app>` in your HTML
@@ -791,16 +800,59 @@ Rebuild to `dist/` using the command `npm run build`
 ### DOM and DOM diffing
 
 - [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function (used by this project)
-- [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
 - [set-dom](https://github.com/DylanPiercey/set-dom) - tiny dom diffing library
+- [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
 - [fast-html-parser](https://www.npmjs.com/package/fast-html-parser) - generate a simplified DOM tree from string, with basic element querying
+
+### JSX-like syntax in Template Literals
+
+- [developit/htm](https://github.com/developit/htm) - JSX-like syntax in ES6 templates, generates vdom from Template Literals
+- [zspecza/common-tags - html function](https://github.com/zspecza/common-tags#html) - makes it easier to write properly indented HTML in your templates
+- this [tagged template function](examples/usage-in-browser--table.html) below enables some JSX-like features in your template literals:
+
+```js
+  /*
+   * html`<div>...</div>`  -  allows easier HTML in template literals
+   * - auto joins arrays, without adding commas (so no need to keep using .join('') in your templates)
+   * - convert objects to strings (so you can use `style="${someObj}"` in your templates)
+   *   - ignores/strips child objects/arrays when converting to string
+   * - hides falsey stuff (instead of printing "false" [etc] in the output)
+   */
+  var html = (strings, ...vals) => {
+    return strings.map((str, i) => {
+      var v = vals[i] || '';
+      var val = v;
+      if (Array.isArray(v)) {
+        val = v.join('');
+      }
+      else if (typeof v === "object") {
+        var s = '';
+        for (var p in v) {
+          if (v.hasOwnProperty(p) && typeof v[p] !== "object") {
+            s += `${p}:${v[p]};`;
+          }
+        }
+        val = s;
+      }
+      return str ? str + (val || '') : '';
+    }).join('');
+  }
+``` 
 
 ### Template strings to real DOM nodes
 
 - [htl](https://observablehq.com/@observablehq/htl)- by Mike Bostock, events, attr/styles as object, other syntactic sugar, 2kb
+- [developit/htm](https://github.com/developit/htm) - JSX-like syntax in ES6 templates, generates vdom from Template Literals
 - [nanohtml](https://github.com/choojs/nanohtml) - uses vdom, can attach event listers, can do SSR, 8kb
 - [domify-template-strings](https://github.com/loilo-archive/domify-template-strings) - get real DOM nodes from HTML template strings, browser only, no SSR
 - [genel](https://github.com/capsidjs/genel) - create real DOM nodes from template string, browser only (no SSR), 639 bytes
+
+### Template strings to VDOM and VDOM diffing
+
+- [snabbdom](https://github.com/snabbdom/snabbdom) - the vdom diffing library used by Vue.js
+- [snabby](https://github.com/mreinstein/snabby) - use HTML template strings to generate vdom, use with snabbdom
+- [petit-dom](https://github.com/yelouafi/petit-dom) - tiny vdom diffing and patching library
+- [hyperx](https://github.com/choojs/hyperx) - tagged templates to vdom (used by [nanohtml](https://github.com/choojs/nanohtml)
 
 ### CSS in JS
 
@@ -811,14 +863,6 @@ Rebuild to `dist/` using the command `npm run build`
 - `var cssClassMatchRegex = new RegExp(/\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/g)` - regex to match all classes in a string (maybe useful for "scoping")
 - `Math.random().toString(36).split(".")[1]` - unique ID generator (create a unique id for each new component)
 - `cssString.replace(/\n/g, '').replace(/\s\s+/g, ' ')` - minify string of CSS
-
-### VDOM and VDOM diffing
-
-- [developit/htm](https://github.com/developit/htm) - JSX like syntax in ES6 templates, generates vdom
-- [snabbdom](https://github.com/snabbdom/snabbdom) - the vdom diffing library used by Vue.js
-- [snabby](https://github.com/mreinstein/snabby) - use HTML template strings to generate vdom, use with snabbdom
-- [petit-dom](https://github.com/yelouafi/petit-dom) - tiny vdom diffing and patching library
-- [hyperx](https://github.com/choojs/hyperx) - tagged templates to vdom (used by [nanohtml](https://github.com/choojs/nanohtml)
 
 ### Animation
 
