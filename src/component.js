@@ -114,7 +114,7 @@ function Component(state, schema) {
   var rt = function(state) {
     rt.render(rt.container)
     rt.setState(state)
-    return rt
+    return !state ? rt.container : rt
   }
 
   rt.state = state
@@ -158,6 +158,7 @@ function Component(state, schema) {
    * state in specific ways and register in our state history
    */
   rt.actions = actions => {
+    rt.actionsList = actions
     // convert each key/value to set state function:
     Object.keys(actions).forEach(action => {
       if (typeof rt[action] !== "undefined") {
