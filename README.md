@@ -315,7 +315,7 @@ To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-
 
 Define "actions" to update your state in specific ways.
 
-These are like regular methods, except they're always chainable and tagged by name in your components state history. 
+These are like regular methods, except they're always chainable, they hook into the `emitter` automatically, and they're tagged by name in your components state history. 
 
 ```js
 App.actions({
