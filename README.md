@@ -258,19 +258,12 @@ var state = {
 
 App.view = props => html`
   <div style="${props.css}">
-
     <h2>${props.title}</p>
-
     <p>${props.text}</p>
-
     <ul style="${props.css.list}">
-
       ${props.list.map(val => `<li>${val}</li>`)}
-
     </ul>
-
     ${status && `<p>${status}</p>`}
-
   </div>
 `;
 
