@@ -170,7 +170,7 @@ These return your components view as either a String or HTML Object, but are oth
 
 Features of `html` and `htmel`:
 
-```
+```js
  // embed JS object properties as CSS 
  // (ignores nested child objects, keeping only properties)
 
@@ -178,10 +178,10 @@ html`<p style=${{background: "red"}}>I'm red!</p>`
 
 // or
 
- html`<p style="${someObj}">foo</p>`
+html`<p style="${someObj}">foo</p>`
 ```
 
-```
+```js
 // embed real DOM objects 
 
 const elem = document.querySelector(".foo");
@@ -189,19 +189,19 @@ const elems = document.querySelectorAll(".bar");
 html`<div>${elem}${elems}</div>` 
 ```
 
-```
+```js
 // embeds arrays properly (no need to use `.join('')`)
 
 html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>`
 ```
 
-```
+```js
 // hides falsey stuff, instead of printing "false", etc
 
 html`<span>Some ${foo && `<b>thing</b>`} cool</span>`
 ```
 
-```
+```js
 // nested templates
 
 var TableRows = props => props.map(row =>
@@ -219,19 +219,19 @@ var Table = props =>
 
 Use `htmel` instead of `html` to return DOM Nodes (instead of strings):
 
-```
+```js
 // returns a text node
 
 htmel`I’m simply text.`
 ```
 
-```
+```js
 // returns an HTML node
 
 htmel`<p>I’m simply text.</p>`
 ```
 
-```
+```js
 // supports HTML fragments
 
 htmel`<td>foo</td>`
