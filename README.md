@@ -173,8 +173,11 @@ Features of `html` and `htmel`:
 ```js
  // embed JS object properties as CSS (ignores nested child objects, keeping only properties)
 html`<p style=${{background: "red"}}>I'm red!</p>`
+```
 
-// or
+
+```js
+// embed JS object properties as CSS (alternative)
 html`<p style="${someObj}">foo</p>`
 ```
 
@@ -231,7 +234,7 @@ htmel`<td>foo</td>`
 
 Example usage:
 
-```
+```js
 import { Component, html } from "@scottjarvis/Component"
 
 // ...later
