@@ -189,12 +189,12 @@ html`<div>${elem}${elems}</div>`
 ```
 
 ```js
-// embeds arrays properly (no need to use `.join('')`)
+// embeds arrays properly, no need to use .join('')
 html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>`
 ```
 
 ```js
-// hides falsey stuff, instead of printing "false", etc
+// hides Falsey values, instead of printing "false", etc
 html`<span>Some ${foo && `<b>thing</b>`} cool</span>`
 ```
 
