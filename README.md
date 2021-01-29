@@ -165,8 +165,8 @@ To make it easier to build a good HTML "view" for your components, there are two
 
 These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
 
-- `html` - returns your Template literal as a string (439 bytes).
-- `htmel` - returns your Template literal as real DOM Node Element (427 bytes).
+- `html` (439 bytes) - returns your Template literal as a string.
+- `htmel` (427 bytes) - returns your Template literal as real DOM Node Element.
 
 Features of `html` and `htmel`:
 
