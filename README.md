@@ -171,13 +171,13 @@ These return your components view as either a String or HTML Object, but are oth
 Features of `html` and `htmel`:
 
 ```js
- // embed JS object properties as CSS (ignores nested child objects, keeping only properties)
+// embed JS object properties as CSS 
 html`<p style=${{background: "red"}}>I'm red!</p>`
 ```
 
 
 ```js
-// embed JS object properties as CSS (alternative)
+// embed JS object properties as CSS (ignores nested child objects, keeping only properties)
 html`<p style="${someObj}">foo</p>`
 ```
 
