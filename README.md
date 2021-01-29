@@ -170,12 +170,72 @@ These return your components view as either a String or HTML Object, but are oth
 
 Features of `html` and `htmel`:
 
-- embed JS object properties as CSS: `html`<p style="${someObj}">foo</p>``
-  - ignores nested child objects, keeping only properties
-- embed real DOM objects: `html`<p>${elem}</p>``
-- embeds arrays properly (no need to use `.join('')`): `html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>``
-- hides falsey stuff instead of printing "false" (etc): `html`${foo && `<p>bar</p>`}``
-- supports HTML fragments: `html`<td>foo</td>``
+```
+ // embed JS object properties as CSS 
+ // (ignores nested child objects, keeping only properties)
+
+html`<p style=${{background: "red"}}>I'm red!</p>`
+
+// or
+
+ html`<p style="${someObj}">foo</p>`
+```
+
+```
+// embed real DOM objects 
+
+const elem = document.querySelector(".foo");
+const elems = document.querySelectorAll(".bar");
+html`<div>${elem}${elems}</div>` 
+```
+
+```
+// embeds arrays properly (no need to use `.join('')`)
+
+html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>`
+```
+
+```
+// hides falsey stuff, instead of printing "false", etc
+
+html`<span>Some ${foo && `<b>thing</b>`} cool</span>`
+```
+
+```
+// nested templates
+
+var TableRows = props => props.map(row =>
+  html`<tr>${row.map((item, i) => `<td>${row[i]}</td>`)}</tr>`);
+
+var Table = props =>
+  html`<div>
+    <table>
+    <tbody>
+      ${TableRows(props.data)}
+    </tbody>
+    </table>
+  </div>`;
+```
+
+Use `htmel` instead of `html` to return DOM Nodes (instead of strings):
+
+```
+// returns a text node
+
+htmel`I’m simply text.`
+```
+
+```
+// returns an HTML node
+
+htmel`<p>I’m simply text.</p>`
+```
+
+```
+// supports HTML fragments
+
+htmel`<td>foo</td>`
+```
 
 Example usage:
 
