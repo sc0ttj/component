@@ -165,8 +165,8 @@ To make it easier to build a good HTML "view" for your components, there are two
 
 These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
 
-- `html` (439 bytes) - returns your Template literal as a string.
-- `htmel` (427 bytes) - returns your Template literal as real DOM Node Element.
+- `html` (469 bytes) - returns your Template literal as a string.
+- `htmel` (541 bytes) - returns your Template literal as real DOM Node Element.
 
 Features of `html` and `htmel`:
 
@@ -175,10 +175,19 @@ Features of `html` and `htmel`:
 html`<p style=${{background: "red"}}>I'm red!</p>`
 ```
 
-
 ```js
 // embed JS object properties as CSS (ignores nested child objects, keeping only properties)
-html`<p style="${someObj}">foo</p>`
+html`<p style="${someObj}">some text</p>`
+```
+
+```js
+// embed JS object properties as valid HTML attributes  (ignores nested child objects, keeping only properties)
+html`<p ${someObj}>some text</p>`
+```
+
+```js
+// embed JS objects as JSON in HTML data attributes
+html`<p data-json='${someObj}'>some text</p>`
 ```
 
 ```js
@@ -195,7 +204,7 @@ html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>`
 
 ```js
 // hides Falsey values, instead of printing "false", etc
-html`<span>Some ${foo && `<b>thing</b>`} cool</span>`
+html`<span>some ${foo && `<b>cool</b>`} text</span>`
 ```
 
 ```js
@@ -224,7 +233,7 @@ htmel`I’m simply text.`
 
 ```js
 // returns an HTML node
-htmel`<p>I’m simply text.</p>`
+htmel`<p>I’m text in an element.</p>`
 ```
 
 ```js
@@ -911,55 +920,11 @@ Rebuild to `dist/` using the command `npm run build`
 - [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
 - [fast-html-parser](https://www.npmjs.com/package/fast-html-parser) - generate a simplified DOM tree from string, with basic element querying
 
-### JSX-like syntax in Template Literals
+### JSX-like syntax in Template Literals (alternatives to `html`/`hmtel`)
 
 - [developit/htm](https://github.com/developit/htm) - JSX-like syntax in ES6 templates, generates vdom from Template Literals
 - [htl](https://observablehq.com/@observablehq/htl)- by Mike Bostock, events, attr/styles as object, other syntactic sugar, 2kb
 - [zspecza/common-tags - html function](https://github.com/zspecza/common-tags#html) - makes it easier to write properly indented HTML in your templates
-- this [tagged template function](examples/usage-in-browser--table.html) below enables some JSX-like features in your template literals:
-
-```js
-  /*
-   * html`<div>...</div>`
-   * - allows easier HTML in template literals:
-   *   - auto joins arrays, without adding commas (no need for .join('') in your templates)
-   *   - supports embedding HTML Elements, HTML Collections and NodeLists
-   *   - supports embedding properties of JS Objects (`style="${someObj}"`):
-   *       - nested child objects are ignored when embedding objects
-   *   - hides falsey stuff (instead of printing "false" [etc] in the output)
-   *   - returns generated HTML as a string
-   *
-   * @param {Template Literal} HTML representing a single element
-   * @return {String}
-   */
-  var html = (strings, ...vals) => {
-    var output = strings.map((str, i) => {
-      var v = vals[i] || '';
-      var s = '';
-      if (v.nodeName) {
-        // if we have an HTML Element, get its HTML as a string
-        v = v.outerHTML;
-      } else if (Array.isArray(v)) {
-        // if we have HTML Collection or NodeList, get all HTML as a string
-        if(v[0].nodeName) v = v.map(n => `${n.outerHTML}`)
-        v = v.join('');
-      } else if (typeof v === "object") {
-        // if we have an Object, gets its properties as a strings,
-        // and ignore nested objects, arrays etc
-        for (var p in v) {
-          if (v.hasOwnProperty(p) && typeof v[p] !== "object") {
-            s += `${p}:${v[p]};`;
-          }
-        }
-        v = s;
-      }
-      // now we've converted `v` to a string version of whatever is was,
-      // we can return the current string, with `v` appended
-      return str ? str + (v || '') : '';
-    }).join('');
-    return output;
-  }
-``` 
 
 ### Template strings to real DOM nodes
 
