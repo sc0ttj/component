@@ -176,12 +176,12 @@ html`<p style=${{background: "red"}}>I'm red!</p>`
 ```
 
 ```js
-// embed JS object properties as CSS (ignores nested child objects, keeping only properties)
+// embed JS object properties as CSS (ignores nested/child objects, keeping only properties)
 html`<p style="${someObj}">some text</p>`
 ```
 
 ```js
-// embed JS object properties as valid HTML attributes  (ignores nested child objects, keeping only properties)
+// embed JS object properties as valid HTML attributes  (ignores nested/child objects)
 html`<p ${someObj}>some text</p>`
 ```
 
