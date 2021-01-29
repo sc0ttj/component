@@ -198,7 +198,9 @@ html`<span>Some ${foo && `<b>thing</b>`} cool</span>`
 ```js
 // nested templates
 var TableRows = props => props.map(row =>
-  html`<tr>${row.map((item, i) => `<td>${row[i]}</td>`)}</tr>`);
+  html`<tr>
+    ${row.map((item, i) => `<td>${row[i]}</td>`)}
+  </tr>`);
 
 var Table = props =>
   html`<div>
