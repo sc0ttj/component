@@ -161,7 +161,7 @@ See [examples/usage-in-node.js](examples/usage-in-node.js)
 
 ### JSX-like features with `html` and `htmel`
 
-To make it easier to build a good HTML "view" for your components, there are two add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
+To make it easier to build a good HTML "view" for your components, there are two **optional** add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
 
 These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
 
