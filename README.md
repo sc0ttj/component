@@ -274,7 +274,7 @@ App.view = props => html`
   </div>
 `;
 
-console.log(App.view(state)  // returns string of valid HTML
+console.log(App.view(state));  // returns string of valid HTML
 ```
 
 Note: Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
