@@ -26,11 +26,12 @@ A "state" is a snapshot of your application data at a specific time.
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
+- Use "middleware" to easily customise component re-render behaviour 
 - A small list of optional add-on modules:
   - `tweenState`: animate from one state to the next
   - `emitter`: an event emitter, for sharing updates between components
   - `validator`: validate states against a schema (like a simple PropTypes)
-- Use "middleware" to easily customise component re-render behaviour 
+  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
 - ...and more
 
 Your components will support:
@@ -55,14 +56,6 @@ Your components will support:
   - render component views as a String, JSON, or Buffer
 - Simple, stateless "child" components
 - ...and more
-
-## Limitations
-
-Currently, the most important limitations are:
-
-- No Event objects passed into components events attributes (`onclick`, etc)
-- No JSX - uses template literals
-- No CSS-in-JS - uses template literals
 
 ## Quickstart
 
@@ -109,8 +102,9 @@ Properties:
 - **App.uid**: a unique string, generated once, on creation of a component
 - **App.state**: an object, contains your app data, read-only - cannot be modified directly
 - **App.log**: an array containing a history of all component states
-- **App.css**: the `<style>` element which holds the component styles
-- **App.container**: the HTML element into which the components view is rendered
+- **App.css**: the `<style>` Element which holds the component styles
+- **App.container**: the HTML Element into which the components view is rendered
+- **App.html**: alias of `App.container`
 - ...and more
 
 Settings:
@@ -165,9 +159,74 @@ See [examples/usage-in-node.js](examples/usage-in-node.js)
 
 ## Advanced usage
 
+### JSX-like features with `html` and `htmel`
+
+To make it easier to build a good HTML "view" for your components, there are two add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
+
+These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
+
+- `html` - returns your Template literal as a string (439 bytes).
+- `htmel` - returns your Template literal as real DOM Node Element (427 bytes).
+
+Features of `html` and `htmel`:
+
+- embed JS object properties as CSS: `html`<p style="${someObj}">foo</p>``
+  - ignores nested child objects, keeping only properties
+- embed real DOM objects: `html`<p>${elem}</p>``
+- embeds arrays properly (no need to use `.join('')`): `html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>``
+- hides falsey stuff instead of printing "false" (etc): `html`${foo && `<p>bar</p>`}``
+- supports HTML fragments: `html`<td>foo</td>``
+
+Example usage:
+
+```
+import { Component, html } from "@scottjarvis/Component"
+
+// ...later
+
+var state = {
+  css: {
+    "border": "2px solid red",
+    list: {
+      "padding": "8px",
+    }
+  },
+  text: "My Title:",
+  list: [
+    "one",
+    "two",
+  ],
+  status: null,
+};
+
+// now let's use `html` to construct our HTML view..
+
+App.view = props => html`
+  <div style="${props.css}">
+
+    <h2>${props.title}</p>
+
+    <p>${props.text}</p>
+
+    <ul style="${props.css.list}">
+
+      ${props.list.map(val => `<li>${val}</li>`)}
+
+    </ul>
+
+    ${status && `<p>${status}</p>`}
+
+  </div>
+`;
+
+console.log(App.view(state)  // returns string of valid HTML
+```
+
+Note: Both `html` and `htmel` can be used standalone (with `Component`) as a general HTML templating JS utility.
+
 ### Styling your component
 
-Use `.style()` to define some styles for your components view (optional):
+Use `App.style()` to define some styles for your components view (optional):
 
 ```js
 App.style = (props) => `
@@ -807,35 +866,50 @@ Rebuild to `dist/` using the command `npm run build`
 ### JSX-like syntax in Template Literals
 
 - [developit/htm](https://github.com/developit/htm) - JSX-like syntax in ES6 templates, generates vdom from Template Literals
+- [htl](https://observablehq.com/@observablehq/htl)- by Mike Bostock, events, attr/styles as object, other syntactic sugar, 2kb
 - [zspecza/common-tags - html function](https://github.com/zspecza/common-tags#html) - makes it easier to write properly indented HTML in your templates
 - this [tagged template function](examples/usage-in-browser--table.html) below enables some JSX-like features in your template literals:
 
 ```js
   /*
-   * html`<div>...</div>`  -  allows easier HTML in template literals
-   * - auto joins arrays, without adding commas (so no need to keep using .join('') in your templates)
-   * - convert objects to strings (so you can use `style="${someObj}"` in your templates)
-   *   - ignores/strips child objects/arrays when converting to string
-   * - hides falsey stuff (instead of printing "false" [etc] in the output)
+   * html`<div>...</div>`
+   * - allows easier HTML in template literals:
+   *   - auto joins arrays, without adding commas (no need for .join('') in your templates)
+   *   - supports embedding HTML Elements, HTML Collections and NodeLists
+   *   - supports embedding properties of JS Objects (`style="${someObj}"`):
+   *       - nested child objects are ignored when embedding objects
+   *   - hides falsey stuff (instead of printing "false" [etc] in the output)
+   *   - returns generated HTML as a string
+   *
+   * @param {Template Literal} HTML representing a single element
+   * @return {String}
    */
   var html = (strings, ...vals) => {
-    return strings.map((str, i) => {
+    var output = strings.map((str, i) => {
       var v = vals[i] || '';
-      var val = v;
-      if (Array.isArray(v)) {
-        val = v.join('');
-      }
-      else if (typeof v === "object") {
-        var s = '';
+      var s = '';
+      if (v.nodeName) {
+        // if we have an HTML Element, get its HTML as a string
+        v = v.outerHTML;
+      } else if (Array.isArray(v)) {
+        // if we have HTML Collection or NodeList, get all HTML as a string
+        if(v[0].nodeName) v = v.map(n => `${n.outerHTML}`)
+        v = v.join('');
+      } else if (typeof v === "object") {
+        // if we have an Object, gets its properties as a strings,
+        // and ignore nested objects, arrays etc
         for (var p in v) {
           if (v.hasOwnProperty(p) && typeof v[p] !== "object") {
             s += `${p}:${v[p]};`;
           }
         }
-        val = s;
+        v = s;
       }
-      return str ? str + (val || '') : '';
+      // now we've converted `v` to a string version of whatever is was,
+      // we can return the current string, with `v` appended
+      return str ? str + (v || '') : '';
     }).join('');
+    return output;
   }
 ``` 
 
