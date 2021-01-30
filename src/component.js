@@ -215,9 +215,12 @@ function Component(state, schema) {
       // re-render component
       if (c.reactive) c.render(c.container)
 
-      if (t) cancelAnimationFrame(t)
-      // for debouncing logging
+      if (t && !c.isNode) cancelAnimationFrame(t)
+      // for debouncing logging in browser
       var t = undefined
+      if (typeof requestAnimationFrame === "undefined") {
+        var requestAnimationFrame = function(logFn) { setTimeout(() => logFn(), 1); };
+      }
       t = requestAnimationFrame(() => {
         // update history and move along index
         if (c.debug && this.i === c.log.length) {

@@ -41,9 +41,7 @@
 		"dist/html.min.js",
 		"dist/htmel.min.js"
 	],
-	"dependencies": {
-		"raf": "^3.4.1"
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@rollup/plugin-commonjs": "^14.0.0",
 		"@rollup/plugin-node-resolve": "^8.4.0",

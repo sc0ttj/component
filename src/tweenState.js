@@ -1,4 +1,4 @@
-import raf from 'raf'
+import raf from './raf.js'
 import easing from "./easings.js"
 ;("use strict")
 
