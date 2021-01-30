@@ -736,9 +736,11 @@ See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usa
 - both add-ons are optional, can be used for easier HTML templating
 - `html` always returns your template as a String
 - `htmel` returns your template as an HTML Object (browser) or String (NodeJS)
-- fixes in `src/component.js`, to allow view to be HTML Object, not only String
-- added `App.html`, alias of `App.container` (which is an HTML Element of components container) 
-- updated examples, docs and build tool configs
+- updates to `src/component.js`:
+  - added: new property `App.html`, an alias of `App.container` (returns an HTML Element) 
+  - added: allow view to be HTML Object, not only String
+  - fixed (in NodeJS): debounced logging falls back to using setTimeout, if needed 
+- updated examples, README and build configs
 
 **1.2.0**
 - doing `Foo = new Component(someState)` now returns a function, not an object

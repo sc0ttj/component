@@ -40,7 +40,7 @@ App.tweenState(
   // 2nd param - object - the tween settings
   {
     delay: 0,
-    duration: 350,
+    duration: 300,
     ease: "linear",
     paused: false,
     // called on first frame:
