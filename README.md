@@ -26,11 +26,12 @@ A "state" is a snapshot of your application data at a specific time.
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
-- A small list of optional add-on modules:
+- Use "middleware" to easily customise component re-render behaviour 
+- A useful list of optional add-ons:
+  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
+  - `validator`: validate states against a schema (like a simple PropTypes)
   - `tweenState`: animate from one state to the next
   - `emitter`: an event emitter, for sharing updates between components
-  - `validator`: validate states against a schema (like a simple PropTypes)
-- Use "middleware" to easily customise component re-render behaviour 
 - ...and more
 
 Your components will support:
@@ -55,14 +56,6 @@ Your components will support:
   - render component views as a String, JSON, or Buffer
 - Simple, stateless "child" components
 - ...and more
-
-## Limitations
-
-Currently, the most important limitations are:
-
-- No Event objects passed into components events attributes (`onclick`, etc)
-- No JSX - uses template literals
-- No CSS-in-JS - uses template literals
 
 ## Quickstart
 
@@ -109,8 +102,9 @@ Properties:
 - **App.uid**: a unique string, generated once, on creation of a component
 - **App.state**: an object, contains your app data, read-only - cannot be modified directly
 - **App.log**: an array containing a history of all component states
-- **App.css**: the `<style>` element which holds the component styles
-- **App.container**: the HTML element into which the components view is rendered
+- **App.css**: the `<style>` Element which holds the component styles
+- **App.container**: the HTML Element into which the components view is rendered
+- **App.html**: alias of `App.container`
 - ...and more
 
 Settings:
@@ -165,9 +159,130 @@ See [examples/usage-in-node.js](examples/usage-in-node.js)
 
 ## Advanced usage
 
+### JSX-like features with `html` and `htmel`
+
+To make it easier to build a good HTML "view" for your components, there are two **optional** add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
+
+These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
+
+- `html` (456 bytes) - returns your template as a String.
+- `htmel` (520 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
+
+Note: Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
+
+Features of `html` and `htmel`:
+
+```js
+// embed JS object properties as valid HTML attributes  (ignores nested/child objects)
+html`<p ${someObj}>some text</p>`
+```
+
+```js
+// embed JS object properties as CSS (ignores nested/child objects)
+html`<p style="${someObj}">some text</p>`
+```
+
+```js
+// embed JS objects as JSON in HTML data attributes
+html`<p data-json='${someObj}'>some text</p>`
+```
+
+```js
+// embed real DOM objects 
+const elem = document.querySelector(".foo");
+const elems = document.querySelectorAll(".bar");
+html`<div>${elem}${elems}</div>` 
+```
+
+```js
+// embeds arrays properly, no need to use .join('')
+html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>`
+```
+
+```js
+// hides Falsey values, instead of printing "false", etc
+html`<span>some ${foo && `<b>cool</b>`} text</span>`
+```
+
+```js
+// nested templates
+var TableRows = props => props.map(row =>
+  html`<tr>
+    ${row.map((item, i) => `<td>${row[i]}</td>`)}
+  </tr>`);
+
+var Table = props =>
+  html`<div>
+    <table>
+    <tbody>
+      ${TableRows(props.data)}
+    </tbody>
+    </table>
+  </div>`;
+```
+
+In a browser, you can use `htmel` instead of `html` to return DOM Nodes (instead of strings):
+
+```js
+// returns a text node
+htmel`I’m simply text.`
+```
+
+```js
+// returns an HTML node
+htmel`<p>I’m text in an element.</p>`
+```
+
+```js
+// supports HTML fragments
+htmel`<td>foo</td>`
+```
+
+Example usage:
+
+```js
+import { Component, html } from "@scottjarvis/Component"
+
+// ...later
+
+var state = {
+  css: {
+    "border": "2px solid red",
+    list: {
+      "padding": "8px",
+    }
+  },
+  attrs: {
+    "class": "foo bar",
+    "z-index": 2,
+  },
+  text: "My Title:",
+  list: [
+    "one",
+    "two",
+  ],
+  status: false,
+};
+
+// now let's use `html` to construct our HTML view..
+
+App.view = props => html`
+  <div style="${props.css}" ${props.attrs}>
+    <h2>${props.title}</p>
+    <p>${props.text}</p>
+    <ul style="${props.css.list}">
+      ${props.list.map(val => `<li>${val}</li>`)}
+    </ul>
+    ${status && `<p>${status}</p>`}
+  </div>
+`;
+
+console.log(App.view(state));  // returns string of valid HTML
+```
+
 ### Styling your component
 
-Use `.style()` to define some styles for your components view (optional):
+Use `App.style()` to define some styles for your components view (optional):
 
 ```js
 App.style = (props) => `
@@ -201,7 +316,7 @@ To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-
 
 Define "actions" to update your state in specific ways.
 
-These are like regular methods, except they're always chainable and tagged by name in your components state history. 
+These are like regular methods, except they're always chainable, they hook into the `emitter` automatically, and they're tagged by name in your components state history. 
 
 ```js
 App.actions({
@@ -616,6 +731,17 @@ See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usa
 
 ## Changelog
 
+**1.3.0**
+- new add-ons: `html` and `htmel` for more JSX-like component views
+- both add-ons are optional, can be used for easier HTML templating
+- `html` always returns your template as a String
+- `htmel` returns your template as an HTML Object (browser) or String (NodeJS)
+- updates to `src/component.js`:
+  - added: new property `App.html`, an alias of `App.container` (returns an HTML Element) 
+  - added: allow view to be HTML Object, not only String
+  - fixed (in NodeJS): debounced logging falls back to using setTimeout, if needed 
+- updated examples, README and build configs
+
 **1.2.0**
 - doing `Foo = new Component(someState)` now returns a function, not an object
 - the function returned calls `setState` in its constructor
@@ -744,14 +870,16 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Future improvements
 
+- Persistant state
+  - stored in/retrieved from localStorage (etc)
+
+- Store manager
+  - like redux, storeon, etc
+   
 - Usability:
   - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
     - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
     - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
-  - Better CSS-in-JS: 
-    - define a components CSS using regular JS objects (alternative to template strings)
-    - see [twirl](https://github.com/benjamminj/twirl-js)
-  - see `htl` or similar for wrappers around view HTML that provide syntactic sugar
 
 - Better SSR
   - an `App.envelope()` add-on method, to render components as JSON envelopes:
@@ -804,40 +932,11 @@ Rebuild to `dist/` using the command `npm run build`
 - [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
 - [fast-html-parser](https://www.npmjs.com/package/fast-html-parser) - generate a simplified DOM tree from string, with basic element querying
 
-### JSX-like syntax in Template Literals
+### JSX-like syntax in Template Literals (alternatives to `html`/`hmtel`)
 
 - [developit/htm](https://github.com/developit/htm) - JSX-like syntax in ES6 templates, generates vdom from Template Literals
+- [htl](https://observablehq.com/@observablehq/htl)- by Mike Bostock, events, attr/styles as object, other syntactic sugar, 2kb
 - [zspecza/common-tags - html function](https://github.com/zspecza/common-tags#html) - makes it easier to write properly indented HTML in your templates
-- this [tagged template function](examples/usage-in-browser--table.html) below enables some JSX-like features in your template literals:
-
-```js
-  /*
-   * html`<div>...</div>`  -  allows easier HTML in template literals
-   * - auto joins arrays, without adding commas (so no need to keep using .join('') in your templates)
-   * - convert objects to strings (so you can use `style="${someObj}"` in your templates)
-   *   - ignores/strips child objects/arrays when converting to string
-   * - hides falsey stuff (instead of printing "false" [etc] in the output)
-   */
-  var html = (strings, ...vals) => {
-    return strings.map((str, i) => {
-      var v = vals[i] || '';
-      var val = v;
-      if (Array.isArray(v)) {
-        val = v.join('');
-      }
-      else if (typeof v === "object") {
-        var s = '';
-        for (var p in v) {
-          if (v.hasOwnProperty(p) && typeof v[p] !== "object") {
-            s += `${p}:${v[p]};`;
-          }
-        }
-        val = s;
-      }
-      return str ? str + (val || '') : '';
-    }).join('');
-  }
-``` 
 
 ### Template strings to real DOM nodes
 

@@ -31,6 +31,24 @@ export default [
     plugins: [resolve(), commonjs(), terser()]
   },
   {
+    input: "src/htmel.js",
+    output: {
+      file: "dist/htmel.min.js",
+      name: "htmel",
+      format: "umd"
+    },
+    plugins: [resolve(), commonjs(), terser()]
+  },
+  {
+    input: "src/html.js",
+    output: {
+      file: "dist/html.min.js",
+      name: "html",
+      format: "umd"
+    },
+    plugins: [resolve(), commonjs(), terser()]
+  },
+  {
     input: "src/index.js",
     output: {
       file: "dist/index.min.js",

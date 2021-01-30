@@ -1,6 +1,6 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.2.0",
+	"version": "1.3.0",
 	"description": "Simple component library with state management, DOM diffing, tweening, server-side rendering and more.",
 	"author": "sc0ttj",
 	"license": "MIT",
@@ -27,6 +27,7 @@
 		"component",
 		"dom-diff",
 		"server-side-rendering",
+		"templating",
 		"tween",
 		"pubsub",
 		"emit",
@@ -36,13 +37,15 @@
 		"dist/index.min.js",
 		"dist/component.min.js",
 		"dist/tweenState.min.js",
-		"dist/emitter.min.js"
+		"dist/emitter.min.js",
+		"dist/html.min.js",
+		"dist/htmel.min.js"
 	],
 	"dependencies": {},
 	"devDependencies": {
 		"@rollup/plugin-commonjs": "^14.0.0",
 		"@rollup/plugin-node-resolve": "^8.4.0",
-		"@scottjarvis/validator": "^1.0.1",
+		"@scottjarvis/validator": "^1.0.2",
 		"rollup": "^2.23.0",
 		"rollup-plugin-terser": "^6.1.0"
 	},
