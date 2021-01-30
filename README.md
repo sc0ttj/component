@@ -27,11 +27,11 @@ A "state" is a snapshot of your application data at a specific time.
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
 - Use "middleware" to easily customise component re-render behaviour 
-- A small list of optional add-on modules:
+- A useful list of optional add-ons:
+  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
+  - `validator`: validate states against a schema (like a simple PropTypes)
   - `tweenState`: animate from one state to the next
   - `emitter`: an event emitter, for sharing updates between components
-  - `validator`: validate states against a schema (like a simple PropTypes)
-  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
 - ...and more
 
 Your components will support:
@@ -165,24 +165,21 @@ To make it easier to build a good HTML "view" for your components, there are two
 
 These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
 
-- `html` (469 bytes) - returns your Template literal as a string.
-- `htmel` (541 bytes) - returns your Template literal as real DOM Node Element.
+- `html` (456 bytes) - returns your template as a String.
+- `htmel` (520 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
+
+Note: Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
 
 Features of `html` and `htmel`:
 
 ```js
-// embed JS object properties as CSS 
-html`<p style=${{background: "red"}}>I'm red!</p>`
-```
-
-```js
-// embed JS object properties as CSS (ignores nested/child objects, keeping only properties)
-html`<p style="${someObj}">some text</p>`
-```
-
-```js
 // embed JS object properties as valid HTML attributes  (ignores nested/child objects)
 html`<p ${someObj}>some text</p>`
+```
+
+```js
+// embed JS object properties as CSS (ignores nested/child objects)
+html`<p style="${someObj}">some text</p>`
 ```
 
 ```js
@@ -224,7 +221,7 @@ var Table = props =>
   </div>`;
 ```
 
-Use `htmel` instead of `html` to return DOM Nodes (instead of strings):
+In a browser, you can use `htmel` instead of `html` to return DOM Nodes (instead of strings):
 
 ```js
 // returns a text node
@@ -255,18 +252,22 @@ var state = {
       "padding": "8px",
     }
   },
+  attrs: {
+    "class": "foo bar",
+    "z-index": 2,
+  },
   text: "My Title:",
   list: [
     "one",
     "two",
   ],
-  status: null,
+  status: false,
 };
 
 // now let's use `html` to construct our HTML view..
 
 App.view = props => html`
-  <div style="${props.css}">
+  <div style="${props.css}" ${props.attrs}>
     <h2>${props.title}</p>
     <p>${props.text}</p>
     <ul style="${props.css.list}">
@@ -278,8 +279,6 @@ App.view = props => html`
 
 console.log(App.view(state));  // returns string of valid HTML
 ```
-
-Note: Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
 
 ### Styling your component
 
@@ -732,6 +731,15 @@ See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usa
 
 ## Changelog
 
+**1.3.0**
+- new add-ons: `html` and `htmel` for more JSX-like component views
+- both add-ons are optional, can be used for easier HTML templating
+- `html` always returns your template as a String
+- `htmel` returns your template as an HTML Object (browser) or String (NodeJS)
+- fixes in `src/component.js`, to allow view to be HTML Object, not only String
+- added `App.html`, alias of `App.container` (which is an HTML Element of components container) 
+- updated examples, docs and build tool configs
+
 **1.2.0**
 - doing `Foo = new Component(someState)` now returns a function, not an object
 - the function returned calls `setState` in its constructor
@@ -870,10 +878,6 @@ Rebuild to `dist/` using the command `npm run build`
   - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
     - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
     - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
-  - Better CSS-in-JS: 
-    - define a components CSS using regular JS objects (alternative to template strings)
-    - see [twirl](https://github.com/benjamminj/twirl-js)
-  - see `htl` or similar for wrappers around view HTML that provide syntactic sugar
 
 - Better SSR
   - an `App.envelope()` add-on method, to render components as JSON envelopes:

@@ -1,6 +1,7 @@
-import raf from "./raf.js"
+import raf from 'raf'
 import easing from "./easings.js"
 ;("use strict")
+
 
 // if no window.performance, use 'perf_hooks' module
 // (from https://stackoverflow.com/questions/23003252/window-performance-now-equivalent-in-nodejs)

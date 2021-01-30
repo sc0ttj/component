@@ -3,41 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <script src="../dist/component.min.js"></script>
+<script src="../dist/htmel.min.js"></script>
 <script>
-  /*
-   * html`<div>...</div>`  -  allows easier HTML in template literals
-   * - auto joins arrays, without adding commas (so no need to keep using .join('') in your templates)
-   * - convert objects to strings (so you can use `style="${someObj}"` in your templates)
-   * - hides falsey stuff (instead of printing "false" [etc] in the output)
-   */
-  var html = (strings, ...vals) => {
-    return strings.map((str, i) => {
-      var v = vals[i] || '';
-      var val = v;
-      if (Array.isArray(v)) {
-        val = v.join('');
-      }
-      else if (typeof v === "object") {
-        var s = '';
-        for (var p in v) {
-          if (v.hasOwnProperty(p) && typeof v[p] !== "object") {
-            s += `${p}:${v[p]};`;
-          }
-        }
-        val = s;
-      }
-      return str ? str + (val || '') : '';
-    }).join('');
-  }
-</script>
-<script>
+  // define the component
+
   var state = {
     title: "Title goes here",
     subTitle: "Sub-title goes here",
+    attrs: {
+      "class": "foobar",
+      "z-index": 2,
+    },
     css: {
       "font-weight": "bold",
-      foo: {
-        bar: "baz",
+      "color": "red",
+      unused: {
+        "font-size": "2em",
       },
     },
     headings: [ "Country", "0-10", "11-20", "21-30", "31-40", "older" ],
@@ -52,12 +33,12 @@
   var Table = new Component(state);
 
   var TableRows = props => props.map(row =>
-    html`<tr>
+    htmel`<tr>
       ${row.map((item, i) => `<td>${row[i]}</td>`)}
     </tr>`);
 
   Table.view = props =>
-    html`<div>
+    htmel`<div ${props.attrs}>
       <h2>${props.title}</h2>
       <p style="${props.css}">${props.subTitle}</p>
       <table>
@@ -78,30 +59,37 @@
     `;
 
   Table.actions({
-    add: props => {
-      Table.setState({ content: [ ...Table.state.content, props] })
-    }
+    add: props => Table.setState({ content: [ ...Table.state.content, props] })
   });
 
 </script>
 </head>
 
 <body>
-  <div class="demo">
+  <div>
     <div class="table"></div>
     <button id="add-more" onclick="Table.addRow()">Add row</button>
   </div>
 
-<script>
-  // use the component
+  <script>
+  // add component to page
   Table.render('.table');
+  // update the component
   Table({ title: "Awesome Table" });
   Table.add([ "USA", 61, 32, 83, 14, 56 ]);
   Table.add([ "Japan", 1, 2, 3, 4, 5 ]);
   Table.add([ "China", 12, 23, 344, 42, 245 ]);
-  // add our own methods to the component
+
+  // use event delegation to add user interactivity (recommended)
+  Table.html.addEventListener("click", e => {
+    var el = e.target.nodeName.toLowerCase();
+    console.log(`You clicked a  <${el}>  element.`);
+  });
+
+  // ..or add your own methods to the component
   Table.addRow = e => Table.add([ "Buttonland", 12, 23, 344, 42, 245 ]);
-</script>
+
+  </script>
 </body>
 
 </html>
