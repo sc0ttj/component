@@ -860,6 +860,12 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Future improvements
 
+- Persistant state
+  - stored in/retrieved from localStorage (etc)
+
+- Store manager
+  - like redux, storeon, etc
+   
 - Usability:
   - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
     - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
