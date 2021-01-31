@@ -248,7 +248,7 @@ htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
 Example usage:
 
 ```js
-import { Component, html } from "@scottjarvis/Component"
+import { Component, htmel } from "@scottjarvis/Component"
 
 // ...later
 
@@ -273,9 +273,9 @@ var state = {
 
 var someFunc = function(event) { console.log(event); }
 
-// now let's use `html` to construct our HTML view..
+// now let's use `htmel` to construct our HTML view..
 
-App.view = props => html`
+App.view = props => htmel`
   <div style="${props.css}" ${props.attrs}>
     <h2>${props.title}</p>
     <p>${props.text}</p>
@@ -283,7 +283,6 @@ App.view = props => html`
       ${props.list.map(val => `<li>${val}</li>`)}
     </ul>
     ${status && `<p>${status}</p>`}
-    <hr>
     <button onclick="${someFunc}">Click me</button>
   </div>
 `;
