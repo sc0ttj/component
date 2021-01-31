@@ -737,9 +737,12 @@ See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usa
 - `html` always returns your template as a String
 - `htmel` returns your template as an HTML Object (browser) or String (NodeJS)
 - updates to `src/component.js`:
-  - added: new property `App.html`, an alias of `App.container` (returns an HTML Element) 
+  - fixed: in NodeJS, debounced logging now falls back to using setTimeout, if needed 
   - added: allow view to be HTML Object, not only String
-  - fixed (in NodeJS): debounced logging falls back to using setTimeout, if needed 
+  - added: `App.html` property - alias of `App.container` (returns an HTML Element) 
+  - added: `App()` will return the container (an HTML Element)
+  - added: `App.actionsList` property - the list of defined actions functions
+    - `App({...})` still returns `App` (for chainable actions, etc)
 - updated examples, README and build configs
 
 **1.2.0**
@@ -882,7 +885,7 @@ Rebuild to `dist/` using the command `npm run build`
     - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
 
 - Better SSR
-  - an `App.envelope()` add-on method, to render components as JSON envelopes:
+  - an `toEnvelope()` add-on method, to render components as JSON envelopes:
     - render as JSON
     - include view, actions & style as stringified HTML, CSS and JS
   - pass in config to `toString()`, to choose what to render:
@@ -898,6 +901,12 @@ Rebuild to `dist/` using the command `npm run build`
         - the contents will be grabbed and used for a new `.view()`
       - for (re)attaching events, see [yo-yo](https://github.com/maxogden/yo-yo)
   
+- Scroll-based re-rendering/animation:
+  - create a `Component.scroll({ ... })` add-on module:
+    - hooks `setState` into scroll progress values for components container
+    - see [sc0ttj/scrollstory](https://github.com/sc0ttj/scrollstory)
+      - e.g. progress = data => App.tweenState({ width: `${data.progress * 100}%` })
+
 - Better animations: 
   - create a physics based timing functions module:
     - like current easings, but more flexible/dynamic
@@ -910,14 +919,14 @@ Rebuild to `dist/` using the command `npm run build`
         - collision detection
 
 - Universal rendering (add-ons):
-  - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from `x` to HTML strings:
+  - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from `x` to HTML strings:
     - markdown (see [YerkoPalma/marli](https://github.com/YerkoPalma/marli))
     - files/binary/buffer (see [almost/stream-template](https://github.com/almost/stream-template))
-  - use [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) to render from HTML strings to `x`:
-    - virtual DOM (see `htm`, `hyperx`, `snabby`)
-    - real DOM (see `htl`, `fast-html-parser`, `bel`, `genel`, ...)
-    - ANSI console markup, for coloured terminal output (like a JS/HTML-based `tput`) (?)
-    - pdf (?)
+  - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from HTML strings to `x`:
+    - real DOM (see `html`/`htmel`, or [htl](https://observablehq.com/@observablehq/htl), [fast-html-parser](https://www.npmjs.com/package/fast-html-parser), [genel](https://github.com/capsidjs/genel), ...)
+    - virtual DOM (see [developit/htm](https://github.com/developit/htm), [hyperx](https://github.com/choojs/hyperx), [snabby](https://github.com/mreinstein/snabby))
+    - ANSI console output (for coloured terminal output..?)
+    - PDF (..?)
 
 - Support for custom elements/Web Components
   - so you can use `<my-custom-app></my-custom-app>` in your HTML
@@ -930,26 +939,25 @@ Rebuild to `dist/` using the command `npm run build`
 - [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function (used by this project)
 - [set-dom](https://github.com/DylanPiercey/set-dom) - tiny dom diffing library
 - [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
-- [fast-html-parser](https://www.npmjs.com/package/fast-html-parser) - generate a simplified DOM tree from string, with basic element querying
 
-### JSX-like syntax in Template Literals (alternatives to `html`/`hmtel`)
+### JSX-like syntax in Template Literals (alternatives to `html`/`htmel`)
 
 - [developit/htm](https://github.com/developit/htm) - JSX-like syntax in ES6 templates, generates vdom from Template Literals
 - [htl](https://observablehq.com/@observablehq/htl)- by Mike Bostock, events, attr/styles as object, other syntactic sugar, 2kb
-- [zspecza/common-tags - html function](https://github.com/zspecza/common-tags#html) - makes it easier to write properly indented HTML in your templates
+- [zspecza/common-tags: `html` function](https://github.com/zspecza/common-tags#html) - makes it easier to write properly indented HTML in your templates
 
 ### Template strings to real DOM nodes
 
 - [htl](https://observablehq.com/@observablehq/htl)- by Mike Bostock, events, attr/styles as object, other syntactic sugar, 2kb
 - [developit/htm](https://github.com/developit/htm) - JSX-like syntax in ES6 templates, generates vdom from Template Literals
-- [nanohtml](https://github.com/choojs/nanohtml) - uses vdom, can attach event listers, can do SSR, 8kb
+- [fast-html-parser](https://www.npmjs.com/package/fast-html-parser) - generate a simplified DOM tree from string, with basic element querying
 - [domify-template-strings](https://github.com/loilo-archive/domify-template-strings) - get real DOM nodes from HTML template strings, browser only, no SSR
 - [genel](https://github.com/capsidjs/genel) - create real DOM nodes from template string, browser only (no SSR), 639 bytes
 
 ### Template strings to VDOM and VDOM diffing
 
-- [snabbdom](https://github.com/snabbdom/snabbdom) - the vdom diffing library used by Vue.js
 - [snabby](https://github.com/mreinstein/snabby) - use HTML template strings to generate vdom, use with snabbdom
+- [snabbdom](https://github.com/snabbdom/snabbdom) - the vdom diffing library used by Vue.js
 - [petit-dom](https://github.com/yelouafi/petit-dom) - tiny vdom diffing and patching library
 - [hyperx](https://github.com/choojs/hyperx) - tagged templates to vdom (used by [nanohtml](https://github.com/choojs/nanohtml)
 
@@ -973,7 +981,7 @@ Rebuild to `dist/` using the command `npm run build`
 
 ### Routers
 
-- [router](https://github.com/sc0ttj/router) - a tiny, simple isomorphic router, should play nice with this project
+- [router](https://github.com/sc0ttj/router) - a tiny, isomorphic router & web server, supports express middleware, runs in browsers, lambdas, NodeJS.
 
 ### Other tiny component libraries
 
@@ -981,6 +989,7 @@ Rebuild to `dist/` using the command `npm run build`
 - [choojs](http://github.com/choojs/) - A 4kb framework for creating sturdy frontend applications, uses `yo-yo`
 - [hyperapp](https://github.com/jorgebucaran/hyperapp) - The tiny framework for building web interfaces, React-like, uses h(), VDOM, etc
 - [preact](https://github.com/preactjs/preact) - a 3.1kb alternative to React.js
+- [nanohtml](https://github.com/choojs/nanohtml) -  8kb, uses vdom, can attach event listers, can do SSR
 
 
 ## Further reading
