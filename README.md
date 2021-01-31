@@ -739,9 +739,9 @@ See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usa
 - updates to `src/component.js`:
   - fixed: in NodeJS, debounced logging now falls back to using setTimeout, if needed 
   - added: allow view to be HTML Object, not only String
+  - added: `App.actionsList` property - the list of defined actions functions
   - added: `App.html` property - alias of `App.container` (returns an HTML Element) 
   - added: `App()` will return the container (an HTML Element)
-  - added: `App.actionsList` property - the list of defined actions functions
     - `App({...})` still returns `App` (for chainable actions, etc)
 - updated examples, README and build configs
 
