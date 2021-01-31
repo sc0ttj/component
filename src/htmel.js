@@ -21,6 +21,22 @@ var htmel = (strings, ...vals) => {
   // else, return the HTML as a proper HTML Object
   var t = document.createElement('template');
   t.innerHTML = out;
+  // get all elems inside our template
+  var elems = t.content.firstChild.children;
+  // for each elem, get its attributes
+  for (var i = 0; i < elems.length; i++) {
+    var attrs = elems[i].attributes;
+    // for each attribute, check it starts with `on`
+    for (var q = 0; q < attrs.length; q++) {
+      var attr = attrs[q];
+      if (attr.name.match(/^on/)) {
+        // if attribute starts with "on", remove it
+        elems[i].removeAttribute(attr.name);
+        // and assign the function as a proper event listener instead
+        elems[i].addEventListener(attr.name.replace(/^on/, ''), html.funcs[attr.value])
+      }
+    }
+  }
   return t.content.firstChild;
 }
 

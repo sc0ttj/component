@@ -165,8 +165,8 @@ To make it easier to build a good HTML "view" for your components, there are two
 
 These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
 
-- `html` (456 bytes) - returns your template as a String.
-- `htmel` (520 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
+- `html` (527 bytes) - returns your template as a String.
+- `htmel` (728 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
 
 Note: Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
 
@@ -238,6 +238,13 @@ htmel`<p>I’m text in an element.</p>`
 htmel`<td>foo</td>`
 ```
 
+If using `htmel` in a browser, you can even embed functions as event attributes - they'll be attached to the relevant HTML Elements as proper Event listeners:
+
+```js
+// embed functions - they'll be attached as proper event listeners
+html`<p onclick="${e => console.log(e.target)}">some text</p>`
+```
+
 Example usage:
 
 ```js
@@ -264,6 +271,8 @@ var state = {
   status: false,
 };
 
+var someFunc = function(event) { console.log(event); }
+
 // now let's use `html` to construct our HTML view..
 
 App.view = props => html`
@@ -274,6 +283,8 @@ App.view = props => html`
       ${props.list.map(val => `<li>${val}</li>`)}
     </ul>
     ${status && `<p>${status}</p>`}
+    <hr>
+    <button onclick="${someFunc}">Click me</button>
   </div>
 `;
 

@@ -13,12 +13,15 @@
  * @return {String}
  */
 var html = (strings, ...vals) => {
+  // create a property in which to save event attribute funcs, which we'll
+  // later attach to their elements as proper event listeners
+  html.funcs = []
+  // start: loop over the template content
   var output = strings.map((str, i) => {
     var v = vals[i] || '';
-
+    var ctx = 'attr'
     // workout our current "context" (either inside an HTML opening tag,
     // inside a style attribute, or inside a data-* attribute)
-    var ctx = 'attr'
     if (str.match(/style=("|')$/i)) { //"
       ctx = 'style'
     }
@@ -26,18 +29,33 @@ var html = (strings, ...vals) => {
       ctx = 'dataAttr'
     }
 
-    // get the "type" of the current value (either an Element, HTML
-    // Collection, Node List, String, Object, etc):
+    // check for onclick="{someFunc}", and so on
+    if (typeof v === 'function'
+        && ctx === 'attr'
+        && str.match(/ on[a-z0-9]+=("|')$/i)) //"
+    {
+      ctx = 'funcAttr'
+    }
 
+    // check for either an Element, HTML Collection, Node List, String,
+    // Object, etc):
     // if current value to process (v) is an HTML Object of any kind,
     // gets its outer HTML and use that
-    if (v.nodeName) {
+    if (v.nodeName && ctx === 'attr') {
       v = v.outerHTML;
 
+    } else if (ctx === 'funcAttr' && typeof v === 'function') {
+      // keep the function for later, but dont include it in output
+      if (Array.isArray(html.funcs) && !html.funcs[i]) html.funcs[i] = v;
+      // replace `onclick="..." with onclick="${i}" - we'll reference
+      // it later, once it's a real Element, so we can attach funcs[i] to
+      // it, as a proper event listener method
+      v='';
+      str += i
     } else if (Array.isArray(v)) {
       // if we have a Node List or HTML Collection, convert its
       // items to strings
-      if(v[0].nodeName) v = v.map(n => `${n.outerHTML}`)
+      if (v[0].nodeName) v = v.map(n => `${n.outerHTML}`)
       // now concat the array itself to string
       v = v.join('');
 
@@ -50,7 +68,7 @@ var html = (strings, ...vals) => {
         // gets the objects properties as strings,
         // while ignoring nested objects, arrays etc
         for (var p in v) {
-          if (v.hasOwnProperty(p) && typeof v[p] !== "object") {
+          if (p && v && v.hasOwnProperty(p) && typeof v[p] !== "object") {
             // if inside a style attr, return `key: val;`
             // if inside an HTML tag, return ` key="val"`
             if (ctx === 'style') s += `${p}:${v[p]};`;
@@ -66,7 +84,7 @@ var html = (strings, ...vals) => {
     // we can return the current string, with `v` appended, and then
     // move to next iteration
     return str ? str + (v || '') : '';
-  }).join(''); // join it all together as a single string
+  }).join('');
 
   // return the compiled HTML as a string
   return output;

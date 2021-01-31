@@ -432,7 +432,6 @@ function Component(state, schema) {
    */
   c.render = function(el) {
     var view = typeof c.view === "function" ? c.view(c.state) : null
-    if (view.outerHTML) view = view.outerHTML
 
     if (c.isNode) {
       return c.toString()
@@ -446,18 +445,17 @@ function Component(state, schema) {
 
       // Setup the new requestAnimationFrame()
       timeout = requestAnimationFrame(() => {
-        //console.log("debounced")
-        // get the container element if needed
-        //if (document && !c.html) {
-        //  el = document.querySelector(el)
-        //  c.html = c.container = el
-        //}
         if (c.css && c.style) c.setCss()
         if (c.container && view) {
           try {
-            domDiff(c.container.firstChild, view)
+            domDiff(c.container.firstChild, (view.outerHTML ? view.outerHTML : view))
           } catch (err) {
-            c.container.innerHTML = view.outerHTML ? view.outerHTML : view
+            if (view.outerHTML) {
+              c.container.innerHTML = ''
+              c.container.append(view)
+            } else {
+              c.container.innerHTML = view
+            }
           }
         }
       })
