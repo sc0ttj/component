@@ -242,7 +242,7 @@ If using `htmel` in a browser, you can even embed functions as event attributes 
 
 ```js
 // embed functions - they'll be attached as proper event listeners
-html`<p onclick="${e => console.log(e.target)}">some text</p>`
+htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
 ```
 
 Example usage:
