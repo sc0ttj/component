@@ -409,9 +409,9 @@ App.minus(1)
 
 Also see [examples/usage-emitter.js](examples/usage-emitter.js)
 
-### Attaching Events
+### Attaching Event Listeners
 
-To add your own standard JavaScript Events, you should add them to the container of your components:
+To add your own Event Listeners, you should add them to the container of your components:
 
 ```js
 App.render('.container');
