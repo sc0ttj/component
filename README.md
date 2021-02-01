@@ -56,13 +56,10 @@ A "state" is a snapshot of your application data at a specific time.
 ```js
 const { Component } = require('@scottjarvis/component');
 
-// Define a state
-const state = { title: "Hello world", txt: "foobar" }
-
 // Define your component:
 
-// 1. create it, pass in the state 
-const App = new Component(state)
+// 1. create it, pass in the initial state 
+const App = new Component({ title: "Hello world", txt: "foobar" })
 
 // 2. define a view
 App.view = props => `
@@ -290,9 +287,9 @@ App.style = (props) => `
 `
 ```
 
-If a component is added to a page with `render('.container')`, the CSS above is prefixed with the `id` or `className` of its container. 
+If a component is added to a page with `render('.container')`, the CSS is prefixed with the `id` or `className` of its container. 
 
-_This CSS automatic "scoping"/prefixing will (usually) prevent your component styles affecting other parts of the page_.
+_This CSS "auto-scoping" will prevent a components styles affecting other parts on the page_.
 
 It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself.
 
@@ -411,6 +408,25 @@ App.minus(1)
 ```
 
 Also see [examples/usage-emitter.js](examples/usage-emitter.js)
+
+### Attaching Events
+
+To add your own standard JavaScript Events, you should add them to the container of your components:
+
+```js
+App.render('.container');
+
+App.html.addEventListener("click", e => {
+    // get the element clicked
+    const el = e.target.className;
+    // work out what to do next
+    if (el === "foo") {
+      // ...
+    } else if (el === "bar") {
+      // ...
+    }
+});
+```
 
 ### Using the `tweenState` module
 
@@ -576,14 +592,12 @@ var TableRows = props => props.map(row =>
     ${row.map((item, i) => `<td>${row[i]}</td>`)}
   </tr>`);
 
-var Table = props =>
-  html`<div>
-    <table>
+var Table = props => html`
+  <table>
     <tbody>
       ${TableRows(props.data)}
     </tbody>
-    </table>
-  </div>`;
+  </table>`;
 ```
 
 Features of `htmel`:
