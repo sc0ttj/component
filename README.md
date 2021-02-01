@@ -54,15 +54,15 @@ A "state" is a snapshot of your application data at a specific time.
 ## Quickstart
 
 ```js
-{ Component } = require('@scottjarvis/component');
+const { Component } = require('@scottjarvis/component');
 
 // Define a state
-var state = { title: "Hello world", txt: "foobar" }
+const state = { title: "Hello world", txt: "foobar" }
 
 // Define your component:
 
 // 1. create it, pass in the state 
-var App = new Component(state)
+const App = new Component(state)
 
 // 2. define a view
 App.view = props => `
