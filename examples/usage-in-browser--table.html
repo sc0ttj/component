@@ -5,48 +5,52 @@
 <script src="../dist/component.min.js"></script>
 <script src="../dist/htmel.min.js"></script>
 <script>
-  // define the component
+// Define a re-usable component
+// Just create a function that creates a new Component, and returns it:
+function Table(state, schema) {
 
-  var state = {
-    title: "Title goes here",
-    subTitle: "Sub-title goes here",
-    attrs: {
-      "class": "foo bar",
-      "z-index": 2,
-    },
+  const defaults = {
     css: {
       "font-weight": "bold",
       "color": "red",
-      unused: {
-        "font-size": "2em",
-      },
     },
+    attrs: {
+      width: "100%",
+      "border": 0,
+    },
+    title: "Title goes here",
+    subTitle: "Click me and check the dev tools console",
     headings: [ "Country", "0-10", "11-20", "21-30", "31-40", "older" ],
     content: [
       [ "England", 10, 20, 30, 20, 20 ],
       [ "France",  10, 20, 30, 30, 10 ],
       [ "Germany", 1, 2, 3, 3, 1 ],
     ],
-    source: null
+    source: false,
+    onclick: e => console.log("CLICKED!", e.target),
   };
 
-  var Table = new Component(state);
+  // Create the component to return
+  const Table = new Component({ ...defaults, ...state }, schema);
 
-  var TableRows = props => props.map(row =>
-    htmel`<tr>
-      ${row.map((item, i) => `<td>${row[i]}</td>`)}
-    </tr>`);
+  const TableRows = props => props.map(row =>
+    htmel`<tr>${row.map((item, i) => `<td>${row[i]}</td>`)}</tr>`);
 
-  Table.view = props =>
-    htmel`<div ${props.attrs}>
-      <h2>${props.title}</h2>
-      <p style="${props.css}">${props.subTitle}</p>
-      <table>
+  Table.view = props => htmel`
+    <div>
+      <h2 style="${props.css}">${props.title}</h2>
+
+      <p onclick="${props.onclick}">
+        ${props.subTitle}
+      </p>
+      <table ${props.attrs}>
       <thead>
-        <tr>${props.headings.map(h => `<td>${h}</td>`)}</tr>
+        <tr>
+          ${props.headings.map(h => `<td>${h}</td>`)}
+        </tr>
       </thead>
       <tbody>
-        ${TableRows(props.content)}
+          ${TableRows(props.content)}
       </tbody>
       </table>
       ${props.source && `<p>Source: ${props.source}</p>`}
@@ -55,41 +59,42 @@
   Table.style = props => `
     table { display: table; }
     thead { font-weight: bold; }
-    td { min-width: 50px; padding: 4px; border: 1px solid grey; }
-    `;
+    td { min-width: 50px; padding: 4px; border: 1px solid grey; }`;
+
+  Table.middleware = [ props => console.log("MIDDLEWARE", props.title, Table.uid) ]
 
   Table.actions({
-    add: props => Table.setState({ content: [ ...Table.state.content, props] })
-  });
+    add: props => Table.setState({ content: [ ...Table.state.content, props ] })
+  })
 
+  return Table;
+}
 </script>
 </head>
 
 <body>
-  <div>
-    <div class="table"></div>
-    <button id="add-more" onclick="Table.addRow()">Add row</button>
+
+  <div class="demo">
+    <div class="table1"></div>
+    <div class="table2"></div>
+    <div class="table3"></div>
   </div>
 
   <script>
-  // add component to page
-  Table.render('.table');
-  // update the component
-  Table({ title: "Awesome Table" });
-  Table.add([ "USA", 61, 32, 83, 14, 56 ]);
-  Table.add([ "Japan", 1, 2, 3, 4, 5 ]);
-  Table.add([ "China", 12, 23, 344, 42, 245 ]);
+  // now we can create lots of re-usable components
+  var table1 = new Table({ title: "table 1" });
+  var table2 = new Table({ title: "table 2" });
+  var table3 = new Table({ title: "table 3" });
 
-  // use event delegation to add user interactivity (recommended)
-  Table.html.addEventListener("click", e => {
-    var el = e.target.nodeName.toLowerCase();
-    console.log(`You clicked a  <${el}>  element.`);
-  });
+  table1.render('.table1');
+  table2.render('.table2');
+  table3.render('.table3');
 
-  // ..or add your own methods to the component
-  Table.addRow = e => Table.add([ "Buttonland", 12, 23, 344, 42, 245 ]);
-
+  table1.add(["Added to ONE",   23, 20, 47,  7, 0])
+  table2.add(["Added to TWO",    0, 32, 40, 91, 0])
+  table3.add(["Added to THREE", 20, 40, 60, 20, 0])
   </script>
+
 </body>
 
 </html>

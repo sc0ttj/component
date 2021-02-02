@@ -10,108 +10,113 @@
 
 **Component** is a simple, "stateful component" thing.
 
-It lets you create "functional components" - basically functions that have a "state". 
+It lets you create re-usable, "functional components" - basically functions that have a "state". 
 
 A "state" is a snapshot of your application data at a specific time.
 
 ## Features
 
 - Easy setup, zero dependencies
-- 2kb, minified and gzipped
-- Simple syntax, easy to use, easy to learn
-- Plain JavaScript only
+- 2.1kb, minified and gzipped
+- Simple syntax, easy to use, easy to learn:
+  - plain JavaScript only
+  - no compilation or build tools needed
+  - no virtual DOM or JSX needed
+  - should work with any test suite
 - Works **client-side**, in browsers:
   - add your component to the page as you would a normal Element
   - auto re-render on state change, using `requestAnimationFrame` and DOM-diffing
+    - DOM diffing uses real DOM Nodes (not VDOM)
+    - all DOM reads/writes performed inside a debounced `requestAnimationFrame` 
+    - good (re)rendering/animation performance at 60fps
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
-- Use "middleware" to easily customise component re-render behaviour 
-- A useful list of optional add-ons:
-  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
+- Includes a useful list of **optional add-ons**:
   - `validator`: validate states against a schema (like a simple PropTypes)
-  - `tweenState`: animate from one state to the next
+  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
   - `emitter`: an event emitter, for sharing updates between components
-- ...and more
-
-Your components will support:
-
-- Auto re-render to page on state change (_optional_)
-- good rendering/animation performance:
-  - DOM diffing
-  - all DOM reads/writes performed inside a debounced `requestAnimationFrame` 
-- Automatic "scoping"/prefixing of your component CSS (_optional_)
-- Re-render styles on component CSS change (_optional_)
-- Event attributes like `onclick`, `onchange`, `onkeyup`, etc, etc
+  - `tweenState`: animate from one state to the next
+- Supports **"middleware"** functions:
+  - easily customise a components setState and re-render behaviour
+- Easy component CSS styling:
+  - Automatic "scoping"/prefixing of your component CSS (_optional_)
+  - Re-render styles on component CSS change (_optional_)
 - Easy state management:
   - define "actions" to easily update the state in specific ways 
-  - a state timeline for debugging (_optional_):
-    - a log/history of all changes to the component state
+  - a log of all state history can be kept, for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
-- Use "middleware" to customise your components "on state change" behaviour
-- Tweening/animating from the current state to the next state
-- Event emitting - publish & subscribe to state changes between components
-- Server side rendering:
-  - render component views as a String, JSON, or Buffer
 - Simple, stateless "child" components
 - ...and more
 
+
 ## Quickstart
 
+Example of a re-usable HTML component:
+
 ```js
+const { Component } = require('@scottjarvis/component');
 
-// Define a state
-var state = { title: "Hello world" }
+function Header(state) {
 
-// Define your component:
+  const Header = new Component({ title: "Hello world", ...state });
 
-// 1. create it, pass in the state 
-var App = new Component(state)
+  Header.view = props => `<h1>${props.title}</h1>`;
 
-// 2. define a view
-App.view = (props) => `<h1>${props.title}</h1>`
+  return Header;
+}
 
-// 3. render into the given elem
-App.render('.container')
-
-// ...later
-
-// Update the state, the page will re-render for you
-App.setState({ title: "Hello again!" })
-
-// Or set state via the component constructor (since v1.2.0)
-App({ title: "Hello a 3rd time!" })
+export default Header
 ```
 
-## Component overview
+And you use it like this:
+
+```js
+import Header from './Header.js'
+
+const header = new Header();
+
+// add it to our page
+header.render('.container');
+
+// Update the state, the heading will re-render for you
+header.setState({ title: "Hello again!" });
+
+// Or set state via the component constructor (since v1.2.0)
+header({ title: "Hello a 3rd time!" });
+```
+
+## Component API overview
 
 Methods:
 
-- **App.view(props)**: receives a state and sets the component view to (re)render
-- **App.style(props)**: receives a state and sets the `<style>` to (re)render
-- **App.render(el)**: (re)render to the given element on state change (browser)
-- **App.toString()**: render your component as a string on state change (NodeJS)
-- **App.setState(obj)**: update the component state, triggers a re-render
-- **App.tweenState(obj[, cfg])**: set state on each animation frame, supports various easing functions
-- **App.actions(obj)**: creates chainable methods that simplify updating the state
+- **.setState(obj)**: update the component state, triggers a re-render
+- **.render(el)**: (re)render to the given element on state change (browser)
+- **.toString()**: render your component as a string on state change (NodeJS)
+- **.view(props)**: receives a state and sets the component view to (re)render (optional)
+- **.style(props)**: receives a state and sets the `<style>` to (re)render (optional)
+- **.actions(obj)**: chainable methods that simplify updating the state (optional)
+- **.tweenState(obj[, cfg])**: set state on each frame, supports various easings (optional)
+- **.middleware**: an array of functions that run at the end of `setState()` (optional)
 - ...and more
 
 Properties:
 
-- **App.uid**: a unique string, generated once, on creation of a component
-- **App.state**: an object, contains your app data, read-only - cannot be modified directly
-- **App.log**: an array containing a history of all component states
-- **App.css**: the `<style>` Element which holds the component styles
-- **App.container**: the HTML Element into which the components view is rendered
-- **App.html**: alias of `App.container`
+- **.state**: an object, contains your app data, read-only - cannot be modified directly
+- **.schema**: an object against which to validate your component state (optional) 
+- **.container**: the HTML Element into which the components view is rendered (optional)
+- **.html**: alias of `.container`
+- **.css**: the `<style>` Element which holds the component styles (optional)
+- **.uid**: a unique string, generated once, on creation of a component
+- **.log**: an array containing a history of all component states
 - ...and more
 
 Settings:
 
-- **App.reactive**: if `false`, disables auto re-rendering on state change
-- **App.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${App.uid}`
-- **App.debug**: if true, a record of states changes are kept in `.log`
+- **.reactive**: if `false`, disables auto re-rendering on state change
+- **.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${uid}`
+- **.debug**: if true, a record of states changes are kept in `.log`
 
 ## Installation
 
@@ -159,209 +164,69 @@ See [examples/usage-in-node.js](examples/usage-in-node.js)
 
 ## Advanced usage
 
-### JSX-like features with `html` and `htmel`
+### State validation
 
-To make it easier to build a good HTML "view" for your components, there are two **optional** add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
+You can validate your component state against a schema, before you set it or render anything.
 
-These return your components view as either a String or HTML Object, but are otherwise inter-changeable:
+If the data to set doesn't match a components state schema, an error will be thrown.
 
-- `html` (527 bytes) - returns your template as a String.
-- `htmel` (728 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
+This is a similar concept to `propTypes` in React, but a bit simpler.
 
-Note: Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
-
-Features of `html` and `htmel`:
+First, you must install a tiny (~300 bytes) additional dependency:
 
 ```js
-// embed JS object properties as valid HTML attributes  (ignores nested/child objects)
-html`<p ${someObj}>some text</p>`
+npm i @scottjarvis/validator
 ```
 
+Then enable it:
+
 ```js
-// embed JS object properties as CSS (ignores nested/child objects)
-html`<p style="${someObj}">some text</p>`
+var { Component } = require("@scottjarvis/component")
+Component.validator = require("@scottjarvis/validator")
 ```
 
-```js
-// embed JS objects as JSON in HTML data attributes
-html`<p data-json='${someObj}'>some text</p>`
-```
+Define a schema object. For each property included, the value should be:
+
+- a `typeof` type name, as a string
+- or a validator function, that returns true or false
+
+Then create your component, passing in the schema as the second parameter to `Component()`. 
 
 ```js
-// embed real DOM objects 
-const elem = document.querySelector(".foo");
-const elems = document.querySelectorAll(".bar");
-html`<div>${elem}${elems}</div>` 
-```
-
-```js
-// embeds arrays properly, no need to use .join('')
-html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>`
-```
-
-```js
-// hides Falsey values, instead of printing "false", etc
-html`<span>some ${foo && `<b>cool</b>`} text</span>`
-```
-
-```js
-// nested templates
-var TableRows = props => props.map(row =>
-  html`<tr>
-    ${row.map((item, i) => `<td>${row[i]}</td>`)}
-  </tr>`);
-
-var Table = props =>
-  html`<div>
-    <table>
-    <tbody>
-      ${TableRows(props.data)}
-    </tbody>
-    </table>
-  </div>`;
-```
-
-In a browser, you can use `htmel` instead of `html` to return DOM Nodes (instead of strings):
-
-```js
-// returns a text node
-htmel`I’m simply text.`
-```
-
-```js
-// returns an HTML node
-htmel`<p>I’m text in an element.</p>`
-```
-
-```js
-// supports HTML fragments
-htmel`<td>foo</td>`
-```
-
-If using `htmel` in a browser, you can even embed functions as event attributes - they'll be attached to the relevant HTML Elements as proper Event listeners:
-
-```js
-// embed functions - they'll be attached as proper event listeners
-htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
-```
-
-Example usage:
-
-```js
-import { Component, htmel } from "@scottjarvis/Component"
-
-// ...later
-
-var state = {
-  css: {
-    "border": "2px solid red",
-    list: {
-      "padding": "8px",
+function Foo(state) {
+  const defaults = { 
+    count: 0, 
+    age: 20 
+    items: [ "one", "two" ],
+    foo: {
+      bar: "whatever"
     }
-  },
-  attrs: {
-    "class": "foo bar",
-    "z-index": 2,
-  },
-  text: "My Title:",
-  list: [
-    "one",
-    "two",
-  ],
-  status: false,
-};
+  };
 
-var someFunc = function(event) { console.log(event); }
+  const schema = { 
+    count: "number",
+    age: age => typeof age === "number" && age > 17,
+    items: "array",
+    foo: {
+      bar: "string"
+    }
+  };
 
-// now let's use `htmel` to construct our HTML view..
+  // pass in the schema as the 2nd param
+  const Foo = new Component({ ...defaults, ...state }, schema);
 
-App.view = props => htmel`
-  <div style="${props.css}" ${props.attrs}>
-    <h2>${props.title}</p>
-    <p>${props.text}</p>
-    <ul style="${props.css.list}">
-      ${props.list.map(val => `<li>${val}</li>`)}
-    </ul>
-    ${status && `<p>${status}</p>`}
-    <button onclick="${someFunc}">Click me</button>
-  </div>
-`;
-
-console.log(App.view(state));  // returns string of valid HTML
+  return Foo;
+}
 ```
 
-### Styling your component
-
-Use `App.style()` to define some styles for your components view (optional):
+If you try to set an invalid state, your component will `throw` an error:
 
 ```js
-App.style = (props) => `
-  #myapp {
-    border: 2px solid ${props.borderColor || 'red'};
-    margin: 0 auto;
-    max-width: ${props.maxWidth};
-  }
-  .btn {
-    background-color: ${props.btnColor || 'red'};
-    padding: 6px;
-  }
-`
+const foo = new Foo();
+foo.setState({ count: "a string" }) // this will throw an Error!
 ```
 
-When a component is added to the page using `render('.container')`, the CSS above is prefixed with the `id` or `className` of your container. 
-
-_This CSS automatic "scoping"/prefixing will prevent your component styles affecting other parts of the page_.
-
-It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself.
-
-If your container has no class or id attributes, then a unique string, `App.uid`, will be used instead.
-
-You can disable automatic CSS "scoping"/prefixing by using `App.scopedCss = false`.
-
-When rendering your component in NodeJS, or using `toString()`, your CSS will **not** be auto prefixed.
-
-To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
-
-### Using "actions"
-
-Define "actions" to update your state in specific ways.
-
-These are like regular methods, except they're always chainable, they hook into the `emitter` automatically, and they're tagged by name in your components state history. 
-
-```js
-App.actions({
-
-  update:     (props) => App.setState({ props }), // same as calling App.setState()
-
-  reset:      (props) => App.setState({ count: 0 }),
-
-  count:      (props) => App.setState({ count: props }),
-
-  plus:       (props) => App.setState({ count: App.state.count + props }),
-
-  minus:      (props) => App.setState({ count: App.state.count - props }),
-
-  items:      (props) => App.setState({ items: props }),
-
-  addItems:   (props) => App.setState({ items: [ ...App.state.items, ...props ] }),
-
-});
-
-// If you defined some "actions", you can use them
-// to update specific parts of your state
-App.plus(105)
-App.minus(5)
-
-// A components "actions" can be chained
-App
-  .minus(1)
-  .minus(1)
-  .minus(1)
-  .plus(3)
-  .addItems([ { name: "two" }, { name: "three" } ])
-```
-
-Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
+See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info.
 
 ### Using "middleware"
 
@@ -378,14 +243,28 @@ Here's how to use "middleware" functions to customise your components `setState(
 
 ```js
 // Define the middleware functions
-var countLog = props => console.log("middleware -> count logger", props.count)
-var itemsLog = props => console.log("middleware -> items logger", props.items)
+const countLog = props => console.log("middleware -> count = ", props.count)
 
-// Add the middleware to your component
-App.middleware = [countLog, itemsLog]
+// Define a component that uses middleware
+function Foo() {
+
+  const Foo = new Component({ count: 0 })
+
+  Foo.view = props => `<p>${props.count}</p>`
+
+  // Add the middleware to your component
+  Foo.middleware = [countLog]
+
+  return Foo;
+}
+
+// ..let's use our component with middleware
+
+const foo = new Foo();
+foo.setState({ count: 1 }) // will run the middleware
 ```
 
-In the above example, every time `App.setState({ ... })` is called, the `countLog` and `itemsLog` functions will be called at the end of `setState()`.
+In the above example, every time `foo.setState({ ... })` is called, the `countLog` function will be called at the end of `setState()`.
 
 Note that your middleware functions receive the latest state of the host component, as `props`.
 
@@ -395,85 +274,105 @@ See [examples/usage-in-node.js](examples/usage-in-node.js) for the complete exam
 
 Here is how to "time travel" to previous states, or jump forward to more recent ones.
 
-Note: To enable the state history, `App.debug` must be `true`.
+Note: To enable the state history, `app.debug` must be `true`.
 
 ```js
+const foo = new Foo();
 
 // enable logging of state history
-App.debug = true
+foo.debug = true
 
 // Take a "snapshot" (we'll use it later)
-var snapshot = App.state
+var snapshot = foo.state
 
 // ...later
 
-App.rw()         // go to initial state
-App.ff()         // go to latest state
-App.rw(2)        // rewind two steps to a previous state
-App.ff(2)        // fast-forward two steps to a more current state
+foo.rw()         // go to initial state
+foo.ff()         // go to latest state
+foo.rw(2)        // rewind two steps to a previous state
+foo.ff(2)        // fast-forward two steps to a more current state
 
 // Set a previous state
-App.setState(App.log[0].state)
+foo.setState(foo.log[0].state)
 
 // Set a "named" state, from a previous point in time
-App.setState(snapshot)
+foo.setState(snapshot)
 ```
 
-### Server side rendering
+### Styling your component
 
-If running a NodeJS server, you can render the components as HTML strings or JSON.
-
-Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
+Use `Foo.style()` to define some styles for your components view (optional):
 
 ```js
-// create an HTML view, using template literals
-var htmlView = props => `
-    <div id=${props.id}>
-      ${Heading("Total so far = " + props.count)}
-      ${List(props.items)}
-      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
-    </div>`
+function Foo(state, schema) {
 
-// or return the state itself (pure headless component)
-var dataOnlyView = props => props
+  // ... 
 
-// Choose a view to render
-App.view = htmlView
+  Foo.style = (props) => `
+    #myapp {
+      border: 2px solid ${props.borderColor || 'red'};
+      margin: 0 auto;
+      max-width: ${props.maxWidth};
+    }
+    .btn {
+      background-color: ${props.btnColor || 'red'};
+      padding: 6px;
+    }`;
 
-// render the component
-App.render()
-
-// ..other rendering options...
-
-// print it to the terminal
-console.log(App.render())
-```
-
-If rendering a component in NodeJS that has a `.view()` and `.style()`, or if calling `.toString()` directly, the output will be a string like this one:
-
-```
-"<style>
-#myapp {
-  border: 2px solid grey;
-  margin: 0 auto;
-  max-width: 360px;
+  return Foo;
 }
-.btn {
-  background-color: black;
-  color: white;
-  padding: 6px;
-}
-</style>
-<div id=\"foo-id\">
-  <h1>Total so far = 101</h1>
-  <ul><li>First</li><li>two</li><li>three</li></ul>
-  <button class=\"btn\" onclick=App.clickBtn(5)>Click here</button>
-</div>"
 ```
 
-^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
+If a component is added to a page with `foo.render('.container')`, the CSS is prefixed with the `id` or `className` of its container. 
 
-Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
+_This CSS "auto-scoping" will prevent a components styles affecting other parts on the page_.
+
+It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself.
+
+If your container has no class or id attributes, then a unique string, `foo.uid`, will be used instead.
+
+You can disable automatic CSS "scoping"/prefixing by using `foo.scopedCss = false`.
+
+When rendering your component in NodeJS, or using `toString()`, your CSS will **not** be auto prefixed.
+
+To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
+
+### Using "actions"
+
+Define "actions" to update your state in specific ways.
+
+These are like regular methods, except they're always chainable, they hook into the [emitter](#using-the-emitter-module) add-on automatically, and they're tagged by name in your components state history. 
+
+```js
+function Foo(state, schema) {
+  const Foo = new Component({ count: 0, items: [] });
+  // define the actions
+  Foo.actions({
+    update:     props => Foo({ props }), // same as calling Foo.setState()
+    plus:       props => Foo({ count: Foo.state.count + props }),
+    minus:      props => Foo({ count: Foo.state.count - props }),
+    addItems:   props => Foo({ items: [ ...Foo.state.items, ...props ] }),
+  });
+  return Foo;
+}
+
+// ...later
+
+const foo = new Foo();
+
+// use "actions" to update specific parts of your state
+foo.plus(105);
+foo.minus(5);
+
+// A components "actions" can be chained
+foo.minus(1)
+   .minus(1)
+   .minus(1)
+   .plus(3)
+   .addItems([ { name: "one" }, { name: "two" } ]);
+```
+
+Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
 
 ### Using the `emitter` module
 
@@ -503,58 +402,84 @@ Component.emitter = emitter;
 
 The emitter provides the following methods:
 
-- `App.on("eventName", props => { ... })` - every time `eventName` is emitted, run the given function
-- `App.once("eventName", props => { ... })` - run the given function only once
-- `App.off("eventName")` - stop listening to `eventName`
+- `foo.on("actionName", props => { ... })` - every time `actionName` is emitted, run the given function
+- `foo.once("actionName", props => { ... })` - run the given function only once
+- `foo.off("actionName")` - stop listening to `actionName`
 
 Note, `props` is the latest state of the component that emitted the event.
 
 Here's how to use the emitter:
 
 ```js
-var { Component, emitter } = require("../dist/index.min.js")
-Component.emitter = emitter
+// Define a component to listen to
 
-// Define our app
-var state = {
-  count: 0,
-  items: [{ name: "one" }]
+function Foo(state) {
+  const defaults = {
+    count: 0,
+    items: [{ name: "one" }]
+  }
+  const Foo = new Component({ ...defaults, ...state })
+
+  // Define chainable "actions" that we can listen to
+  Foo.actions({
+    plus:     props => Foo.setState({ count: Foo.state.count + props }),
+    minus:    props => Foo.setState({ count: Foo.state.count - props }),
+    addItems: props => Foo.setState({ items: [...Foo.state.items, ...props] })
+  })
+
+  return Foo;
 }
-var App = new Component(state)
+```
 
-// Define chainable "actions", to update the state more easily
-App.actions({
-  plus:     props => App.setState({ count: App.state.count + props }),
+Now let's "listen" to `foo` using another component, called `bar`:
 
-  minus:    props => App.setState({ count: App.state.count - props }),
-
-  addItems: props => App.setState({ items: [...App.state.items, ...props] })
-})
-
+```js  
 // Define some other component
-var Foo = new Component({ foo: "bar" })
+const bar = new Component({})
 
-// Listen for the actions above:
-Foo
-  .once("minus",  props => console.log("Foo: action 'minus'", props.count))
-  .on("plus",     props => console.log("Foo: action 'plus'", props.count))
-  .on("addItems", props => console.log("Foo: action 'addItems'", props.items))
+// Define "listeners" for the actions above:
+bar
+  .once("minus",  props => console.log("Bar: 'minus'",    props.count))
+  .on("plus",     props => console.log("Bar: 'plus'",     props.count))
+  .on("addItems", props => console.log("Bar: 'addItems'", props.items))
 
 // ...now we're ready to run the program..
 
-App.plus(105)
-App.minus(5)
+const foo = new Foo();
 
-// stop listening to the "plus" action
-Foo.off("plus")
+// these actions will trigger Bar
+foo.plus(105)
+foo.minus(5)
 
-App.minus(1)
+// stop listening to the "plus" action, keep listening to others..
+bar.off("plus")
+
+foo.minus(1)
   .minus(1)
   .plus(3)
   .addItems([{ name: "two" }, { name: "three" }])
 ```
 
 Also see [examples/usage-emitter.js](examples/usage-emitter.js)
+
+### Attaching Event Listeners
+
+To add your own Event Listeners, you should add them to the container of your components:
+
+```js
+foo.render('.container');
+
+foo.html.addEventListener("click", e => {
+    // get the element clicked
+    const el = e.target.className;
+    // work out what to do next
+    if (el === "foo") {
+      // ...
+    } else if (el === "bar") {
+      // ...
+    }
+});
+```
 
 ### Using the `tweenState` module
 
@@ -598,12 +523,9 @@ Component.tweenState = tweenState
 
 ```
 
-Example usage of `tweenState`, in NodeJS:
+Example usage of `tweenState`:
 
 ```js
-var { Component, tweenState } = require('@scottjarvis/component');
-Component.tweenState = tweenState
-
 // Define our app state
 var state = {
   ignore: "me",
@@ -668,76 +590,230 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
+### JSX-like features with `html` and `htmel`
+
+To make it easier to build a good HTML "view" for your components, there are two **optional** add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
+
+These return your components view as either a String or HTML Object, but are otherwise mostly inter-changeable:
+
+- `html` (527 bytes) - returns your template as a String.
+- `htmel` (728 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
+
+Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
+
+To use `html` or `htmel` (or both), import them along with Component, like so:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/html.min.js"></script>
+<script>
+  // use it here
+</script>
+```
+
+#### In NodeJS:
+
+```js
+var { Component, html } = require('@scottjarvis/component');
+
+// use it here
+
+```
+
+Features of both `html` and `htmel`:
+
+```js
+// embed JS object properties as valid HTML attributes  (ignores nested/child objects)
+html`<p ${someObj}>some text</p>`
+```
+
+```js
+// embed JS object properties as CSS (ignores nested/child objects)
+html`<p style="${someObj}">some text</p>`
+```
+
+```js
+// embed JS objects as JSON in HTML data attributes
+html`<p data-json='${someObj}'>some text</p>`
+```
+
+```js
+// embed real DOM objects 
+const elem = document.querySelector(".foo");
+const elems = document.querySelectorAll(".bar");
+html`<div>${elem}${elems}</div>` 
+```
+
+```js
+// embeds arrays properly, no need to use .join('')
+html`<ul>${list.map(i => `<li>${i}</li>`)}</ul>`
+```
+
+```js
+// hides Falsey values, instead of printing "false", etc
+html`<span>some ${foo && `<b>cool</b>`} text</span>`
+```
+
+```js
+// nested templates
+var TableRows = props => props.map(row =>
+  html`<tr>
+    ${row.map((item, i) => `<td>${row[i]}</td>`)}
+  </tr>`);
+
+var Table = props => html`
+  <table>
+    <tbody>
+      ${TableRows(props.data)}
+    </tbody>
+  </table>`;
+```
+
+Features of `htmel`:
+
+In a browser, you can use `htmel` instead of `html` to return DOM Nodes (instead of strings):
+
+```js
+// returns a text node
+htmel`I’m simply text.`
+```
+
+```js
+// returns an HTML node
+htmel`<p>I’m text in an element.</p>`
+```
+
+```js
+// supports HTML fragments
+htmel`<td>foo</td>`
+```
+
+If using `htmel` in a browser, you can also embed functions as event attributes - they'll be attached to the relevant HTML Elements as proper Event listeners:
+
+```js
+// embed functions - they'll be attached as Event listener methods
+htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
+```
+
+Example usage:
+
+```js
+// Let's define a component with a view, using `htmel`
+function Foo(state, schema) {
+
+  const defaults = {
+    css: {
+      "border": "2px solid red",
+      list: {
+        "padding": "8px",
+      }
+    },
+    attrs: {
+      "class": "foo bar",
+      "z-index": 2,
+    },
+    text: "My Title:",
+    list: [
+      "one",
+      "two",
+    ],
+    status: false,
+    someFunc: function(event) { console.log(event); }
+  };
+
+  const Foo = new Component({ ...defaults, ...state }, schema);
+
+  // now let's use `htmel` to construct an HTML view..
+  Foo.view = props => htmel`
+    <div style="${props.css}" ${props.attrs}>
+      <h2>${props.title}</p>
+      <p>${props.text}</p>
+      <ul style="${props.css.list}">
+        ${props.list.map(val => `<li>${val}</li>`)}
+      </ul>
+      ${props.status && `<p>${props.status}</p>`}
+      <button onclick="${props.someFunc}">Click me</button>
+    </div>
+  `;
+
+  return Foo;
+} 
+  
+```
+
 ### Using JSON-LD (linked data)
 
 Adding linked data to your components is easy - just define it as part of your view:
 
 ```js
-App.view = props => `
-  <script type="application/ld+json">{ ... }</script>
-  <div> ... </div>
-`
-```
+  Foo.view = props => `
+    <div>
+      <script type="application/ld+json">{ ... }</script>
+      ...
+    </div>`
+  ```
 
 - add a JSON-LD script before your component HTML
 - use the `props` passed in to define/update whatever you need
-- you JSON-LD will be updated along with your view whenever your component re-renders
+- your JSON-LD will be updated along with your view, whenever your component re-renders
 
-### State validation
+### Server side rendering
 
-You can validate your component state against a schema, before you set it or render anything.
+If running a NodeJS server, you can render the components as HTML strings or JSON.
 
-This is a similar concept to `propTypes` in React, but simpler and dumber.
-
-First, you must install a tiny (~300 bytes) additional dependency:
+Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
 
 ```js
-npm i @scottjarvis/validator
+// create an HTML view, using template literals
+var htmlView = props => `
+    <div id=${props.id}>
+      ${Heading("Total so far = " + props.count)}
+      ${List(props.items)}
+      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
+    </div>`
+
+// or return the state itself (pure headless component)
+var dataOnlyView = props => props
+
+// Choose a view to render
+App.view = htmlView
+
+// render the component
+App.render()
+
+// ..other rendering options...
+
+// print it to the terminal
+console.log(App.render())
 ```
 
-Then enable it:
+If rendering a component in NodeJS that has a `.view()` and `.style()`, or if calling `.toString()` directly, the output will be a string like this one:
 
-```js
-var { Component } = require("@scottjarvis/component")
-Component.validator = require("@scottjarvis/validator")
 ```
-
-Define a schema object. For each property included, the value should be:
-
-- a `typeof` type name, as a string
-- or a validator function, that returns true or false
-
-Then create your component, passing in the schema as the second parameter. 
-
-```js
-var state = { 
-  count: 0, 
-  age: 20 
-  items: [ "one", "two" ],
-  foo: {
-    bar: "whatever"
-  }
+"<style>
+#myapp {
+  border: 2px solid grey;
+  margin: 0 auto;
+  max-width: 360px;
 }
-
-var schema = { 
-  count: "number",
-  age: age => typeof age === "number" && age > 17,
-  items: "array",
-  foo: {
-    bar: "string"
-  }
+.btn {
+  background-color: black;
+  color: white;
+  padding: 6px;
 }
-
-var App = new Component(state, schema)
+</style>
+<div id=\"foo-id\">
+  <h1>Total so far = 101</h1>
+  <ul><li>First</li><li>two</li><li>three</li></ul>
+  <button class=\"btn\" onclick=App.clickBtn(5)>Click here</button>
+</div>"
 ```
 
-If you try to set an invalid state, your component will `throw` an error:
+^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
 
-```js
-App.setState({ count: "foo" }) // this will throw an Error!
-```
-
-See [`@scottjarvis/validator`](https://github.com/sc0ttj/validator) for more usage info.
+Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
 
 ## Changelog
 
