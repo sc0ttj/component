@@ -59,8 +59,11 @@ Example of a re-usable HTML component:
 const { Component } = require('@scottjarvis/component');
 
 function Header(state) {
+
   const Header = new Component({ title: "Hello world", ...state });
+
   Header.view = props => `<h1>${props.title}</h1>`;
+
   return Header;
 }
 
@@ -90,20 +93,21 @@ Methods:
 
 - **.setState(obj)**: update the component state, triggers a re-render
 - **.render(el)**: (re)render to the given element on state change (browser)
-- **.tweenState(obj[, cfg])**: set state on each animation frame, supports various easing functions
-- **.view(props)**: receives a state and sets the component view to (re)render
-- **.style(props)**: receives a state and sets the `<style>` to (re)render
-- **.actions(obj)**: creates chainable methods that simplify updating the state
-- **.middleware**: an array of functions that run at the end of setState()
 - **.toString()**: render your component as a string on state change (NodeJS)
+- **.view(props)**: receives a state and sets the component view to (re)render (optional)
+- **.style(props)**: receives a state and sets the `<style>` to (re)render (optional)
+- **.actions(obj)**: chainable methods that simplify updating the state (optional)
+- **.tweenState(obj[, cfg])**: set state on each frame, supports various easings (optional)
+- **.middleware**: an array of functions that run at the end of `setState()` (optional)
 - ...and more
 
 Properties:
 
 - **.state**: an object, contains your app data, read-only - cannot be modified directly
-- **.container**: the HTML Element into which the components view is rendered
+- **.schema**: an object against which to validate your component state (optional) 
+- **.container**: the HTML Element into which the components view is rendered (optional)
 - **.html**: alias of `.container`
-- **.css**: the `<style>` Element which holds the component styles (if set)
+- **.css**: the `<style>` Element which holds the component styles (optional)
 - **.uid**: a unique string, generated once, on creation of a component
 - **.log**: an array containing a history of all component states
 - ...and more
@@ -722,7 +726,7 @@ function Foo(state, schema) {
   const Foo = new Component({ ...defaults, ...state }, schema);
 
   // now let's use `htmel` to construct an HTML view..
-    Foo.view = props => htmel`
+  Foo.view = props => htmel`
     <div style="${props.css}" ${props.attrs}>
       <h2>${props.title}</p>
       <p>${props.text}</p>
