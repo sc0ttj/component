@@ -696,7 +696,8 @@ htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
 Example usage:
 
 ```js
-Foo(state, schema) {
+// Let's define a component with a view, using `htmel`
+function Foo(state, schema) {
 
   const defaults = {
     css: {
@@ -721,8 +722,7 @@ Foo(state, schema) {
   const Foo = new Component({ ...defaults, ...state }, schema);
 
   // now let's use `htmel` to construct an HTML view..
-  
-  Foo.view = props => htmel`
+    Foo.view = props => htmel`
     <div style="${props.css}" ${props.attrs}>
       <h2>${props.title}</p>
       <p>${props.text}</p>
