@@ -10,7 +10,7 @@
 
 **Component** is a simple, "stateful component" thing.
 
-It lets you create "functional components" - basically functions that have a "state". 
+It lets you create re-usable, "functional components" - basically functions that have a "state". 
 
 A "state" is a snapshot of your application data at a specific time.
 
@@ -416,7 +416,7 @@ function Foo(state) {
   }
   const Foo = new Component({ ...defaults, ...state })
 
-  // Define chainable "actions" that we cna listen to
+  // Define chainable "actions" that we can listen to
   Foo.actions({
     plus:     props => Foo.setState({ count: Foo.state.count + props }),
     minus:    props => Foo.setState({ count: Foo.state.count - props }),
@@ -696,7 +696,7 @@ htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
 Example usage:
 
 ```js
-const Foo = (state, schema) => {
+Foo(state, schema) {
 
   const defaults = {
     css: {
@@ -744,12 +744,12 @@ const Foo = (state, schema) => {
 Adding linked data to your components is easy - just define it as part of your view:
 
 ```js
-App.view = props => `
-  <div>
-    <script type="application/ld+json">{ ... }</script>
-    ...
-  </div>`
-```
+  Foo.view = props => `
+    <div>
+      <script type="application/ld+json">{ ... }</script>
+      ...
+    </div>`
+  ```
 
 - add a JSON-LD script before your component HTML
 - use the `props` passed in to define/update whatever you need
