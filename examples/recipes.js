@@ -27,8 +27,8 @@ const addItem = e => Todo({ list: [ ...Todo.state.list, Todo.state.txt ] });
 Todo.view = props => htmel
   `<div>
     <h1>Todo</h1>
-    <input  onkeyup="${e => setText(e)}" value="${props.txt}" type="text" />
-    <button onclick="${e => addItem()}"> Add </button>
+    <input  onkeyup="${setText}" value="${props.txt}" type="text" />
+    <button onclick="${addItem}"> Add Note </button>
     <ul>
       ${props.list.map(i => `<li>${i}</li>`)}
     </ul>
