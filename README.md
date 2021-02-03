@@ -174,17 +174,20 @@ See each add-on module (`validator`, `html`, `htmel`, `emitter` and `tweenState`
 
 Create interactive components for your web pages:
 
-See [examples/usage-in-browser.html](examples/usage-in-browser.html)
+- [examples/usage-in-browser--table.html](examples/usage-in-browser--table.html)
+- [examples/usage-in-browser.html](examples/usage-in-browser.html)
 
 ### In NodeJS
 
 Or you can do "server-side rendering" (SSR) of your components:
 
+See [examples/usage-in-node.js](examples/usage-in-node.js)
+
+Or run it in your terminal:
+
 ```
 node examples/usage-in-node.js
 ```
-
-See [examples/usage-in-node.js](examples/usage-in-node.js)
 
 ## Component API overview
 
