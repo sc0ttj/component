@@ -5,33 +5,36 @@
 
 // 1. "Counter" app
 
-  const Counter = new Component({ count: 1 });
+const Counter = new Component({ count: 1 });
 
-  Counter.view = props => htmel
-    `<div>
-      <h1>Counter: ${props.value}</h1>
-      <button onclick=${setCount(+1)}> + </button>
-      <button onclick=${setCount(-1)}> - </button>
-    </div>`;
+const add = num => Counter({ count: Counter.state.count+num })
 
-  const setCount = num => Counter({ Counter.state.count + num });
+Counter.view = props => htmel
+  `<div>
+    <h1>Counter: ${props.count}</h1>
+    <button onclick="${e => add(+1)}"> + </button>
+    <button onclick="${e => add(-1)}"> - </button>
+  </div>`;
 
 
 // 2. "Todo" app
 
-  const Todo = new Component({ txt: '', list: [] });
+const Todo = new Component({ txt: '', list: [ "one" ] });
 
-  Todo.view = props => htmel
-    `<div>
-      <h1>Todo</h1>
-      <input onchange="${Todo({ txt: e.target.value })}" type="text" />
-      <button onclick=${addItem(props.txt)}>Add</button>
-      <ul>
-        ${props.list.map(i => `<li>${i}</li>`)}
-      </ul>
-    </div>`;
+const setText = e => Todo({ txt: e.target.value });
 
-  const addItem = txt => Todo({ list: [ ...Todo.list, txt ] });
+const addItem = () => Todo({ list: [ ...Todo.state.list, Todo.state.txt ] });
+
+Todo.view = props => htmel
+  `<div>
+    <h1>Todo</h1>
+    <input  onkeyup="${e => setText(e)}" value="${props.txt}" type="text" />
+    <button onclick="${e => addItem()}"> Add Note </button>
+    <ul>
+      ${props.list.map(i => `<li>${i}</li>`)}
+    </ul>
+  </div>`;
+
 
 // -----------------------------------------------------------------------
 //
@@ -126,5 +129,3 @@ header1.render('#some-elem2')
 
 header1({ title: "One!" })
 header2({ title: "Two!" })
-
-
