@@ -448,13 +448,16 @@ function Component(state, schema) {
         if (c.css && c.style) c.setCss()
         if (c.container && view) {
           try {
-            domDiff(c.container.firstChild, (view.outerHTML ? view.outerHTML : view))
+            domDiff(c.container.firstElementChild, view.outerHTML ? view.outerHTML : view)
+            // console.log('diffed')
           } catch (err) {
             if (view.outerHTML) {
               c.container.innerHTML = ''
               c.container.append(view)
+              // console.log('cleared & appended')
             } else {
               c.container.innerHTML = view
+              // console.log('replaced innerHTML')
             }
           }
         }

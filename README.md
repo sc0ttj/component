@@ -19,7 +19,7 @@ A "state" is a snapshot of your application data at a specific time.
 - Easy setup, zero dependencies
 - 2.1kb, minified and gzipped
 - Simple syntax, easy to use, easy to learn:
-  - plain JavaScript only
+  - plain, vanilla JavaScript only
   - no compilation or build tools needed
   - no virtual DOM or JSX needed
   - should work with any test suite
@@ -53,17 +53,55 @@ A "state" is a snapshot of your application data at a specific time.
 
 ## Quickstart
 
-Example of a re-usable HTML component:
+Here's some quick examples to demo how it all looks:
+
+### "Counter" app
 
 ```js
-const { Component } = require('@scottjarvis/component');
+const Counter = new Component({ count: 1 });
 
+const add = num => Counter({ count: Counter.state.count + num })
+
+Counter.view = props => htmel
+  `<div>
+    <h1>Counter: ${props.count}</h1>
+    <button onclick="${e => add(+1)}"> + </button>
+    <button onclick="${e => add(-1)}"> - </button>
+  </div>`;
+
+Counter.render('.container')
+```
+
+### "Todo list" app
+
+```js
+const Todo = new Component({ txt: '', list: [ "one" ] });
+
+const setText = e => Todo({ txt: e.target.value });
+const addItem = e => Todo({ list: [ ...Todo.state.list, Todo.state.txt ] });
+
+Todo.view = props => htmel
+  `<div>
+    <h1>Todo</h1>
+    <input  onkeyup="${setText}" value="${props.txt}" type="text" />
+    <button onclick="${addItem}"> Add Note </button>
+    <ul>
+      ${props.list.map(i => `<li>${i}</li>`)}
+    </ul>
+  </div>`;
+
+Todo.render('.container')
+```
+
+
+### A *re-usable* HTML component:
+
+Unlike the previous two examples, this one below is a function which generates re-usable components - a new component is created from the given definition (state, view, etc) each time it's called.
+
+```js
 function Header(state) {
-
   const Header = new Component({ title: "Hello world", ...state });
-
   Header.view = props => `<h1>${props.title}</h1>`;
-
   return Header;
 }
 
@@ -75,48 +113,23 @@ And you use it like this:
 ```js
 import Header from './Header.js'
 
-const header = new Header();
+const header1 = new Header();
+const header2 = new Header();
 
 // add it to our page
-header.render('.container');
+header1.render('.container');
 
 // Update the state, the heading will re-render for you
-header.setState({ title: "Hello again!" });
+header1.setState({ title: "Hello again!" });
 
 // Or set state via the component constructor (since v1.2.0)
-header({ title: "Hello a 3rd time!" });
+header1({ title: "Hello a 3rd time!" });
+
+// etc..
+
 ```
 
-## Component API overview
-
-Methods:
-
-- **.setState(obj)**: update the component state, triggers a re-render
-- **.render(el)**: (re)render to the given element on state change (browser)
-- **.toString()**: render your component as a string on state change (NodeJS)
-- **.view(props)**: receives a state and sets the component view to (re)render (optional)
-- **.style(props)**: receives a state and sets the `<style>` to (re)render (optional)
-- **.actions(obj)**: chainable methods that simplify updating the state (optional)
-- **.tweenState(obj[, cfg])**: set state on each frame, supports various easings (optional)
-- **.middleware**: an array of functions that run at the end of `setState()` (optional)
-- ...and more
-
-Properties:
-
-- **.state**: an object, contains your app data, read-only - cannot be modified directly
-- **.schema**: an object against which to validate your component state (optional) 
-- **.container**: the HTML Element into which the components view is rendered (optional)
-- **.html**: alias of `.container`
-- **.css**: the `<style>` Element which holds the component styles (optional)
-- **.uid**: a unique string, generated once, on creation of a component
-- **.log**: an array containing a history of all component states
-- ...and more
-
-Settings:
-
-- **.reactive**: if `false`, disables auto re-rendering on state change
-- **.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${uid}`
-- **.debug**: if true, a record of states changes are kept in `.log`
+See more short recipes in [examples/recipes.js](examples/recipes.js).
 
 ## Installation
 
@@ -137,12 +150,23 @@ npm i @scottjarvis/component
 
 Then add it to your project:
 
+#### ES6 Modules:
+
+```js
+import { Component } from '@scottjarvis/component'
+
+// use it here
+```
+
+#### Using NodeJS `require()`:
+
 ```js
 var { Component } = require('@scottjarvis/component');
 
 // use it here
-
 ```
+
+See each add-on module (`validator`, `html`, `htmel`, `emitter` and `tweenState`) for their respective installation instructions.
 
 ## Usage
 
@@ -150,17 +174,53 @@ var { Component } = require('@scottjarvis/component');
 
 Create interactive components for your web pages:
 
-See [examples/usage-in-browser.html](examples/usage-in-browser.html)
+- [examples/usage-in-browser--table.html](examples/usage-in-browser--table.html)
+- [examples/usage-in-browser.html](examples/usage-in-browser.html)
 
 ### In NodeJS
 
 Or you can do "server-side rendering" (SSR) of your components:
 
+See [examples/usage-in-node.js](examples/usage-in-node.js)
+
+Or run it in your terminal:
+
 ```
 node examples/usage-in-node.js
 ```
 
-See [examples/usage-in-node.js](examples/usage-in-node.js)
+## Component API overview
+
+These are the methods and properties attached to the components you create.
+
+### Methods:
+
+- **.setState(obj)**: update the component state, triggers a re-render
+- **.render(el)**: (re)render to the given element on state change (browser)
+- **.toString()**: render your component as a string on state change (NodeJS)
+- **.view(props)**: receives a state and sets the component view to (re)render (optional)
+- **.style(props)**: receives a state and sets the `<style>` to (re)render (optional)
+- **.actions(obj)**: chainable methods that simplify updating the state (optional)
+- **.tweenState(obj[, cfg])**: set state on each frame, supports various easings (optional)
+- **.middleware**: an array of functions that run at the end of `setState()` (optional)
+- ...and more
+
+### Properties:
+
+- **.state**: an object, contains your app data, read-only - cannot be modified directly
+- **.schema**: an object against which to validate your component state (optional) 
+- **.container**: the HTML Element into which the components view is rendered (optional)
+- **.html**: alias of `.container`
+- **.css**: the `<style>` Element which holds the component styles (optional)
+- **.uid**: a unique string, generated once, on creation of a component
+- **.log**: an array containing a history of all component states
+- ...and more
+
+### Settings:
+
+- **.reactive**: if `false`, disables auto re-rendering on state change
+- **.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${uid}`
+- **.debug**: if true, a record of states changes are kept in `.log`
 
 ## Advanced usage
 
