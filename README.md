@@ -53,7 +53,50 @@ A "state" is a snapshot of your application data at a specific time.
 
 ## Quickstart
 
-Example of a re-usable HTML component:
+Here's some quick examples to demo how it all looks:
+
+### "Counter" app
+
+```js
+const Counter = new Component({ count: 1 });
+
+const add = num => Counter({ count: Counter.state.count + num })
+
+Counter.view = props => htmel
+  `<div>
+    <h1>Counter: ${props.count}</h1>
+    <button onclick="${e => add(+1)}"> + </button>
+    <button onclick="${e => add(-1)}"> - </button>
+  </div>`;
+
+Counter.render('.container')
+```
+
+### "Todo list" app
+
+```js
+const Todo = new Component({ txt: '', list: [ "one" ] });
+
+const setText = e => Todo({ txt: e.target.value });
+const addItem = e => Todo({ list: [ ...Todo.state.list, Todo.state.txt ] });
+
+Todo.view = props => htmel
+  `<div>
+    <h1>Todo</h1>
+    <input  onkeyup="${e => setText(e)}" value="${props.txt}" type="text" />
+    <button onclick="${e => addItem()}"> Add </button>
+    <ul>
+      ${props.list.map(i => `<li>${i}</li>`)}
+    </ul>
+  </div>`;
+
+Todo.render('.container')
+```
+
+
+### A *re-usable* HTML component:
+
+Unlike the previous two examples, this one below is a function which generates re-usable components - a new component is created from the given definition (state, schema, view, etc) each time it's called.
 
 ```js
 const { Component } = require('@scottjarvis/component');
@@ -75,17 +118,23 @@ And you use it like this:
 ```js
 import Header from './Header.js'
 
-const header = new Header();
+const header1 = new Header();
+const header2 = new Header();
 
 // add it to our page
-header.render('.container');
+header1.render('.container');
 
 // Update the state, the heading will re-render for you
-header.setState({ title: "Hello again!" });
+header1.setState({ title: "Hello again!" });
 
 // Or set state via the component constructor (since v1.2.0)
-header({ title: "Hello a 3rd time!" });
+header1({ title: "Hello a 3rd time!" });
+
+// etc..
+
 ```
+
+See more short recipes in [examples/recipes.js](examples/recipes.js).
 
 ## Component API overview
 

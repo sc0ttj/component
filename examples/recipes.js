@@ -128,3 +128,26 @@ header1.render('#some-elem2')
 
 header1({ title: "One!" })
 header2({ title: "Two!" })
+
+
+// -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+
+// You can use `html` or `htmel` standalone, without any Component stuff:
+
+const foo = "Hello world"
+
+const el = htmel`<h1>${foo}</h1>`
+
+const string = html`<h1>${foo}</h1>`
+
+// ..or in functions that return pre-defined HTML snippets from templates:
+
+const para = data => htmel`<p>${data}</p>`
+
+const list = data => htmel`<ul>${data.map(val => `<li>${val}</li>`)}</ul>`
+
+// now generate the DOM elements
+const p  = para("Put me in a paragraph.")
+const ul = list([ "one", "two", "three" ])
+
