@@ -7,7 +7,7 @@
 
 const Counter = new Component({ count: 1 });
 
-const add = num => Counter({ count: Counter.state.count+num })
+const add = num => Counter({ count: Counter.state.count + num })
 
 Counter.view = props => htmel
   `<div>
@@ -22,14 +22,13 @@ Counter.view = props => htmel
 const Todo = new Component({ txt: '', list: [ "one" ] });
 
 const setText = e => Todo({ txt: e.target.value });
-
-const addItem = () => Todo({ list: [ ...Todo.state.list, Todo.state.txt ] });
+const addItem = e => Todo({ list: [ ...Todo.state.list, Todo.state.txt ] });
 
 Todo.view = props => htmel
   `<div>
     <h1>Todo</h1>
     <input  onkeyup="${e => setText(e)}" value="${props.txt}" type="text" />
-    <button onclick="${e => addItem()}"> Add Note </button>
+    <button onclick="${e => addItem()}"> Add </button>
     <ul>
       ${props.list.map(i => `<li>${i}</li>`)}
     </ul>
