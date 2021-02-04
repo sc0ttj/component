@@ -19,6 +19,8 @@ var html = (strings, ...vals) => {
   // start: loop over the template content
   var output = strings.map((str, i) => {
     var v = vals[i] || '';
+    // dont ignore zeros
+    if (typeof vals[i] === 'number') v = vals[i]
     var ctx = 'attr'
     // workout our current "context" (either inside an HTML opening tag,
     // inside a style attribute, or inside a data-* attribute)
@@ -80,6 +82,8 @@ var html = (strings, ...vals) => {
       // add to our template
       v = s
     }
+    // fix not returning zeros (JS treats them as "falsey")
+    if (vals[i] === 0) v = "0"
     // now we've converted `v` to a string version of whatever is was,
     // we can return the current string, with `v` appended, and then
     // move to next iteration
