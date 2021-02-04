@@ -161,12 +161,13 @@ function Component(state, schema) {
     c.actionsList = actions
     // convert each key/value to set state function:
     Object.keys(actions).forEach(action => {
-      if (typeof c[action] !== "undefined") {
-        return false
-      }
+      if (typeof c[action] !== "undefined") return false
+      // add the action as a function
       c[action] = newState => {
         c.action = action
-        return actions[action](newState)
+        actions[action](newState)
+        // return itself, so it's always chainable
+        return c
       }
     })
     return c
@@ -218,21 +219,21 @@ function Component(state, schema) {
       if (t && !c.isNode) cancelAnimationFrame(t)
       // for debouncing logging in browser
       var t = undefined
-      if (typeof requestAnimationFrame === "undefined") {
-        var requestAnimationFrame = function(logFn) { setTimeout(() => logFn(), 1); };
-      }
-      t = requestAnimationFrame(() => {
-        // update history and move along index
-        if (c.debug && this.i === c.log.length) {
+      // update history and move along index
+      if (c.debug && this.i === c.log.length) {
+        if (typeof requestAnimationFrame === "undefined") {
+          var requestAnimationFrame = function(logFn) { setTimeout(() => logFn(), 60); };
+        }
+        t = requestAnimationFrame(() => {
           // we are not traversing state history, so add the new state to the log
           c.log.push({
             id: c.log.length,
             state: c.prev,
             action: c.action || "setState"
           })
-        }
-        this.i = c.log.length
-      })
+          this.i = c.log.length
+        })
+      }
 
       // log state changes if dubeg = true
       //if (c.debug) console.log(this.i, [c.state, ...c.log])
