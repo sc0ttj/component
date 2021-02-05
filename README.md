@@ -36,6 +36,7 @@ A "state" is a snapshot of your application data at a specific time.
   - `validator`: validate states against a schema (like a simple PropTypes)
   - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
   - `emitter`: an event emitter, for sharing updates between components
+  - `storage`: enables persistent states (between page refreshes, etc)
   - `tweenState`: animate from one state to the next
 - Supports **"middleware"** functions:
   - easily customise a components setState and re-render behaviour
@@ -541,7 +542,60 @@ foo.html.addEventListener("click", e => {
 });
 ```
 
+### Using the `storage` module
+
+Use the storage module to make your components remember their state between page refreshes and sessions, using `localStorage`.
+
+Note that `storage` includes polyfills for NodeJS, so works in Node too, by saving to JSON files.
+
+To use the `storage` add-on, include it in your project like so:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/storage.min.js"></script>
+<script>
+  Component.storage = storage
+
+  // use it here
+</script>
+```
+
+#### In NodeJS:
+
+```js
+var { Component, storage } = require('@scottjarvis/component');
+Component.storage = storage
+
+// use it here
+
+```
+
+To enable persistent storage for a component, just define a **store name** (where to save your data) as `myComponent.store = "something"`.
+
+Here is an example of adding persistent storage to our Counter app:
+
+```js
+const Counter = new Component({ count: 1 });
+
+const add = num => Counter({ count: Counter.state.count + num })
+
+Counter.view = props => htmel`
+  <div>
+    <h1>Counter: ${props.count}</h1>
+    <button onclick="${e => add(+1)}"> + </button>
+    <button onclick="${e => add(-1)}"> - </button>
+  </div>`;
+
+// simply define a "store name" (where to save your data) before you render
+Counter.store = 'Counter';
+```
+
+The counter number will now persist between page refreshes.
+
 ### Using the `tweenState` module
+
 
 With `tweenState` it's super easy to do animations that use `requestAnimationFrame` and DOM diffing.
 
