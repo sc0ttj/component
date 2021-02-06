@@ -1,14 +1,10 @@
 // persistent states for NodeJS:
 //
-// 1. Polyfill localStorage, then setup Component to use its "storage" add-on
+// 1. Setup Component to use its "storage" add-on
 // 2. Define your component
 // 3. Call myComponent.render() to get the lastest saved state
 // 4. Now you're ready - calling setState saves the state to persistent storage :)
 //
-
-// polyfill localStorage for NodeJS
-const { LocalStorage } = require('node-localstorage');
-const localStorage = new LocalStorage('storage/')
 
 // attach the storage add-on to Component, so it'll get used
 const { Component, storage } = require('../dist/index.min.js');
@@ -37,3 +33,6 @@ console.log(Counter.state);
 //
 //    node -r node-localstorage/register examples/usage-persistant-state.js
 //
+// NOTE:
+//
+// The `node-localstorage` module must be installed as a dev dependency!
