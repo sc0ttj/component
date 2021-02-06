@@ -118,7 +118,7 @@ function Header(state, schema) {
 }
 
 // the `opts` param allows users to set custom options each time they use this component
-function Header(opts = {}) {
+function ConfigurableHeader(opts = {}) {
   const defaults  = { title: 'Hello world' };
 
   const Header = new Component(defaults);
@@ -131,12 +131,11 @@ function Header(opts = {}) {
 // (NOTE: state, schema and opts can be passed in, even if undefined/not used)
 
 const header1      = new Header(state, schema);
-const headerInCaps = new Header(state, schema, { caps: true });
 
 header1.render('#some-elem1')
-
 header1({ title: "One!" })
 
+const headerInCaps = new ConfigurableHeader({ caps: true });
 
 // -------------------------------------------------------------------------
 // -------------------------------------------------------------------------
