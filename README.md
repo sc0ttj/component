@@ -600,8 +600,6 @@ Counter.render('.container')
 
 **In NodeJS**, this is how you add persistent storage to our Counter app:
 
-See [examples/usage-persistent-storage.js](examples/usage-persistent-storage.js):
-
 - include the localStorage polyfill in your .js script
 - the "local storage" used will be a file/folder you specify in your script
 - then run the script with the `-r node-localstorage/register` option to enable it
@@ -611,6 +609,8 @@ Here's how to run a component/application with a persistent state in NodeJS:
 ```
 node -r node-localstorage/register examples/usage-persistant-state.js
 ```
+
+See [examples/usage-persistant-state.js](examples/usage-persistant-state.js):
 
 ### Using the `tweenState` module
 
