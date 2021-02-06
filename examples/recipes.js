@@ -126,15 +126,17 @@ function ConfigurableHeader(opts = {}) {
 
   return Header;
 }
+// ----------  end of examples  ----------
 
-// ...in most cases, you'd use these re-usable Components like so:
+
+// ...in most cases, you'd use these re-usable Components defined above like so:
 // (NOTE: state, schema and opts can be passed in, even if undefined/not used)
 
 const header1      = new Header(state, schema);
-
 header1.render('#some-elem1')
 header1({ title: "One!" })
 
+// our last example would be run like this:
 const headerInCaps = new ConfigurableHeader({ caps: true });
 
 // -------------------------------------------------------------------------
