@@ -8,6 +8,8 @@ import html from './html'
  *   - supports embedding JS Objects as HTML attributes, CSS styles, and HTML data attributes:
  *     - `html` works out the context and converts the given object to an appropriate string
  *     - `html` ignores/strips nested child objects when converting to string
+ *   - supports embedding functions in event attributes:
+ *     - `htmel` will attach them as callbacks to the relevant Event Listeners
  *   - hides falsey stuff (instead of printing "false" [etc] in the output)
  *   - returns the generated HTML as an HTML Object (browser) or a string (NodeJS)
  *

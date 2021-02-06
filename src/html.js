@@ -13,8 +13,8 @@
  * @return {String}
  */
 var html = (strings, ...vals) => {
-  // create a property in which to save event attribute funcs, which we'll
-  // later attach to their elements as proper event listeners
+  // create a property in which to save event attribute funcs, which `htmel`
+  // can later attach to their elements as proper event listeners
   html.funcs = []
   // start: loop over the template content
   var output = strings.map((str, i) => {

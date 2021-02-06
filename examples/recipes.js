@@ -117,17 +117,25 @@ function Header(state, schema) {
   return Header;
 }
 
-// ...in all cases, you'd use these re-usable Components like so:
-// (NOTE: state and schema can be passed in, even if not used)
+// the `opts` param allows users to set custom options each time they use this component
+function Header(opts = {}) {
+  const defaults  = { title: 'Hello world' };
 
-const header1 = new Header(state, schema);
-const header2 = new Header(state, schema);
+  const Header = new Component(defaults);
+  Header.view  = props => `<h1>${opts.caps ? props.title.toUpperCase() : props.title}</h1>`
+
+  return Header;
+}
+
+// ...in most cases, you'd use these re-usable Components like so:
+// (NOTE: state, schema and opts can be passed in, even if undefined/not used)
+
+const header1      = new Header(state, schema);
+const headerInCaps = new Header(state, schema, { caps: true });
 
 header1.render('#some-elem1')
-header1.render('#some-elem2')
 
 header1({ title: "One!" })
-header2({ title: "Two!" })
 
 
 // -------------------------------------------------------------------------
@@ -137,9 +145,8 @@ header2({ title: "Two!" })
 
 const foo = "Hello world"
 
-const el = htmel`<h1>${foo}</h1>`
-
-const string = html`<h1>${foo}</h1>`
+const str = html`<h1>${foo}</h1>` // `html`  returns a string
+const el = htmel`<h1>${foo}</h1>` // `htmel` returns a DOM Node
 
 // ..or in functions that return pre-defined HTML snippets from templates:
 
