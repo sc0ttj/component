@@ -200,7 +200,7 @@ function Component(state, schema) {
     // get initial state from localStorage, if it's in there
     if (storage && !c.loaded) {
       const pState = storage.getItem(c, { ...c.state, ...newState });
-      if (pState) newState = pState;
+      if (pState) newState = { ...newState, ...pState };
     }
     c.loaded = true;
 
@@ -221,7 +221,7 @@ function Component(state, schema) {
 
     if (!this.eq(c.state, c.prev)) {
 
-      if (storage) {
+      if (storage && c.loaded) {
         // c.store is just the name of the key in localStorage,
         // where we keep our JSON stringified state
         storage.setItem(c, c.state)
@@ -414,6 +414,13 @@ function Component(state, schema) {
     var str = ""
     var view = c.view(c.state)
     var style
+
+    // get local state
+    if (!c.loaded && storage) {
+      const pState = storage.getItem(c, c.state);
+      c.setState(pState);
+      view = typeof c.view === "function" ? c.view(pState) : view
+    }
 
     // get component styles, nicely indented
     if (typeof c.style === "function") {

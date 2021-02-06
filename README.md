@@ -546,7 +546,9 @@ foo.html.addEventListener("click", e => {
 
 Use the storage module to make your components remember their state between page refreshes and sessions, using `localStorage`.
 
-Note that `storage` includes polyfills for NodeJS, so works in Node too, by saving to JSON files.
+Note that `storage` can be polyfilled for NodeJS, so will work in Node too - by saving to JSON files. 
+
+In NodeJS, the state persists between script invocations, rather than page refreshes.
 
 To use the `storage` add-on, include it in your project like so:
 
@@ -574,7 +576,7 @@ Component.storage = storage
 
 To enable persistent storage for a component, just define a **store name** (where to save your data) as `myComponent.store = "something"`.
 
-Here is an example of adding persistent storage to our Counter app:
+**In a browser**, this is how you add persistent storage to our Counter app:
 
 ```js
 const Counter = new Component({ count: 1 });
@@ -590,12 +592,27 @@ Counter.view = props => htmel`
 
 // simply define a "store name" (where to save your data) before you render
 Counter.store = 'Counter';
+
+// now we can render it into the page - this will load in the persistent state 
+// from its store as the initial state for the component
+Counter.render('.container')
 ```
 
-The counter number will now persist between page refreshes.
+**In NodeJS**, this is how you add persistent storage to our Counter app:
+
+See [examples/usage-persistent-storage.js](examples/usage-persistent-storage.js):
+
+- include the localStorage polyfill in your .js script
+- the "local storage" used will be a file/folder you specify in your script
+- then run the script with the `-r node-localstorage/register` option to enable it
+
+Here's how to run a component/application with a persistent state in NodeJS:
+
+```
+node -r node-localstorage/register examples/usage-persistant-state.js
+```
 
 ### Using the `tweenState` module
-
 
 With `tweenState` it's super easy to do animations that use `requestAnimationFrame` and DOM diffing.
 

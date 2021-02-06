@@ -49,6 +49,15 @@ export default [
     plugins: [resolve(), commonjs(), terser()]
   },
   {
+    input: "src/storage.js",
+    output: {
+      file: "dist/storage.min.js",
+      name: "storage",
+      format: "umd"
+    },
+    plugins: [resolve(), commonjs(), terser()]
+  },
+  {
     input: "src/index.js",
     output: {
       file: "dist/index.min.js",
