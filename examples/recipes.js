@@ -126,7 +126,6 @@ function ConfigurableHeader(opts = {}) {
 
   return Header;
 }
-// ----------  end of examples  ----------
 
 
 // ...in most cases, you'd use these re-usable Components defined above like so:
@@ -138,6 +137,47 @@ header1({ title: "One!" })
 
 // our last example would be run like this:
 const headerInCaps = new ConfigurableHeader({ caps: true });
+
+
+// nested components:
+//
+// let's create a re-usable button, generate 3 buttons, and then put them
+// in a main/parent component...
+
+function Button(state) {
+  const Button = new Component({ ...state });
+  Button.view = props => html`<button onclick="${props.fn}">${props.txt}</button>`;
+  return Button;
+}
+
+const btn1 = new Button({ txt: "1", fn: e => console.log("btn1 'click' Event: ", e) });
+const btn2 = new Button({ txt: "2", fn: e => console.log("btn2 'click' Event: ", e) });
+const btn3 = new Button({ txt: "3", fn: e => console.log("btn3 'click' Event: ", e) });
+
+const Menu = new Component({ txt: 'Buttons!' });
+
+Menu.view = props => htmel`
+  <div>
+    <h2>${props.txt}</h2>
+    ${btn1}
+    ${btn2}
+    ${btn3}
+  </div>
+`;
+
+// add our main/parent component to page
+Menu.render('.nested-components-example');
+
+// we can update the state of the main component, it will re-render
+// what is needed - each child component returns their view based on
+// their own state
+Menu.setState({ txt: "3 Buttons:"})
+
+// to change the text of the buttons, you must update their state,
+// then update the state of Menu, to trigger a re-render on the page...
+
+
+
 
 // -------------------------------------------------------------------------
 // -------------------------------------------------------------------------
@@ -158,4 +198,5 @@ const list = data => htmel`<ul>${data.map(val => `<li>${val}</li>`)}</ul>`
 // now generate the DOM elements
 const p  = para("Put me in a paragraph.")
 const ul = list([ "one", "two", "three" ])
+
 

@@ -12,12 +12,14 @@
  * @param {Template Literal} representing a single HTML element
  * @return {String}
  */
+
 var html = (strings, ...vals) => {
-  // create a property in which to save event attribute funcs, which `htmel`
-  // can later attach to their elements as proper event listeners
-  html.funcs = []
+  // create a property in which to save event attribute funcs, which we'll
+  // later attach to their elements as proper event listeners
+  html.funcs = html.funcs || [];
   // start: loop over the template content
   var output = strings.map((str, i) => {
+    html.i = html.i || i;
     var v = vals[i] || '';
     // dont ignore zeros
     if (typeof vals[i] === 'number') v = vals[i]
@@ -27,17 +29,23 @@ var html = (strings, ...vals) => {
     if (str.match(/style=("|')$/i)) { //"
       ctx = 'style'
     }
+    // check if dealing with a html `data-*` attribute
     else if (str.match(/data-[a-z0-9\-_]+=("|')$/i)) { //"
       ctx = 'dataAttr'
     }
 
-    // check for onclick="{someFunc}", and so on
-    if (typeof v === 'function'
+    // check for a nested component
+    else if (typeof v === 'function' && v.uid && v.state && v.setState && v.render) {
+      ctx = 'nestedComponent'
+    }
+    // check for event attributes like `onclick="{someFunc}"` etc
+    else if (typeof v === 'function'
         && ctx === 'attr'
         && str.match(/ on[a-z0-9]+=("|')$/i)) //"
     {
       ctx = 'funcAttr'
     }
+
 
     // check for either an Element, HTML Collection, Node List, String,
     // Object, etc):
@@ -46,14 +54,23 @@ var html = (strings, ...vals) => {
     if (v.nodeName && ctx === 'attr') {
       v = v.outerHTML;
 
-    } else if (ctx === 'funcAttr' && typeof v === 'function') {
+    } else if (ctx === 'nestedComponent' && typeof v === 'function') {
+
+      // *Important* ..We have a nested component, with its own state and
+      // render loop, but without a container.. We don't need or want it to
+      // setState and re-render, we just want it's latest "view", which is
+      // also much faster to get than doing a whole setState + re-render
+      str += v.view(v.state)
+      v=''
+
+    } else if (ctx === 'funcAttr' && typeof v === 'function' && !v.uid) {
       // keep the function for later, but dont include it in output
-      if (Array.isArray(html.funcs) && !html.funcs[i]) html.funcs[i] = v;
+      if (Array.isArray(html.funcs)) html.funcs[html.i] = v;
       // replace `onclick="..." with onclick="${i}" - we'll reference
       // it later, once it's a real Element, so we can attach funcs[i] to
       // it, as a proper event listener method
       v='';
-      str += i
+      str += html.i
     } else if (Array.isArray(v)) {
       // if we have a Node List or HTML Collection, convert its
       // items to strings
@@ -87,6 +104,8 @@ var html = (strings, ...vals) => {
     // now we've converted `v` to a string version of whatever is was,
     // we can return the current string, with `v` appended, and then
     // move to next iteration
+
+    html.i += 1;
     return str ? str + (v || '') : '';
   }).join('');
 
