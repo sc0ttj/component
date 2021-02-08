@@ -768,8 +768,8 @@ To make it easier to build a good HTML "view" for your components, there are two
 
 These return your components view as either a String or HTML Object, but are otherwise mostly inter-changeable:
 
-- `html` (527 bytes) - returns your template as a String.
-- `htmel` (728 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
+- `html`  (~650 bytes) - returns your template as a String.
+- `htmel` (~800 bytes) - returns your template as an HTML Object (browser) or String (NodeJS).
 
 Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
 
