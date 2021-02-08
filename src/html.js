@@ -29,14 +29,16 @@ var html = (strings, ...vals) => {
     if (str.match(/style=("|')$/i)) { //"
       ctx = 'style'
     }
+    // check if dealing with a html `data-*` attribute
     else if (str.match(/data-[a-z0-9\-_]+=("|')$/i)) { //"
       ctx = 'dataAttr'
     }
 
-    // check for onclick="{someFunc}", and so on
-    if (typeof v === 'function' && v.uid && v.state && v.setState && v.render) {
+    // check for a nested component
+    else if (typeof v === 'function' && v.uid && v.state && v.setState && v.render) {
       ctx = 'nestedComponent'
     }
+    // check for event attributes like `onclick="{someFunc}"` etc
     else if (typeof v === 'function'
         && ctx === 'attr'
         && str.match(/ on[a-z0-9]+=("|')$/i)) //"
