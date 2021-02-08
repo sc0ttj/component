@@ -165,9 +165,18 @@ Menu.view = props => htmel`
   </div>
 `;
 
+// add our main/parent component to page
 Menu.render('.nested-components-example');
 
-Menu.setState({ txt: '3 BUTTONS:' });
+// we can update the state of the main component, it will re-render
+// what is needed - each child component returns their view based on
+// their own state
+Menu.setState({ txt: "3 Buttons:"})
+
+// to change the text of the buttons, you must update their state,
+// then update the state of Menu, to trigger a re-render on the page...
+
+
 
 
 // -------------------------------------------------------------------------
