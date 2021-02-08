@@ -112,7 +112,6 @@ var domDiff = (target, source) => {
  */
 function Component(state, schema) {
   var c = function (state) {
-    c.render(c.container)
     c.setState(state)
     return !state ? c.container : c
   }
@@ -125,6 +124,7 @@ function Component(state, schema) {
   c.scopedCss = true // auto prefix component css with a unique id
 
   var self = c
+  var storage = Component.storage
 
   // for debouncing render() calls
   var timeout = undefined
@@ -197,6 +197,13 @@ function Component(state, schema) {
    * @param {object} newState - the new state to update to
    */
   c.setState = newState => {
+    // get initial state from localStorage, if it's in there
+    if (storage && !c.loaded) {
+      const pState = storage.getItem(c, { ...c.state, ...newState });
+      if (pState) newState = { ...newState, ...pState };
+    }
+    c.loaded = true;
+
     // enable schema validation using @scottjarvis/validator
     if (Component.validator && c.schema) {
       var err = Component.validator({ ...c.state, ...newState }, c.schema)
@@ -213,6 +220,13 @@ function Component(state, schema) {
     c.state = { ...c.state, ...newState }
 
     if (!this.eq(c.state, c.prev)) {
+
+      if (storage && c.loaded) {
+        // c.store is just the name of the key in localStorage,
+        // where we keep our JSON stringified state
+        storage.setItem(c, c.state)
+      }
+
       // re-render component
       if (c.reactive) c.render(c.container)
 
@@ -401,6 +415,13 @@ function Component(state, schema) {
     var view = c.view(c.state)
     var style
 
+    // get local state
+    if (!c.loaded && storage) {
+      const pState = storage.getItem(c, c.state);
+      c.setState(pState);
+      view = typeof c.view === "function" ? c.view(pState) : view
+    }
+
     // get component styles, nicely indented
     if (typeof c.style === "function") {
       style = c.style(c.state).replace(/^ {4}/gm, "")
@@ -437,6 +458,12 @@ function Component(state, schema) {
     if (c.isNode) {
       return c.toString()
     } else {
+      // get state from localStorage, if it's in there
+      if (!c.html && storage) {
+        const pState = storage.getItem(c, c.state);
+        view = typeof c.view === "function" ? c.view(pState) : null
+        c.setState(pState);
+      }
       // make sure we have the HTML Element, not just the selector for it
       if (document && !c.html) el = document.querySelector(el)
       c.html = c.container = el

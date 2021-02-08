@@ -36,6 +36,7 @@ A "state" is a snapshot of your application data at a specific time.
   - `validator`: validate states against a schema (like a simple PropTypes)
   - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
   - `emitter`: an event emitter, for sharing updates between components
+  - `storage`: enables persistent states (between page refreshes, etc)
   - `tweenState`: animate from one state to the next
 - Supports **"middleware"** functions:
   - easily customise a components setState and re-render behaviour
@@ -47,7 +48,7 @@ A "state" is a snapshot of your application data at a specific time.
   - a log of all state history can be kept, for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
-- Simple, stateless "child" components
+- Nested components
 - ...and more
 
 
@@ -93,7 +94,6 @@ Todo.view = props => htmel
 Todo.render('.container')
 ```
 
-
 ### A *re-usable* HTML component:
 
 Unlike the previous two examples, this one below is a function which generates re-usable components - a new component is created from the given definition (state, view, etc) each time it's called.
@@ -127,6 +127,48 @@ header1({ title: "Hello a 3rd time!" });
 
 // etc..
 
+```
+
+### Nested components
+
+Child components should be regular functions that return part of the view of the parent component:
+
+```js
+const Foo = new Component({ title: "Hey!", list: [ "one", "two" ] });
+
+const Header = txt => `<h2>${txt}</h2>`
+const List   = i   => `<ul>${i.map(item => `<li>${i}</li>`).join('')}</ul>`
+
+Foo.view = props => 
+  `<div id="myapp">
+    ${Header(props.title)}
+    ${List(props.items)}
+  </div>`
+```
+
+But you can also nest proper (stateful) components inside other components, too:
+
+```js
+// create 3 buttons from a re-usable component
+const btn1 = new Button({ txt: "1", fn: e => alert("btn1") });
+const btn2 = new Button({ txt: "2", fn: e => alert("btn2") });
+const btn3 = new Button({ txt: "3", fn: e => alert("btn3") });
+
+// create the main (parent) component
+const Menu = new Component({ txt: 'Click the buttons!' });
+
+// create a view with our buttons included:
+Menu.view = props => htmel`
+  <div>
+    <h2>${props.txt}</h2>
+    ${btn1}
+    ${btn2}
+    ${btn3}
+  </div>
+`;
+
+// add our main/parent component to page
+Menu.render('.container');
 ```
 
 See more short recipes in [examples/recipes.js](examples/recipes.js).
@@ -541,6 +583,76 @@ foo.html.addEventListener("click", e => {
 });
 ```
 
+### Using the `storage` module
+
+Use the storage module to make your components remember their state between page refreshes and sessions, using `localStorage`.
+
+Note that `storage` can be polyfilled for NodeJS, so will work in Node too - by saving to JSON files. 
+
+In NodeJS, the state persists between script invocations, rather than page refreshes.
+
+To use the `storage` add-on, include it in your project like so:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/storage.min.js"></script>
+<script>
+  Component.storage = storage
+
+  // use it here
+</script>
+```
+
+#### In NodeJS:
+
+```js
+var { Component, storage } = require('@scottjarvis/component');
+Component.storage = storage
+
+// use it here
+
+```
+
+To enable persistent storage for a component, just define a **store name** (where to save your data) as `myComponent.store = "something"`.
+
+**In a browser**, this is how you add persistent storage to our Counter app:
+
+```js
+const Counter = new Component({ count: 1 });
+
+const add = num => Counter({ count: Counter.state.count + num })
+
+Counter.view = props => htmel`
+  <div>
+    <h1>Counter: ${props.count}</h1>
+    <button onclick="${e => add(+1)}"> + </button>
+    <button onclick="${e => add(-1)}"> - </button>
+  </div>`;
+
+// simply define a "store name" (where to save your data) before you render
+Counter.store = 'Counter';
+
+// now we can render it into the page - this will load in the persistent state 
+// from its store as the initial state for the component
+Counter.render('.container')
+```
+
+**In NodeJS**, this is how you add persistent storage to our Counter app:
+
+- install the NodeJS localStorage polyfill: `npm i node-localstorage -D`
+- run your scripts with the `-r node-localstorage/register` option to enable it
+- the "local storage" used will be a local folder/file, called `./scratch/<store name>`
+
+Example command, running a component with a persistent state in NodeJS:
+
+```
+node -r node-localstorage/register examples/usage-persistant-state.js
+```
+
+See [examples/usage-persistant-state.js](examples/usage-persistant-state.js) for more info.
+
 ### Using the `tweenState` module
 
 With `tweenState` it's super easy to do animations that use `requestAnimationFrame` and DOM diffing.
@@ -818,6 +930,94 @@ Adding linked data to your components is easy - just define it as part of your v
 - add a JSON-LD script before your component HTML
 - use the `props` passed in to define/update whatever you need
 - your JSON-LD will be updated along with your view, whenever your component re-renders
+
+### Nested components
+
+Components that are nested inside other components are called _child components_.
+
+There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
+
+All child components have the following in common:
+- you include the child component in the "view" of the parent component
+- child components do not trigger a re-render of the page
+- to re-render a child component that has changed, you must update the parent component 
+- nested components work with or without the `html`/`htmel` add-on(s)
+
+**About "stateless" child components:**
+
+Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
+
+```js
+// a stateless child component is just a function that receives `props`, and returns a view
+const h2 = text => `<h2>${text}</h2>`;
+
+// ...used inside the view of another component:
+Foo.view = props => `
+  <div>
+    ${h2(props.txt)}
+    <p> ... </p>
+  </div>
+`;
+```
+
+**About stateful child components**
+
+Stateful components are _any components with a state_, usually created like so:
+
+```js
+const Foo = new Component({ ...someData });
+```
+
+NOTE: When nested inside another component, even stateful components _do not_ run `setState()` & `render()` - they simply return their view, just like stateless child components.
+
+This has a number of implications:
+
+- better performance (fewer page re-renders)
+- enforces similar behaviour to stateless child components
+  - only parent components trigger page re-renders
+- nested components have an undefined `.container` property
+  - therefore calling the `render()` method of a child component (usually) does nothing
+- calling `setState()` of a child component _will_ update its state and run its "middleware", but _doesn't_ re-render
+
+```js
+// let's create a re-usable, stateful button component:
+// the `htmel` add-on is used as we're attaching Event Listeners to the buttons
+
+function Button(state) {
+  const Button = new Component({ ...state });
+  Button.view = props => htmel`<button onclick="${props.fn}">${props.txt}</button>`;
+  return Button;
+}
+
+//  create 3 buttons from our re-usable component
+const btn1 = new Button({ txt: "1", fn: e => console.log("btn1 'click' Event: ", e) });
+const btn2 = new Button({ txt: "2", fn: e => console.log("btn2 'click' Event: ", e) });
+const btn3 = new Button({ txt: "3", fn: e => console.log("btn3 'click' Event: ", e) });
+
+// create the main (parent) component
+const Menu = new Component({ txt: 'Click the buttons!' });
+
+// create a view with our buttons included:
+Menu.view = props => htmel`
+  <div>
+    <h2>${props.txt}</h2>
+    ${btn1}
+    ${btn2}
+    ${btn3}
+  </div>
+`;
+
+// add our main/parent component to page
+Menu.render('.container');
+
+// we can update the state of the main component, it will re-render
+// what is needed - each child component returns their view based on
+// their own state
+Menu.setState({ txt: "3 Buttons:"})
+
+// to change the text of the buttons, you must update their state,
+// then update the state of Menu, to trigger a re-render on the page...
+```
 
 ### Server side rendering
 
