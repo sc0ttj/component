@@ -134,14 +134,14 @@ header1({ title: "Hello a 3rd time!" });
 Child components should be regular functions that return part of the view of the parent component:
 
 ```js
-const Foo = new Component({ title: "Hey!", list: [ "one", "two" ]});
+const Foo = new Component({ title: "Hey!", list: [ "one", "two" ] });
 
 const Header = txt => `<h2>${txt}</h2>`
 const List   = i   => `<ul>${i.map(item => `<li>${i}</li>`).join('')}</ul>`
 
 Foo.view = props => 
   `<div id="myapp">
-    ${Heading(props.title)}
+    ${Header(props.title)}
     ${List(props.items)}
   </div>`
 ```
