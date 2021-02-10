@@ -268,7 +268,7 @@ These are the methods and properties attached to the components you create.
 
 ## Advanced usage
 
-### State validation
+### Using "state validation"
 
 You can validate your component state against a schema, before you set it or render anything.
 
@@ -566,7 +566,7 @@ foo.minus(1)
 
 Also see [examples/usage-emitter.js](examples/usage-emitter.js)
 
-### Attaching Event Listeners
+### Using your own Event Listeners
 
 To add your own Event Listeners, you should add them to the container of your components:
 
@@ -766,7 +766,7 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
-### JSX-like features with `html` and `htmel`
+### Using `html` and `htmel` modules for easier HTML templating
 
 To make it easier to build a good HTML "view" for your components, there are two **optional** add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
 
@@ -955,7 +955,7 @@ Adding linked data to your components is easy - just define it as part of your v
 - use the `props` passed in to define/update whatever you need
 - your JSON-LD will be updated along with your view, whenever your component re-renders
 
-### Nested components
+### Using "nested components"
 
 Components that are nested inside other components are called _child components_.
 
