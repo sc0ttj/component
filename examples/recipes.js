@@ -131,18 +131,21 @@ function ConfigurableHeader(opts = {}) {
 // ...in most cases, you'd use these re-usable Components defined above like so:
 // (NOTE: state, schema and opts can be passed in, even if undefined/not used)
 
-const header1      = new Header(state, schema);
-header1.render('#some-elem1')
+const header1 = new Header(state, schema);
+header1.render('#some-elem')
 header1({ title: "One!" })
 
 // our last example would be run like this:
 const headerInCaps = new ConfigurableHeader({ caps: true });
 
 
-// nested components:
+// -----------------------------------------------------------------------
 //
-// let's create a re-usable button, generate 3 buttons, and then put them
-// in a main/parent component...
+//
+// Examples of nested components:
+//
+// Let's create a re-usable button, generate 3 buttons, and then put
+// them in a main/parent component:
 
 function Button(state) {
   const Button = new Component({ ...state });
@@ -179,8 +182,11 @@ Menu.setState({ txt: "3 Buttons:"})
 
 
 
-// -------------------------------------------------------------------------
-// -------------------------------------------------------------------------
+// -----------------------------------------------------------------------
+//
+//
+// Examples of `html` and `htmel` templating:
+//
 
 // You can use `html` or `htmel` standalone, without any Component stuff:
 
@@ -191,9 +197,9 @@ const el = htmel`<h1>${foo}</h1>` // `htmel` returns a DOM Node
 
 // ..or in functions that return pre-defined HTML snippets from templates:
 
-const para = data => htmel`<p>${data}</p>`
+const para = text => htmel`<p>${text}</p>`
 
-const list = data => htmel`<ul>${data.map(val => `<li>${val}</li>`)}</ul>`
+const list = array => htmel`<ul>${array.map(text => `<li>${text}</li>`)}</ul>`
 
 // now generate the DOM elements
 const p  = para("Put me in a paragraph.")

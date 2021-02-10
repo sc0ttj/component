@@ -6,7 +6,7 @@
     <p align="center"><i>A simple JavaScript component thing</i><p>
 </p>
 
-[![npm version](https://badge.fury.io/js/%40scottjarvis%2Fcomponent.svg)](https://badge.fury.io/js/%40scottjarvis%2Fcomponent) [![Dependency Status](https://david-dm.org/sc0ttj/component.svg)](https://david-dm.org/sc0ttj/component) [![devDependencies Status](https://david-dm.org/sc0ttj/component/dev-status.svg)](https://david-dm.org/sc0ttj/component?type=dev) [![Node version](https://badgen.net/npm/node/@scottjarvis/component)](http://nodejs.org/download/) [![Build Status](https://travis-ci.org/sc0ttj/component.svg?branch=master)](https://travis-ci.org/sc0ttj/component) [![bundle size](https://badgen.net/bundlephobia/minzip/@scottjarvis/component?color=green&label=gzipped)](https://badgen.net/bundlephobia/minzip/@scottjarvis/component) [![Downloads](https://badgen.net/npm/dt/@scottjarvis/component)](https://badgen.net/npm/dt/@scottjarvis/component)
+[![npm version](https://badge.fury.io/js/%40scottjarvis%2Fcomponent.svg)](https://badge.fury.io/js/%40scottjarvis%2Fcomponent) [![Node version](https://badgen.net/npm/node/@scottjarvis/component)](http://nodejs.org/download/) [![Build Status](https://travis-ci.org/sc0ttj/component.svg?branch=master)](https://travis-ci.org/sc0ttj/component) [![bundle size](https://badgen.net/bundlephobia/minzip/@scottjarvis/component?color=green&label=gzipped)](https://badgen.net/bundlephobia/minzip/@scottjarvis/component) [![Downloads](https://badgen.net/npm/dt/@scottjarvis/component)](https://badgen.net/npm/dt/@scottjarvis/component)
 
 **Component** is a simple, "stateful component" thing.
 
@@ -18,43 +18,43 @@ A "state" is a snapshot of your application data at a specific time.
 
 - Easy setup, zero dependencies
 - 2.1kb, minified and gzipped
-- Simple syntax, easy to use, easy to learn:
-  - plain, vanilla JavaScript only
+- Simple syntax, quick to learn, **easy to use**:
+  - plain JavaScript only
   - no compilation or build tools needed
   - no virtual DOM or JSX needed
   - should work with any test suite
 - Works **client-side**, in browsers:
-  - add your component to the page as you would a normal Element
-  - auto re-render on state change, using `requestAnimationFrame` and DOM-diffing
-    - DOM diffing uses real DOM Nodes (not VDOM)
-    - all DOM reads/writes performed inside a debounced `requestAnimationFrame` 
-    - good (re)rendering/animation performance at 60fps
+  - auto re-render on state change
+  - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
+  - DOM diffing uses real DOM Nodes (not VDOM)
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
-- Includes a useful list of **optional add-ons**:
-  - `validator`: validate states against a schema (like a simple PropTypes)
-  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
-  - `emitter`: an event emitter, for sharing updates between components
-  - `storage`: enables persistent states (between page refreshes, etc)
-  - `tweenState`: animate from one state to the next
-- Supports **"middleware"** functions:
-  - easily customise a components setState and re-render behaviour
-- Easy component CSS styling:
-  - Automatic "scoping"/prefixing of your component CSS (_optional_)
-  - Re-render styles on component CSS change (_optional_)
-- Easy state management:
+- Easy **state management**:
   - define "actions" to easily update the state in specific ways 
-  - a log of all state history can be kept, for debugging (_optional_):
+  - log all states in a history, for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
-- Nested components
-- ...and more
+- Easy CSS **component styling**:
+  - Automatic "scoping"/prefixing of your component CSS (_optional_)
+  - Re-render styles on component CSS change (_optional_)
+- Supports **"middleware"** functions:
+  - easily customise a components setState and re-render behaviour
+- Supports **nested components**
+  - embed components in the "views" of other components
+  - supports various methods and syntaxes
+- Works with these **optional add-ons**:
+  - `validator`: validate states against a schema (_like a simple PropTypes_)
+  - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
+  - `emitter`: an event emitter - share updates between components
+  - `storage`: enables persistent states (between page refreshes, etc)
+  - `tweenState`: animate nicely from one state to the next
 
+---
 
 ## Quickstart
 
-Here's some quick examples to demo how it all looks:
+Here's some quick examples to demo how it all looks, generally:
 
 ### "Counter" app
 
@@ -96,7 +96,7 @@ Todo.render('.container')
 
 ### A *re-usable* HTML component:
 
-Unlike the previous two examples, this one below is a function which generates re-usable components - a new component is created from the given definition (state, view, etc) each time it's called.
+Unlike the previous two examples, the one below is a function that generates _re-usable_ components - a new component is created and returned each time it's called.
 
 ```js
 function Header(state) {
@@ -105,28 +105,17 @@ function Header(state) {
   return Header;
 }
 
-export default Header
-```
-
-And you use it like this:
-
-```js
-import Header from './Header.js'
-
+// And you use it like this:
 const header1 = new Header();
-const header2 = new Header();
 
-// add it to our page
+// Add it to our page
 header1.render('.container');
 
 // Update the state, the heading will re-render for you
 header1.setState({ title: "Hello again!" });
 
-// Or set state via the component constructor (since v1.2.0)
+// Or set state via the component constructor
 header1({ title: "Hello a 3rd time!" });
-
-// etc..
-
 ```
 
 ### Nested components
@@ -134,7 +123,7 @@ header1({ title: "Hello a 3rd time!" });
 Child components should be regular functions that return part of the view of the parent component:
 
 ```js
-const Foo = new Component({ title: "Hey!", list: [ "one", "two" ] });
+const Foo = new Component({ title: "Hey!", items: [ "one", "two" ] });
 
 const Header = txt => `<h2>${txt}</h2>`
 const List   = i   => `<ul>${i.map(item => `<li>${i}</li>`).join('')}</ul>`
@@ -149,7 +138,14 @@ Foo.view = props =>
 But you can also nest proper (stateful) components inside other components, too:
 
 ```js
-// create 3 buttons from a re-usable component
+// create a re-usable button component
+function Button(state) {
+  const Button = new Component({ ...state });
+  Button.view = props => html`<button onclick="${props.fn}">${props.txt}</button>`;
+  return Button;
+}
+
+// create 3 buttons from the re-usable component
 const btn1 = new Button({ txt: "1", fn: e => alert("btn1") });
 const btn2 = new Button({ txt: "2", fn: e => alert("btn2") });
 const btn3 = new Button({ txt: "3", fn: e => alert("btn3") });
@@ -172,6 +168,8 @@ Menu.render('.container');
 ```
 
 See more short recipes in [examples/recipes.js](examples/recipes.js).
+
+---
 
 ## Installation
 
@@ -208,7 +206,9 @@ var { Component } = require('@scottjarvis/component');
 // use it here
 ```
 
-See each add-on module (`validator`, `html`, `htmel`, `emitter` and `tweenState`) for their respective installation instructions.
+See each add-on module (`validator`, `html`, `htmel`, `emitter`, `storage` and `tweenState`) for their respective installation instructions.
+
+---
 
 ## Usage
 
@@ -264,9 +264,11 @@ These are the methods and properties attached to the components you create.
 - **.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${uid}`
 - **.debug**: if true, a record of states changes are kept in `.log`
 
+---
+
 ## Advanced usage
 
-### State validation
+### Using "state validation"
 
 You can validate your component state against a schema, before you set it or render anything.
 
@@ -564,13 +566,15 @@ foo.minus(1)
 
 Also see [examples/usage-emitter.js](examples/usage-emitter.js)
 
-### Attaching Event Listeners
+### Using your own Event Listeners
 
 To add your own Event Listeners, you should add them to the container of your components:
 
 ```js
+// render a component into the page to get its HTML
 foo.render('.container');
 
+// now we have the `.html` property on our component, we can use it
 foo.html.addEventListener("click", e => {
     // get the element clicked
     const el = e.target.className;
@@ -762,7 +766,7 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
-### JSX-like features with `html` and `htmel`
+### Using `html` and `htmel` modules for easier HTML templating
 
 To make it easier to build a good HTML "view" for your components, there are two **optional** add-on functions which provide a nicer way to write HTML in JavaScript "Template literals".
 
@@ -773,24 +777,44 @@ These return your components view as either a String or HTML Object, but are oth
 
 Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
 
-To use `html` or `htmel` (or both), import them along with Component, like so:
+```js
+// Example of using `html` or `htmel` standalone, without any `Component` stuff:
+
+const foo = "Hello world"
+
+const str = html`<h1>${foo}</h1>` // `html`  returns a string
+const el = htmel`<h1>${foo}</h1>` // `htmel` returns a DOM Node
+
+// ..or in functions that return pre-defined HTML snippets from templates:
+
+const para = text => htmel`<p>${text}</p>`
+
+const list = array => htmel`<ul>${array.map(text => `<li>${text}</li>`)}</ul>`
+
+// now generate the DOM elements
+const p  = para("Put me in a paragraph.")
+const ul = list([ "one", "two", "three" ])
+```
+
+To use `html` or `htmel` (or both), import them [along with Component], like so:
 
 #### In browsers:
 
 ```html
 <script src="https://unpkg.com/@scottjarvis/component"></script>
 <script src="https://unpkg.com/@scottjarvis/component/dist/html.min.js"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/htmel.min.js"></script>
 <script>
-  // use it here
+  // use them here
 </script>
 ```
 
 #### In NodeJS:
 
 ```js
-var { Component, html } = require('@scottjarvis/component');
+var { Component, html, htmel } = require('@scottjarvis/component');
 
-// use it here
+// use them here
 
 ```
 
@@ -869,7 +893,7 @@ If using `htmel` in a browser, you can also embed functions as event attributes 
 htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
 ```
 
-Example usage:
+#### Example usage of `htmel` with `Component`:
 
 ```js
 // Let's define a component with a view, using `htmel`
@@ -931,7 +955,7 @@ Adding linked data to your components is easy - just define it as part of your v
 - use the `props` passed in to define/update whatever you need
 - your JSON-LD will be updated along with your view, whenever your component re-renders
 
-### Nested components
+### Using "nested components"
 
 Components that are nested inside other components are called _child components_.
 
@@ -954,7 +978,7 @@ const h2 = text => `<h2>${text}</h2>`;
 // ...used inside the view of another component:
 Foo.view = props => `
   <div>
-    ${h2(props.txt)}
+    ${h2(props.text)}
     <p> ... </p>
   </div>
 `;
@@ -979,45 +1003,7 @@ This has a number of implications:
   - therefore calling the `render()` method of a child component (usually) does nothing
 - calling `setState()` of a child component _will_ update its state and run its "middleware", but _doesn't_ re-render
 
-```js
-// let's create a re-usable, stateful button component:
-// the `htmel` add-on is used as we're attaching Event Listeners to the buttons
-
-function Button(state) {
-  const Button = new Component({ ...state });
-  Button.view = props => htmel`<button onclick="${props.fn}">${props.txt}</button>`;
-  return Button;
-}
-
-//  create 3 buttons from our re-usable component
-const btn1 = new Button({ txt: "1", fn: e => console.log("btn1 'click' Event: ", e) });
-const btn2 = new Button({ txt: "2", fn: e => console.log("btn2 'click' Event: ", e) });
-const btn3 = new Button({ txt: "3", fn: e => console.log("btn3 'click' Event: ", e) });
-
-// create the main (parent) component
-const Menu = new Component({ txt: 'Click the buttons!' });
-
-// create a view with our buttons included:
-Menu.view = props => htmel`
-  <div>
-    <h2>${props.txt}</h2>
-    ${btn1}
-    ${btn2}
-    ${btn3}
-  </div>
-`;
-
-// add our main/parent component to page
-Menu.render('.container');
-
-// we can update the state of the main component, it will re-render
-// what is needed - each child component returns their view based on
-// their own state
-Menu.setState({ txt: "3 Buttons:"})
-
-// to change the text of the buttons, you must update their state,
-// then update the state of Menu, to trigger a re-render on the page...
-```
+For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
 ### Server side rendering
 
@@ -1219,17 +1205,9 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Future improvements
 
-- Persistant state
-  - stored in/retrieved from localStorage (etc)
-
 - Store manager
   - like redux, storeon, etc
    
-- Usability:
-  - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
-    - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
-    - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
-
 - Better SSR
   - an `toEnvelope()` add-on method, to render components as JSON envelopes:
     - render as JSON
@@ -1266,13 +1244,12 @@ Rebuild to `dist/` using the command `npm run build`
 
 - Universal rendering (add-ons):
   - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from `x` to HTML strings:
-    - markdown (see [YerkoPalma/marli](https://github.com/YerkoPalma/marli))
-    - files/binary/buffer (see [almost/stream-template](https://github.com/almost/stream-template))
+    - from markdown (see [YerkoPalma/marli](https://github.com/YerkoPalma/marli))
+    - from files/binary/buffer (see [almost/stream-template](https://github.com/almost/stream-template))
   - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from HTML strings to `x`:
-    - real DOM (see `html`/`htmel`, or [htl](https://observablehq.com/@observablehq/htl), [fast-html-parser](https://www.npmjs.com/package/fast-html-parser), [genel](https://github.com/capsidjs/genel), ...)
-    - virtual DOM (see [developit/htm](https://github.com/developit/htm), [hyperx](https://github.com/choojs/hyperx), [snabby](https://github.com/mreinstein/snabby))
-    - ANSI console output (for coloured terminal output..?)
-    - PDF (..?)
+    - to virtual DOM (see [developit/htm](https://github.com/developit/htm), [hyperx](https://github.com/choojs/hyperx), [snabby](https://github.com/mreinstein/snabby))
+    - to ANSI console output (for coloured terminal output..?)
+    - to PDF (..?)
 
 - Support for custom elements/Web Components
   - so you can use `<my-custom-app></my-custom-app>` in your HTML
