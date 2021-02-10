@@ -96,7 +96,7 @@ Todo.render('.container')
 
 ### A *re-usable* HTML component:
 
-Unlike the previous two examples, this one below is a function which generates re-usable components - a new component is created from the given definition (state, view, etc) each time it's called.
+Unlike the previous two examples, the one below is a function that generates _re-usable_ components - a new component is created and returned each time it's called.
 
 ```js
 function Header(state) {
@@ -105,28 +105,17 @@ function Header(state) {
   return Header;
 }
 
-export default Header
-```
-
-And you use it like this:
-
-```js
-import Header from './Header.js'
-
+// And you use it like this:
 const header1 = new Header();
-const header2 = new Header();
 
-// add it to our page
+// Add it to our page
 header1.render('.container');
 
 // Update the state, the heading will re-render for you
 header1.setState({ title: "Hello again!" });
 
-// Or set state via the component constructor (since v1.2.0)
+// Or set state via the component constructor
 header1({ title: "Hello a 3rd time!" });
-
-// etc..
-
 ```
 
 ### Nested components
@@ -134,7 +123,7 @@ header1({ title: "Hello a 3rd time!" });
 Child components should be regular functions that return part of the view of the parent component:
 
 ```js
-const Foo = new Component({ title: "Hey!", list: [ "one", "two" ] });
+const Foo = new Component({ title: "Hey!", items: [ "one", "two" ] });
 
 const Header = txt => `<h2>${txt}</h2>`
 const List   = i   => `<ul>${i.map(item => `<li>${i}</li>`).join('')}</ul>`
@@ -149,7 +138,14 @@ Foo.view = props =>
 But you can also nest proper (stateful) components inside other components, too:
 
 ```js
-// create 3 buttons from a re-usable component
+// create a re-usable button component
+function Button(state) {
+  const Button = new Component({ ...state });
+  Button.view = props => html`<button onclick="${props.fn}">${props.txt}</button>`;
+  return Button;
+}
+
+// create 3 buttons from the re-usable component
 const btn1 = new Button({ txt: "1", fn: e => alert("btn1") });
 const btn2 = new Button({ txt: "2", fn: e => alert("btn2") });
 const btn3 = new Button({ txt: "3", fn: e => alert("btn3") });
@@ -172,6 +168,8 @@ Menu.render('.container');
 ```
 
 See more short recipes in [examples/recipes.js](examples/recipes.js).
+
+---
 
 ## Installation
 
@@ -208,7 +206,9 @@ var { Component } = require('@scottjarvis/component');
 // use it here
 ```
 
-See each add-on module (`validator`, `html`, `htmel`, `emitter` and `tweenState`) for their respective installation instructions.
+See each add-on module (`validator`, `html`, `htmel`, `emitter`, `storage` and `tweenState`) for their respective installation instructions.
+
+---
 
 ## Usage
 
@@ -263,6 +263,8 @@ These are the methods and properties attached to the components you create.
 - **.reactive**: if `false`, disables auto re-rendering on state change
 - **.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${uid}`
 - **.debug**: if true, a record of states changes are kept in `.log`
+
+---
 
 ## Advanced usage
 
@@ -569,8 +571,10 @@ Also see [examples/usage-emitter.js](examples/usage-emitter.js)
 To add your own Event Listeners, you should add them to the container of your components:
 
 ```js
+// render a component into the page to get its HTML
 foo.render('.container');
 
+// now we have the `.html` property on our component, we can use it
 foo.html.addEventListener("click", e => {
     // get the element clicked
     const el = e.target.className;
@@ -773,24 +777,44 @@ These return your components view as either a String or HTML Object, but are oth
 
 Both `html` and `htmel` can be used standalone (without `Component`) for general HTML templating.
 
-To use `html` or `htmel` (or both), import them along with Component, like so:
+```js
+// Example of using `html` or `htmel` standalone, without any `Component` stuff:
+
+const foo = "Hello world"
+
+const str = html`<h1>${foo}</h1>` // `html`  returns a string
+const el = htmel`<h1>${foo}</h1>` // `htmel` returns a DOM Node
+
+// ..or in functions that return pre-defined HTML snippets from templates:
+
+const para = text => htmel`<p>${text}</p>`
+
+const list = array => htmel`<ul>${array.map(text => `<li>${text}</li>`)}</ul>`
+
+// now generate the DOM elements
+const p  = para("Put me in a paragraph.")
+const ul = list([ "one", "two", "three" ])
+```
+
+To use `html` or `htmel` (or both), import them [along with Component], like so:
 
 #### In browsers:
 
 ```html
 <script src="https://unpkg.com/@scottjarvis/component"></script>
 <script src="https://unpkg.com/@scottjarvis/component/dist/html.min.js"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/htmel.min.js"></script>
 <script>
-  // use it here
+  // use them here
 </script>
 ```
 
 #### In NodeJS:
 
 ```js
-var { Component, html } = require('@scottjarvis/component');
+var { Component, html, htmel } = require('@scottjarvis/component');
 
-// use it here
+// use them here
 
 ```
 
@@ -869,7 +893,7 @@ If using `htmel` in a browser, you can also embed functions as event attributes 
 htmel`<p onclick="${e => console.log(e.target)}">some text</p>`
 ```
 
-Example usage:
+#### Example usage of `htmel` with `Component`:
 
 ```js
 // Let's define a component with a view, using `htmel`
@@ -954,7 +978,7 @@ const h2 = text => `<h2>${text}</h2>`;
 // ...used inside the view of another component:
 Foo.view = props => `
   <div>
-    ${h2(props.txt)}
+    ${h2(props.text)}
     <p> ... </p>
   </div>
 `;
@@ -979,45 +1003,7 @@ This has a number of implications:
   - therefore calling the `render()` method of a child component (usually) does nothing
 - calling `setState()` of a child component _will_ update its state and run its "middleware", but _doesn't_ re-render
 
-```js
-// let's create a re-usable, stateful button component:
-// the `htmel` add-on is used as we're attaching Event Listeners to the buttons
-
-function Button(state) {
-  const Button = new Component({ ...state });
-  Button.view = props => htmel`<button onclick="${props.fn}">${props.txt}</button>`;
-  return Button;
-}
-
-//  create 3 buttons from our re-usable component
-const btn1 = new Button({ txt: "1", fn: e => console.log("btn1 'click' Event: ", e) });
-const btn2 = new Button({ txt: "2", fn: e => console.log("btn2 'click' Event: ", e) });
-const btn3 = new Button({ txt: "3", fn: e => console.log("btn3 'click' Event: ", e) });
-
-// create the main (parent) component
-const Menu = new Component({ txt: 'Click the buttons!' });
-
-// create a view with our buttons included:
-Menu.view = props => htmel`
-  <div>
-    <h2>${props.txt}</h2>
-    ${btn1}
-    ${btn2}
-    ${btn3}
-  </div>
-`;
-
-// add our main/parent component to page
-Menu.render('.container');
-
-// we can update the state of the main component, it will re-render
-// what is needed - each child component returns their view based on
-// their own state
-Menu.setState({ txt: "3 Buttons:"})
-
-// to change the text of the buttons, you must update their state,
-// then update the state of Menu, to trigger a re-render on the page...
-```
+For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
 ### Server side rendering
 
