@@ -18,43 +18,43 @@ A "state" is a snapshot of your application data at a specific time.
 
 - Easy setup, zero dependencies
 - 2.1kb, minified and gzipped
-- Simple syntax, easy to use, easy to learn:
-  - plain, vanilla JavaScript only
+- Simple syntax, quick to learn, **easy to use**:
+  - plain JavaScript only
   - no compilation or build tools needed
   - no virtual DOM or JSX needed
   - should work with any test suite
 - Works **client-side**, in browsers:
-  - add your component to the page as you would a normal Element
-  - auto re-render on state change, using `requestAnimationFrame` and DOM-diffing
-    - DOM diffing uses real DOM Nodes (not VDOM)
-    - all DOM reads/writes performed inside a debounced `requestAnimationFrame` 
-    - good (re)rendering/animation performance at 60fps
+  - auto re-render on state change
+  - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
+  - DOM diffing uses real DOM Nodes (not VDOM)
 - Works **server-side**, in Node:
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
-- Includes a useful list of **optional add-ons**:
-  - `validator`: validate states against a schema (like a simple PropTypes)
-  - `html`/`htmel`: simpler, more powerful Template Literals (like a simple JSX)
-  - `emitter`: an event emitter, for sharing updates between components
-  - `storage`: enables persistent states (between page refreshes, etc)
-  - `tweenState`: animate from one state to the next
-- Supports **"middleware"** functions:
-  - easily customise a components setState and re-render behaviour
-- Easy component CSS styling:
-  - Automatic "scoping"/prefixing of your component CSS (_optional_)
-  - Re-render styles on component CSS change (_optional_)
-- Easy state management:
+- Easy **state management**:
   - define "actions" to easily update the state in specific ways 
-  - a log of all state history can be kept, for debugging (_optional_):
+  - log all states in a history, for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
-- Nested components
-- ...and more
+- Easy CSS **component styling**:
+  - Automatic "scoping"/prefixing of your component CSS (_optional_)
+  - Re-render styles on component CSS change (_optional_)
+- Supports **"middleware"** functions:
+  - easily customise a components setState and re-render behaviour
+- Supports **nested components**
+  - embed components in the "views" of other components
+  - supports various methods and syntaxes
+- Works with these **optional add-ons**:
+  - `validator`: validate states against a schema (_like a simple PropTypes_)
+  - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
+  - `emitter`: an event emitter - share updates between components
+  - `storage`: enables persistent states (between page refreshes, etc)
+  - `tweenState`: animate nicely from one state to the next
 
+---
 
 ## Quickstart
 
-Here's some quick examples to demo how it all looks:
+Here's some quick examples to demo how it all looks, generally:
 
 ### "Counter" app
 
@@ -1205,17 +1205,9 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Future improvements
 
-- Persistant state
-  - stored in/retrieved from localStorage (etc)
-
 - Store manager
   - like redux, storeon, etc
    
-- Usability:
-  - Better Event handling: so `onclick` etc receive proper `Event` objects. See these links:
-    - [yo-yo](https://github.com/maxogden/yo-yo) - hooks into morphdom, and manually copies events handlers to new elems, if needed
-    - [nano-html](https://github.com/choojs/nanohtml/blob/master/lib/set-attribute.js) - similar to above
-
 - Better SSR
   - an `toEnvelope()` add-on method, to render components as JSON envelopes:
     - render as JSON
@@ -1252,13 +1244,12 @@ Rebuild to `dist/` using the command `npm run build`
 
 - Universal rendering (add-ons):
   - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from `x` to HTML strings:
-    - markdown (see [YerkoPalma/marli](https://github.com/YerkoPalma/marli))
-    - files/binary/buffer (see [almost/stream-template](https://github.com/almost/stream-template))
+    - from markdown (see [YerkoPalma/marli](https://github.com/YerkoPalma/marli))
+    - from files/binary/buffer (see [almost/stream-template](https://github.com/almost/stream-template))
   - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from HTML strings to `x`:
-    - real DOM (see `html`/`htmel`, or [htl](https://observablehq.com/@observablehq/htl), [fast-html-parser](https://www.npmjs.com/package/fast-html-parser), [genel](https://github.com/capsidjs/genel), ...)
-    - virtual DOM (see [developit/htm](https://github.com/developit/htm), [hyperx](https://github.com/choojs/hyperx), [snabby](https://github.com/mreinstein/snabby))
-    - ANSI console output (for coloured terminal output..?)
-    - PDF (..?)
+    - to virtual DOM (see [developit/htm](https://github.com/developit/htm), [hyperx](https://github.com/choojs/hyperx), [snabby](https://github.com/mreinstein/snabby))
+    - to ANSI console output (for coloured terminal output..?)
+    - to PDF (..?)
 
 - Support for custom elements/Web Components
   - so you can use `<my-custom-app></my-custom-app>` in your HTML
