@@ -1,3 +1,31 @@
+
+
+// -----------------------------------------------------------------------
+//
+// Examples of `html` and `htmel` templating:
+//
+
+// You can use `html` or `htmel` functions standalone, without Component:
+
+const foo = "Hello world"
+
+const str = html`<h1>${foo}</h1>` // `html`  returns a string
+const el = htmel`<h1>${foo}</h1>` // `htmel` returns a DOM Node
+
+// ..or in functions that return pre-defined HTML snippets from templates:
+
+const para = text => htmel`<p>${text}</p>`
+
+const list = array => htmel`<ul>${array.map(text => `<li>${text}</li>`)}</ul>`
+
+// now generate the DOM elements
+const p  = para("Put me in a paragraph.")
+const ul = list([ "one", "two", "three" ])
+
+
+
+
+// -----------------------------------------------------------------------
 //
 // Example applications  -  Note: apps don't need to be wrapped & returned
 //                          in functions, as they're not intended to be
@@ -117,7 +145,25 @@ function Header(state, schema) {
   return Header;
 }
 
-// the `opts` param allows users to set custom options each time they use this component
+// ...in most cases, you'd use these re-usable Components defined above like so:
+// (NOTE: state, schema and opts can be passed in, even if undefined/not used)
+
+const header1 = new Header(state, schema);
+header1.render('#some-elem')
+header1({ title: "One!" })
+
+
+// -----------------------------------------------------------------------
+//
+//
+// Examples of "configurable" components:
+//
+
+// these are components where you pass in a param that users can set when
+// they create the component, but which cannot be changed thereafter
+
+// create a re-usable, configurable header component -
+// allow user to pass in options, but not set an initial state, or any schema
 function ConfigurableHeader(opts = {}) {
   const defaults  = { title: 'Hello world' };
 
@@ -127,16 +173,38 @@ function ConfigurableHeader(opts = {}) {
   return Header;
 }
 
-
-// ...in most cases, you'd use these re-usable Components defined above like so:
-// (NOTE: state, schema and opts can be passed in, even if undefined/not used)
-
-const header1 = new Header(state, schema);
-header1.render('#some-elem')
-header1({ title: "One!" })
-
-// our last example would be run like this:
+// the above example would be run like this:
 const headerInCaps = new ConfigurableHeader({ caps: true });
+
+
+
+// create a re-usable, stateful HTML element - the element type can't be
+// changed after it's created, but its attributes, style and contents can be
+function Element(el) {
+  const Element = new Component({ attrs: {}, style: {}, contents: '' });
+
+  Element.view  = props => htmel
+    `<${el} style="${props.style}" ${props.attrs}>${props.contents}</${el}>`;
+
+  return Element;
+}
+
+// the above example would be used like this:
+const el = new Element('div');
+el.render('.container');
+
+// now let's use our component like any other - it will update itself in the page
+el({
+  attrs: {
+    'class':   'someThing someThingElse',
+    'onclick': e => alert(e),
+  },
+  style: {
+    'border': '1px dashed red',
+    'margin': '8px',
+  },
+  contents: `<p>I'm some HTML in a string</p>`,
+});
 
 
 // -----------------------------------------------------------------------
@@ -178,31 +246,5 @@ Menu.setState({ txt: "3 Buttons:"})
 
 // to change the text of the buttons, you must update their state,
 // then update the state of Menu, to trigger a re-render on the page...
-
-
-
-
-// -----------------------------------------------------------------------
-//
-//
-// Examples of `html` and `htmel` templating:
-//
-
-// You can use `html` or `htmel` standalone, without any Component stuff:
-
-const foo = "Hello world"
-
-const str = html`<h1>${foo}</h1>` // `html`  returns a string
-const el = htmel`<h1>${foo}</h1>` // `htmel` returns a DOM Node
-
-// ..or in functions that return pre-defined HTML snippets from templates:
-
-const para = text => htmel`<p>${text}</p>`
-
-const list = array => htmel`<ul>${array.map(text => `<li>${text}</li>`)}</ul>`
-
-// now generate the DOM elements
-const p  = para("Put me in a paragraph.")
-const ul = list([ "one", "two", "three" ])
 
 
