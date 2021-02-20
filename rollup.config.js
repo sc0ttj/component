@@ -58,6 +58,15 @@ export default [
     plugins: [resolve(), commonjs(), terser()]
   },
   {
+    input: "src/devtools.js",
+    output: {
+      file: "dist/devtools.min.js",
+      name: "devtools",
+      format: "umd"
+    },
+    plugins: [resolve(), commonjs(), terser()]
+  },
+  {
     input: "src/index.js",
     output: {
       file: "dist/index.min.js",
