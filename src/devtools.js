@@ -2156,7 +2156,9 @@ textarea.panel {
 }
 .history-toolbar {
   border-bottom: 0;
+  float: right;
   text-align: right;
+  width: 20%;
 }
 .history-toolbar button:nth-child(3) {
   margin-right: 0;
@@ -2184,9 +2186,50 @@ textarea.panel {
 .no-scroll .devtools {
    width: calc(100% - 12px);
 }
+
+
+.devtools-vertical {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40%;
+  min-width: 300px;
+  max-width: 800px;
+  min-height: 100%;
+  max-height: 100%;
+}
+
+.devtools-vertical .column {
+  display: inline-block;
+  height: 100%;
+  min-height: 300px;
+  padding: 0 4px 8px;
+  overflow: hidden;
+  vertical-align: top;
+  width: 100%;
+}
+.devtools-vertical .column p,
+.devtools-vertical .history-toolbar {
+  width: 50%;
+}
+
+.devtools-vertical .details-column,
+.devtools-vertical .details-panel,
+.devtools-vertical .history-column,
+.devtools-vertical .history-panel {
+  padding-bottom: 0;
+  max-height: 600px;
+  max-height: 92vh;
+  height: 92%;
+}
+
+#devtools-right,
+#devtools-bottom {
+  margin-right: 4px;
+}
 `;
 
-devtools.view = `<div id="component-devtools" class="devtools">
+devtools.view = `<div id="component-devtools" class="devtools devtools-vertical">
   <div class="toolbar">
     <button id="devtools-selectBtn" title="Select a component from the page" style="padding-top:2px;">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 511.997 511.997" width="16" height="16">
@@ -2197,11 +2240,23 @@ devtools.view = `<div id="component-devtools" class="devtools">
     <button id="devtools-tab2" title="Component properties">Details</button>
     <button id="devtools-tab3" title="State history">History</button>
     <button id="devtools-tab4" title="Component editor">Editor</button>
+
     <button id="devtools-closeBtn" title="Close this panel" style="float:right;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M15.59 7L12 10.59L8.41 7L7 8.41L10.59 12L7 15.59L8.41 17L12 13.41L15.59 17L17 15.59L13.41 12L17 8.41L15.59 7Z" fill="#2E3A59"/>
       </svg>
     </button>
+    <button id="devtools-right" title="Move panel to right-side of viewport" style="float:right;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21ZM16 5V19H19V5H16ZM5 5V19H14V5H5Z" fill="#2E3A59"/>
+      </svg>
+    </button>
+    <button id="devtools-bottom" title="Move panel to bottom of viewport" style="float:right;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21ZM5 16V19H19V16H5ZM5 5V14H19V5H5Z" fill="#2E3A59"/>
+      </svg>
+    </button>
+
   </div>
 
   <div class="tab overview-tab">
@@ -2225,7 +2280,7 @@ devtools.view = `<div id="component-devtools" class="devtools">
   <div class="tab console-tab">
     <div class="column history-column">
       <p>State History</p>
-      <span class="toolbar history-toolbar" style="float:right;width:20%;">
+      <span class="toolbar history-toolbar">
         <button id="btn-state-rewind" title="Rewind to start">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 18L11.5 12L20 6V18ZM11 18L2.5 12L11 6V18Z" fill="#2E3A59"/>
@@ -2286,6 +2341,8 @@ devtools.toggleBtn = `
     🗗
 </button>`;
 
+devtools.layout = 'right';
+
 devtools.init = function(){        // main function to load devtools, adds button to page to hide/show devtools UI
   document.addEventListener('DOMContentLoaded', (event) => {
     // add the devtools stylesheet to the page
@@ -2315,12 +2372,17 @@ devtools.init = function(){        // main function to load devtools, adds butto
     this.eTab = mainUI.querySelector('.editor-tab');
 
     this.openBtn  = mainUI.querySelector('#devtools-toggleBtn');
+    this.toRightBtn = mainUI.querySelector('#devtools-right');
+    this.toBottomBtn = mainUI.querySelector('#devtools-bottom');
     this.closeBtn = mainUI.querySelector('#devtools-closeBtn');
+
+    devtools.toRightBtn.style.display = 'none';
 
     devtoolsToggleBtn.addEventListener('click', function(e) {
         mainUI.style.display = 'block';
         this.style.display = 'none';
-        document.body.style.marginBottom = "350px";
+        if (devtools.layout === 'bottom') document.body.style.marginBottom = "350px";
+        if (devtools.layout === 'right') document.body.style.marginRight = "40%";
         /*
         mainUI.addEventListener('mouseover', function(e) {
             document.querySelector('html').classList.add("no-scroll");
@@ -2332,10 +2394,29 @@ devtools.init = function(){        // main function to load devtools, adds butto
         });
         */
     });
+    this.toBottomBtn.addEventListener('click', function(e) {
+        this.style.display = 'none';
+        devtools.toRightBtn.style.display = 'block';
+        devtools.layout = 'bottom';
+        mainUI.style.display = 'block';
+        mainUI.classList.remove('devtools-vertical')
+        document.body.style.marginBottom = "350px";
+        document.body.style.marginRight = "0";
+    });
+    this.toRightBtn.addEventListener('click', function(e) {
+        this.style.display = 'none';
+        devtools.toBottomBtn.style.display = 'block';
+        devtools.layout = 'right';
+        mainUI.style.display = 'block';
+        mainUI.classList.add('devtools-vertical')
+        document.body.style.marginBottom = "0";
+        document.body.style.marginRight = "40%";
+    });
     this.closeBtn.addEventListener('click', function(e) {
         mainUI.style.display = 'none';
         devtoolsToggleBtn.style.display = 'block';
         document.body.style.marginBottom = "0";
+        document.body.style.marginRight = "0";
     });
 
     this.selectBtn = mainUI.querySelector('#devtools-selectBtn');
