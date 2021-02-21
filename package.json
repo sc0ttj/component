@@ -40,7 +40,9 @@
 		"dist/tweenState.min.js",
 		"dist/emitter.min.js",
 		"dist/html.min.js",
-		"dist/htmel.min.js"
+		"dist/htmel.min.js",
+		"dist/storage.min.js",
+		"dist/devtools.min.js"
 	],
 	"dependencies": {},
 	"devDependencies": {
