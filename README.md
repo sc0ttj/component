@@ -1049,7 +1049,7 @@ Contains modified versions of:
 
 **Horizontal view:**
 
-![Devtools - horizontal view](https://user-images.githubusercontent.com/2726610/108611873-d5aece80-73da-11eb-8177-fd749cf6d8f0.png "Devtools (horizontal view)")
+![Devtools - horizontal view](https://user-images.githubusercontent.com/2726610/108628107-de41ec00-7450-11eb-9c9a-3ae98e81a797.png "Devtools (horizontal view)")
 
 ### Server side rendering
 
