@@ -1110,18 +1110,23 @@ Note: your component CSS is not auto-prefixed or "scoped" with containers class/
 ## Changelog
 
 **1.3.0**
-- new add-ons: `html` and `htmel` for more JSX-like component views
-- both add-ons are optional, can be used for easier HTML templating
-- `html` always returns your template as a String
-- `htmel` returns your template as an HTML Object (browser) or String (NodeJS)
+- new optional add-ons:
+  - `html` JSX-like HTML templating, returns your template as a String
+  - `htmel` JSX-like HTML templating, returns your template as an HTML Object (browser) or String (NodeJS)
+  - `storage` - persistent state between page refreshes (browser) or script invocations (Node)
+  - `devtools` - easier debugging of your components (browser only)
 - updates to `src/component.js`:
   - fixed: in NodeJS, debounced logging now falls back to using setTimeout, if needed 
+  - added: support for all new add-ons
   - added: allow view to be HTML Object, not only String
   - added: `App.actionsList` property - the list of defined actions functions
-  - added: `App.html` property - alias of `App.container` (returns an HTML Element) 
   - added: `App()` will return the container (an HTML Element)
     - `App({...})` still returns `App` (for chainable actions, etc)
-- updated examples, README and build configs
+  - added: `App.html` property - alias of `App.container` (returns an HTML Element) 
+- update docs:
+  - re-write README and examples to show re-usable components
+  - add the new add-ons to README and examples
+- updated build configs
 
 **1.2.0**
 - doing `Foo = new Component(someState)` now returns a function, not an object

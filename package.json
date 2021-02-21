@@ -31,7 +31,8 @@
 		"tween",
 		"pubsub",
 		"emit",
-		"middleware"
+		"middleware",
+		"devtools"
 	],
 	"files": [
 		"dist/index.min.js",
