@@ -111,20 +111,24 @@ var domDiff = (target, source) => {
  * @param {object} state - The component state (model).
  */
 function Component(state, schema) {
-  var c = function (state) {
-    c.setState(state)
+  var c = function (state, schema) {
+    c.setState(state, schema)
     return !state ? c.container : c
   }
 
   c.state = state
   c.schema = schema
 
-  c.reactive = true // if true, re-render on every state change
-  c.debug = false //  if true, maintain a history of state changes in `.log`
-  c.scopedCss = true // auto prefix component css with a unique id
-
   var self = c
   var storage = Component.storage
+  var validator = Component.validator
+  var emitter = Component.emitter
+  var tweenState = Component.tweenState
+  var devtools = Component.devtools
+
+  c.reactive = true // if true, re-render on every state change
+  c.debug = devtools ? true : false //  if true, maintain a history of state changes in `.log`
+  c.scopedCss = true // auto prefix component css with a unique id
 
   // for debouncing render() calls
   var timeout = undefined
@@ -147,11 +151,13 @@ function Component(state, schema) {
   if (!c.isNode) {
     // the <style> elem into which we put our component CSS
     c.css = document.createElement("style")
+    c.css.id = c.uid
     document.head.appendChild(c.css)
   }
 
   // on init, add our initial state to the state history
   c.log = [{ id: 0, state: state, action: "init" }]
+  c.i = c.log.length
 
   /**
    * Define chainable named "actions" that will update our
@@ -205,8 +211,8 @@ function Component(state, schema) {
     c.loaded = true;
 
     // enable schema validation using @scottjarvis/validator
-    if (Component.validator && c.schema) {
-      var err = Component.validator({ ...c.state, ...newState }, c.schema)
+    if (validator && c.schema) {
+      var err = validator({ ...c.state, ...newState }, c.schema)
       if (err.length > 0) {
         var msg = "State doesn't match schema:"
         console.error(msg, "\n", err, "\n")
@@ -233,24 +239,28 @@ function Component(state, schema) {
       if (t && !c.isNode) cancelAnimationFrame(t)
       // for debouncing logging in browser
       var t = undefined
-      // update history and move along index
-      if (c.debug && this.i === c.log.length) {
-        if (typeof requestAnimationFrame === "undefined") {
-          var requestAnimationFrame = function(logFn) { setTimeout(() => logFn(), 60); };
+
+      // c.tt = component is "time travelling" (traversing state history)
+      if (c.debug && c.tt !== true) {
+        if (c.isNode && !requestAnimationFrame) {
+          requestAnimationFrame = function raf(logFn) { setTimeout(() => logFn(), 1); };
         }
+
         t = requestAnimationFrame(() => {
           // we are not traversing state history, so add the new state to the log
           c.log.push({
             id: c.log.length,
-            state: c.prev,
+            state: c.state,
             action: c.action || "setState"
           })
-          this.i = c.log.length
+          c.action = undefined
+          // move along index
+          c.i = c.log.length -1
         })
       }
 
-      // log state changes if dubeg = true
-      //if (c.debug) console.log(this.i, [c.state, ...c.log])
+      // log state changes if debug = true
+      //if (c.debug) console.log(c.i, [c.state, ...c.log])
 
       // freeze state so it can only be changed through setState()
       this.freeze(c.state)
@@ -258,15 +268,12 @@ function Component(state, schema) {
       // if we updated using an "action" method, and emitter is avail,
       // then emit an event with same name as the "action" called,
       // passing in the current state
-      if (typeof Component.emitter !== "undefined" && !!c.action) {
-        Component.emitter.emit(`${c.action}`, c.state)
+      if (typeof emitter !== "undefined" && !!c.action) {
+        emitter.emit(`${c.action}`, c.state)
       }
 
       // run any middlware functions that were defined by the user
       c.middleware.forEach(fn => fn({ ...c.state }))
-
-      // unset any action that may have called this invocation of setState()
-      c.action = undefined
 
       return c
     }
@@ -280,32 +287,32 @@ function Component(state, schema) {
    *
    */
   c.tweenState = (newState, cfg) => {
-    typeof Component.tweenState !== "undefined"
-      ? Component.tweenState(c, newState, cfg)
+    typeof tweenState !== "undefined"
+      ? tweenState(c, newState, cfg)
       : c.setState(newState)
     return c
   }
 
   c.on = (ev, fn) => {
-    typeof Component.emitter !== "undefined"
-      ? Component.emitter.on(ev, fn)
+    typeof emitter !== "undefined"
+      ? emitter.on(ev, fn)
       : false
     return c
   }
 
   c.once = (ev, fn) => {
-    if (typeof Component.emitter !== "undefined") {
-      Component.emitter.on(ev, props => {
+    if (typeof emitter !== "undefined") {
+      emitter.on(ev, props => {
         fn(props)
-        Component.emitter.off(ev, fn)
+        emitter.off(ev, fn)
       })
     }
     return c
   }
 
   c.off = (ev, fn) => {
-    typeof Component.emitter !== "undefined"
-      ? Component.emitter.off(ev, fn)
+    typeof emitter !== "undefined"
+      ? emitter.off(ev, fn)
       : false
     return c
   }
@@ -318,14 +325,17 @@ function Component(state, schema) {
   c.go = function(num, dir) {
     var i
     if (dir === "f") {
-      i = this.i + num
+      i = c.i + num
     } else {
-      i = this.i - num
+      i = c.i - num
     }
-    if (c.log[i]) c.setState(c.log[i].state)
-    this.i = i
-
-    return this
+    if (c.log[i]) {
+      c.i = i
+      c.tt = true;
+      c.setState(c.log[i].state)
+      c.tt = false;
+    }
+    return c
   }
 
   /**
@@ -334,13 +344,15 @@ function Component(state, schema) {
    */
   c.rw = function(num) {
     if (!num) {
-      if (c.log[0]) c.setState(c.log[0].state)
-      this.i = 0
-      return true
+      if (c.log[0]) {
+        c.tt = true;
+        c.setState(c.log[0].state)
+        c.tt = false;
+      }
+      c.i = 0
+      return c
     }
-    this.go(num, "b")
-
-    return c
+    return c.go(num, "b")
   }
 
   /**
@@ -349,14 +361,15 @@ function Component(state, schema) {
    */
   c.ff = function(num) {
     if (!num) {
-      if (c.log[c.log.length - 1])
-        this.setState(c.log[c.log.length - 1].state)
-      this.i = c.log.length - 1
-      return true
+      if (c.log[c.log.length - 1]) {
+        c.tt = true;
+        c.setState(c.log[c.log.length - 1].state)
+        c.tt = false;
+      }
+      c.i = c.log.length -1
+      return c
     }
-    c.go(num, "f")
-
-    return c
+    return c.go(num, "f")
   }
 
   /**
@@ -489,9 +502,20 @@ function Component(state, schema) {
             }
           }
         }
+        // for devtools
+        if (devtools && c.container) {
+          c.container.firstChild.setAttribute('data-uid', c.uid)
+          devtools.populateUI(c.container)
+        }
       })
     }
     return c.container
+  }
+
+  // for devtools
+  if (!c.isNode) {
+    window.sjComponents = window.sjComponents || {};
+    window.sjComponents[c.uid] = c;
   }
 
   return c

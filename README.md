@@ -49,6 +49,7 @@ A "state" is a snapshot of your application data at a specific time.
   - `emitter`: an event emitter - share updates between components
   - `storage`: enables persistent states (between page refreshes, etc)
   - `tweenState`: animate nicely from one state to the next
+  - `devtools`: enables easier component debugging in the browser
 
 ---
 
@@ -1004,6 +1005,51 @@ This has a number of implications:
 - calling `setState()` of a child component _will_ update its state and run its "middleware", but _doesn't_ re-render
 
 For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
+
+### Using the `devtools` module
+
+The **optional** devtools add-on provides a nice UI for inspecting and even editing your components directly in the page.
+
+The devtools only works in the browser.
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/devtools.min.js"></script>
+<script>
+  Component.devtools = devtools
+  devtools.init();
+</script>
+<script>
+// ..now define or import your components
+</script>
+```
+
+It's a bit like React devtools but simpler:
+
+- **Main Toolbar**: 
+  - **Choose component**: click "Select component" button, then choose a component on the page
+  - **Choose layout**: can switch between bottom (horizontal) view, and side (vertical) view
+- **Overview tab**:check a components current state and HTML
+- **Details tab**: view other info about the selected component 
+- **History tab**: cycle through a components state history
+- **Editor tab**: edit a components view and styling
+
+Contains modified versions of:
+- [Olical/EventEmitter](https://github.com/Olical/EventEmitter/)
+- [luyuan/json-tree-view](https://github.com/luyuan/json-tree-view)
+- [jakiestfu/Behave.js](https://github.com/jakiestfu/Behave.js)
+
+#### Devtools screenshots:
+
+**Vertical view:**
+
+![Devtools - vertical view](https://user-images.githubusercontent.com/2726610/108625288-ff4f1080-7441-11eb-9e52-ea8e329c66f4.png "Devtools (vertical view)")
+
+**Horizontal view:**
+
+![Devtools - horizontal view](https://user-images.githubusercontent.com/2726610/108628107-de41ec00-7450-11eb-9c9a-3ae98e81a797.png "Devtools (horizontal view)")
 
 ### Server side rendering
 
