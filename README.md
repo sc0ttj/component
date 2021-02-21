@@ -1041,13 +1041,13 @@ Contains modified versions of:
 - [luyuan/json-tree-view](https://github.com/luyuan/json-tree-view)
 - [jakiestfu/Behave.js](https://github.com/jakiestfu/Behave.js)
 
-Screenshots:
+#### Devtools screenshots:
 
-Vertical view:
+**Vertical view:**
 
 ![Devtools - vertical view](https://user-images.githubusercontent.com/2726610/108625288-ff4f1080-7441-11eb-9e52-ea8e329c66f4.png "Devtools (vertical view)")
 
-Horizontal view:
+**Horizontal view:**
 
 ![Devtools - horizontal view](https://user-images.githubusercontent.com/2726610/108611873-d5aece80-73da-11eb-8177-fd749cf6d8f0.png "Devtools (horizontal view)")
 
