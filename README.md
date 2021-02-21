@@ -1111,8 +1111,8 @@ Note: your component CSS is not auto-prefixed or "scoped" with containers class/
 
 **1.3.0**
 - new optional add-ons:
-  - `html` JSX-like HTML templating, returns your template as a String
-  - `htmel` JSX-like HTML templating, returns your template as an HTML Object (browser) or String (NodeJS)
+  - `html` JSX-like HTML templating, returns templates as a String
+  - `htmel` JSX-like HTML templating, returns templates as HTMLObject (browser) or String (Node)
   - `storage` - persistent state between page refreshes (browser) or script invocations (Node)
   - `devtools` - easier debugging of your components (browser only)
 - updates to `src/component.js`:
