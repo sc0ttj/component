@@ -2186,7 +2186,7 @@ textarea.panel {
 }
 `;
 
-devtools.view = htmel`<div id="component-devtools" class="devtools">
+devtools.view = `<div id="component-devtools" class="devtools">
   <div class="toolbar">
     <button id="devtools-selectBtn" title="Select a component from the page" style="padding-top:2px;">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 511.997 511.997" width="16" height="16">
@@ -2278,29 +2278,30 @@ devtools.view = htmel`<div id="component-devtools" class="devtools">
   </div>
 </div>`
 
+devtools.toggleBtn = `
+<button
+  title="Open Component devtools"
+  id="devtools-toggleBtn"
+  style="position:fixed;top:8px;right:8px;font-size:1.2em;padding:4px;">
+    🗗
+</button>`;
+
 devtools.init = function(){        // main function to load devtools, adds button to page to hide/show devtools UI
   document.addEventListener('DOMContentLoaded', (event) => {
-    //the event occurred
-    const devToolsToggleBtn = htmel`
-      <button
-        title="Open Component devtools"
-        id="devtools-toggleBtn"
-        style="position:fixed;top:8px;right:8px;font-size:1.2em;padding:4px;">
-          🗗
-      </button>`;
-    // add the toggle button
-    document.body.append(devToolsToggleBtn);
-    // add the main UI (hidden by dfault)
-    devtoolsCss = document.createElement("style")
-    devtoolsCss.id = "devtoolsCss";
+    // add the devtools stylesheet to the page
+    const devtoolsCss = document.createElement("style")
     devtoolsCss.innerHTML = devtools.style;
     document.head.appendChild(devtoolsCss)
-    document.body.append(devtools.view);
 
+    // add the devtools HTML to the page
+    const devtoolsView = document.createElement("div")
+    devtoolsView.innerHTML = devtools.view + devtools.toggleBtn;
+    document.body.append(devtoolsView);
+
+    const devtoolsToggleBtn = document.querySelector('#devtools-toggleBtn');
     const mainUI = document.querySelector('.devtools');
 
     this.toolbarBtns = mainUI.querySelectorAll('.devtools .toolbar button');
-
     devtools.toolbarBtns.forEach(el => {
       el.addEventListener('click', e => {
         devtools.rmBtnHighlights();
@@ -2316,7 +2317,7 @@ devtools.init = function(){        // main function to load devtools, adds butto
     this.openBtn  = mainUI.querySelector('#devtools-toggleBtn');
     this.closeBtn = mainUI.querySelector('#devtools-closeBtn');
 
-    devToolsToggleBtn.addEventListener('click', function(e) {
+    devtoolsToggleBtn.addEventListener('click', function(e) {
         mainUI.style.display = 'block';
         this.style.display = 'none';
         document.body.style.marginBottom = "350px";
@@ -2333,7 +2334,7 @@ devtools.init = function(){        // main function to load devtools, adds butto
     });
     this.closeBtn.addEventListener('click', function(e) {
         mainUI.style.display = 'none';
-        devToolsToggleBtn.style.display = 'block';
+        devtoolsToggleBtn.style.display = 'block';
         document.body.style.marginBottom = "0";
     });
 
@@ -2501,7 +2502,7 @@ devtools.populateOverviewPanel = function(comp) {
 devtools.populateDetailsPanel = function(comp) {
   const detailsPanel = document.querySelector('.details-panel');
   if (detailsPanel) {
-    const panelContents = html`
+    const panelContents = `
       <div><span>UID</span><span>${comp.uid}</span></div>
       <div><span>Container</span><span>${comp.container.className.replace(/^/, '.').replace(' ', ' .')}</span></div>
       <div><span>Reactive</span><span>${comp.reactive || 'false'}</span></div>
