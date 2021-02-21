@@ -242,7 +242,7 @@ function Component(state, schema) {
 
       // c.tt = component is "time travelling" (traversing state history)
       if (c.debug && c.tt !== true) {
-        if (c.isNode && requestAnimationFrame) {
+        if (c.isNode && !requestAnimationFrame) {
           requestAnimationFrame = function raf(logFn) { setTimeout(() => logFn(), 1); };
         }
 
