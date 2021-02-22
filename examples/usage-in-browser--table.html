@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <script src="../dist/component.min.js"></script>
 <script src="../dist/htmel.min.js"></script>
+<script src="../dist/storage.min.js"></script>
+<script src="../dist/syncTabs.min.js"></script>
 <script>
+Component.syncTabs = syncTabs;
+Component.storage = storage;
+
 // Define a re-usable component
 // Just create a function that creates a new Component, and returns it:
 function Table(state, schema) {
@@ -69,6 +74,24 @@ function Table(state, schema) {
 
   return Table;
 }
+
+
+// a counter app
+const Counter = new Component({ count: 1 });
+
+Counter.debug = true;
+
+const add = num => Counter({ count: Counter.state.count + num })
+
+Counter.view = props => htmel`
+<div>
+  <h1>Counter: ${props.count}</h1>
+  <button onclick="${e => add(+1)}"> + </button>
+  <button onclick="${e => add(-1)}"> - </button>
+</div>`;
+
+Counter.store = 'myCounter'; // give a name for the localStorage "store" (optional)
+
 </script>
 </head>
 
@@ -79,6 +102,10 @@ function Table(state, schema) {
     <div class="table2"></div>
     <div class="table3"></div>
   </div>
+
+  <hr>
+
+  <div class="counter"></div>
 
   <script>
   // now we can create lots of re-usable components
@@ -93,6 +120,9 @@ function Table(state, schema) {
   table1.add(["Added to ONE",   23, 20, 47,  7, 0])
   table2.add(["Added to TWO",    0, 32, 40, 91, 0])
   table3.add(["Added to THREE", 20, 40, 60, 20, 0])
+
+
+  Counter.render('.counter');
   </script>
 
 </body>

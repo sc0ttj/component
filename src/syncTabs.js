@@ -3,7 +3,7 @@
  * @param {func} c - the component to re-render when it's storage updates/changes
  */
 const syncTabs = function(c) {
-  if (!window) return;
+  if (c.isNode || !window) return;
   // the "storage" event fires when localStorage is updated
   window.addEventListener('storage', function (event) {
     // if the storage obj that changed is the given components "store",
