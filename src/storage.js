@@ -1,3 +1,6 @@
+/**
+ * Enable persistant storage using localStorage
+ */
 const storage = {
 
   getItem: (self, state) => {
@@ -9,7 +12,15 @@ const storage = {
 
   setItem: (self, state) => {
     if (!self.store) return state;
-    // console.log('setItem:', self.store, state);
+
+    // if Component.syncTabs is available, also keep browser tabs in
+    // sync - syncTabs will create an event which monitors localStorage
+    // changes and re-renders the given component if it's storage changed.
+    if (Component.syncTabs) {
+        window.syncTab  = window.syncTab || [];
+        if (!window.syncTab[c.uid]) Component.syncTabs(c)
+    }
+
     localStorage.setItem(self.store, JSON.stringify(state))
   }
 
