@@ -4,19 +4,19 @@ import { terser } from "rollup-plugin-terser"
 
 export default [
   {
-    input: "src/tweenState.js",
+    input: "src/component.js",
     output: {
-      file: "dist/tweenState.min.js",
-      name: "tweenState",
+      file: "dist/component.min.js",
+      name: "Component",
       format: "umd"
     },
     plugins: [resolve(), commonjs(), terser()]
   },
   {
-    input: "src/component.js",
+    input: "src/tweenState.js",
     output: {
-      file: "dist/component.min.js",
-      name: "Component",
+      file: "dist/tweenState.min.js",
+      name: "tweenState",
       format: "umd"
     },
     plugins: [resolve(), commonjs(), terser()]
@@ -53,6 +53,15 @@ export default [
     output: {
       file: "dist/storage.min.js",
       name: "storage",
+      format: "umd"
+    },
+    plugins: [resolve(), commonjs(), terser()]
+  },
+  {
+    input: "src/syncTabs.js",
+    output: {
+      file: "dist/syncTabs.min.js",
+      name: "syncTabs",
       format: "umd"
     },
     plugins: [resolve(), commonjs(), terser()]

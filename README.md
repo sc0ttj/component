@@ -47,8 +47,9 @@ A "state" is a snapshot of your application data at a specific time.
   - `validator`: validate states against a schema (_like a simple PropTypes_)
   - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
   - `emitter`: an event emitter - share updates between components
-  - `storage`: enables persistent states (between page refreshes, etc)
   - `tweenState`: animate nicely from one state to the next
+  - `storage`: enables persistent states (between page refreshes, etc)
+  - `syncTabs`: Synchronize state updates & page renders between browser tabs
   - `devtools`: enables easier component debugging in the browser
 
 ---
@@ -657,6 +658,27 @@ node -r node-localstorage/register examples/usage-persistant-state.js
 ```
 
 See [examples/usage-persistant-state.js](examples/usage-persistant-state.js) for more info.
+
+### Using the `syncTabs` module
+
+The `syncTabs` add-on uses localStorage and only works in browsers. It requires the `storage` add-on.
+
+How to use it:
+
+#### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/storage.min.js"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/syncTabs.min.js"></script>
+<script>
+  Component.storage = storage
+  Component.syncTabs = syncTabs
+
+  // your components will now have a persistent state, that is synchronized 
+  // across multiple browser tabs - an update in one tab will update the others
+</script>
+```
 
 ### Using the `tweenState` module
 
