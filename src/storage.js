@@ -16,9 +16,9 @@ const storage = {
     // if Component.syncTabs is available, also keep browser tabs in
     // sync - syncTabs will create an event which monitors localStorage
     // changes and re-renders the given component if it's storage changed.
-    if (Component.syncTabs) {
+    if (self.syncTabs) {
         window.syncTab  = window.syncTab || [];
-        if (!window.syncTab[c.uid]) Component.syncTabs(c)
+        if (!window.syncTab[c.uid]) self.syncTabs(c)
     }
 
     localStorage.setItem(self.store, JSON.stringify(state))
