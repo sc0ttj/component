@@ -13,7 +13,7 @@
 
 ;("use strict")
 
-var emitter = {
+const emitter = {
   on: function(ev, fn) {
     this._evs = this._evs || {}
     this._evs[ev] = this._evs[ev] || []
@@ -34,7 +34,4 @@ var emitter = {
   }
 }
 
-// export in common js
-if (typeof module !== "undefined" && "exports" in module) {
-  module.exports = emitter
-}
+export default emitter

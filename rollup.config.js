@@ -10,7 +10,7 @@ export default [
       name: "Component",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/tweenState.js",
@@ -19,7 +19,7 @@ export default [
       name: "tweenState",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/emitter.js",
@@ -28,7 +28,7 @@ export default [
       name: "emitter",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/htmel.js",
@@ -37,7 +37,7 @@ export default [
       name: "htmel",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/html.js",
@@ -46,7 +46,7 @@ export default [
       name: "html",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/storage.js",
@@ -55,7 +55,7 @@ export default [
       name: "storage",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/syncTabs.js",
@@ -64,7 +64,7 @@ export default [
       name: "syncTabs",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/devtools.js",
@@ -73,7 +73,7 @@ export default [
       name: "devtools",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
     input: "src/index.js",
@@ -82,6 +82,15 @@ export default [
       name: "Component",
       format: "umd"
     },
-    plugins: [resolve(), commonjs(), terser()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
+  },
+  {
+    input: 'src/index.esm.js',
+    output: {
+      file: "dist/index.esm.js",
+      name: "index",
+      format: "esm"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   }
 ]

@@ -9,13 +9,14 @@
 		"url": "git+https://github.com/sc0ttj/component.git"
 	},
 	"homepage": "https://github.com/sc0ttj/component",
-	"main": "dist/index.js",
+	"main": "dist/index.min.js",
 	"main:umd": "dist/component.min.js",
 	"browser": "dist/component.min.js",
 	"unpkg": "dist/component.min.js",
+	"module": "dist/index.esm.js",
 	"source": "src/index.js",
 	"scripts": {
-		"build": "rollup -c rollup.config.js",
+		"build": "rollup -c rollup.config.js && for x in dist/*.min.js; do gzip -9 -c $x > $x.gz; done",
 		"test": "echo 'Build complete... nothing to do, yet..'"
 	},
 	"keywords": [

@@ -16,7 +16,7 @@ import html from './html'
  * @param {Template Literal} HTML representing a single element
  * @return {Element|String}
  */
-var htmel = (strings, ...vals) => {
+const htmel = (strings, ...vals) => {
   var out = html(strings, ...vals).trim(); // use .trim() so we never return a text node of whitespace as the result
   // if not in a browser, return the HTML as a string
   if (!document) return out;

@@ -1,4 +1,4 @@
-var easing = {
+const easing = {
   // no easing, no acceleration
   linear: t => t,
   // accelerating from zero velocity

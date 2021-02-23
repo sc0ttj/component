@@ -13,7 +13,7 @@
  * @return {String}
  */
 
-var html = (strings, ...vals) => {
+const html = (strings, ...vals) => {
   // create a property in which to save event attribute funcs, which we'll
   // later attach to their elements as proper event listeners
   html.funcs = html.funcs || [];

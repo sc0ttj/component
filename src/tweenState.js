@@ -109,7 +109,7 @@ var Tween = /*#__PURE__*/ (function() {
   return Tween
 })()
 
-var tweenState = (self, newState, cfg) => {
+const tweenState = (self, newState, cfg) => {
   // define default callbacks
   var onStart = cfg.onStart ? cfg.onStart : noop
   var onUpdate = cfg.onUpdate ? cfg.onUpdate : noop
