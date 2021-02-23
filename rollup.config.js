@@ -67,6 +67,15 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
+    input: "src/syncTabs.js",
+    output: {
+      file: "dist/syncTabs.min.js",
+      name: "syncTabs",
+      format: "umd"
+    },
+    plugins: [resolve(), commonjs(), terser()]
+  },
+  {
     input: "src/devtools.js",
     output: {
       file: "dist/devtools.min.js",
