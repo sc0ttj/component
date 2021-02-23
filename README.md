@@ -17,7 +17,7 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- 2.1kb, minified and gzipped
+- 2.2kb, minified and gzipped
 - Simple syntax, quick to learn, **easy to use**:
   - plain JavaScript only
   - no compilation or build tools needed
@@ -1130,6 +1130,13 @@ If rendering a component in NodeJS that has a `.view()` and `.style()`, or if ca
 Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
 
 ## Changelog
+
+**1.3.1**
+- build a "tree-shakable" ES Module too:
+  - added new file `src/index.esm.js`
+  - updated the rollup configs
+  - `npm run build` now also creates `dist/index.esm.js`
+  - added a `"module"` field in package.json, that points to `dist/index.esm.js`
 
 **1.3.0**
 - new optional add-ons:

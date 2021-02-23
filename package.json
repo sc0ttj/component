@@ -1,7 +1,7 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.3.0",
-	"description": "Simple component library with state management, DOM diffing, tweening, server-side rendering and more.",
+	"version": "1.3.1",
+	"description": "A tiny reactive component library with state management, DOM diffing, tweening, server-side rendering and much more.",
 	"author": "sc0ttj",
 	"license": "MIT",
 	"repository": {
@@ -20,11 +20,12 @@
 		"test": "echo 'Build complete... nothing to do, yet..'"
 	},
 	"keywords": [
+		"lightweight",
 		"vanilla-js",
 		"isomorphic",
 		"stateful",
-		"functional",
 		"reactive",
+		"functional",
 		"component",
 		"dom-diff",
 		"server-side-rendering",
@@ -37,6 +38,7 @@
 	],
 	"files": [
 		"dist/index.min.js",
+		"dist/index.esm.js",
 		"dist/component.min.js",
 		"dist/tweenState.min.js",
 		"dist/emitter.min.js",
