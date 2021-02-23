@@ -5,7 +5,7 @@
 ;("use strict")
 
 // from https://codepen.io/tevko/pen/LzXjKE?editors=0010
-var domDiff = (target, source) => {
+const domDiff = (target, source) => {
   //console.log("updating DOM!")
   const worker = {
     cfg: {
