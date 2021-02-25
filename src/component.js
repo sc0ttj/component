@@ -4,106 +4,113 @@
 // Goals:  Super easy to setup, small code base, automatic re-renders on state update
 ;("use strict")
 
-// from https://codepen.io/tevko/pen/LzXjKE?editors=0010
-const domDiff = (target, source) => {
-  //console.log("updating DOM!")
-  const worker = {
+// t = target
+// s = source
+const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=0010
+  const job = {
     cfg: {
-      orig: target
+      orig: t
     },
-    replace(target, source = target) {
+    // t = target
+    // s = source
+    replace(t, s = t) {
       const v = document.createElement("template")
-      v.innerHTML = source
+      v.innerHTML = s
       const vHTML = v.content.firstChild.nextElementSibling
-      if (vHTML.nodeName !== target.nodeName) {
-        target.parentElement.replaceChild(vHTML, target)
+      if (vHTML.nodeName !== t.nodeName) {
+        t.parentElement.replaceChild(vHTML, t)
         return
       }
-      this.iterate(target, vHTML)
+      this.loop(t, vHTML)
     },
-    iterate(targetNode, sourceNode, tOrig) {
-      if (targetNode || sourceNode) {
-        this.checkAdditions(targetNode, sourceNode, tOrig)
+    // tn = target Node
+    // sn = source Node
+    loop(tn, sn, tOrig) {
+      if (tn || sn) {
+        this.checkNew(tn, sn, tOrig)
         if (
-          targetNode &&
-          sourceNode &&
-          targetNode.nodeName !== sourceNode.nodeName
+          tn &&
+          sn &&
+          tn.nodeName !== sn.nodeName
         ) {
-          this.checkNodeName(targetNode, sourceNode)
+          this.checkNodeName(tn, sn)
         } else if (
-          targetNode &&
-          sourceNode &&
-          targetNode.nodeName === sourceNode.nodeName
+          tn &&
+          sn &&
+          tn.nodeName === sn.nodeName
         ) {
-          this.checkTextContent(targetNode, sourceNode)
-          targetNode.nodeType !== 3 &&
-            target.nodeType !== 8 &&
-            this.checkAttributes(targetNode, sourceNode)
+          this.checkCtx(tn, sn)
+          tn.nodeType !== 3 &&
+            t.nodeType !== 8 &&
+            this.checkAttrs(tn, sn)
         }
       }
-      if (targetNode && sourceNode) {
-        if (targetNode.childNodes && sourceNode.childNodes) {
-          this.cfg.lengthDifferentiator = [
-            ...target.childNodes,
-            ...sourceNode.childNodes
+      if (tn && sn) {
+        if (tn.childNodes && sn.childNodes) {
+          this.cfg.lengthDiff = [
+            ...t.childNodes,
+            ...sn.childNodes
           ]
         } else {
-          this.cfg.lengthDifferentiator = null
+          this.cfg.lengthDiff = null
         }
-        Array.apply(null, this.cfg.lengthDifferentiator).forEach(
+        Array.apply(null, this.cfg.lengthDiff).forEach(
           (node, idx) => {
-            this.cfg.lengthDifferentiator &&
-              this.iterate(
-                targetNode.childNodes[idx],
-                sourceNode.childNodes[idx],
-                targetNode,
-                sourceNode
+            this.cfg.lengthDiff &&
+              this.loop(
+                tn.childNodes[idx],
+                sn.childNodes[idx],
+                tn,
+                sn
               )
           }
         )
       }
     },
-    checkNodeName(targetNode, sourceNode) {
-      const n = sourceNode.cloneNode(true)
-      targetNode.parentElement.replaceChild(n, targetNode)
+    checkNodeName(tn, sn) {
+      const n = sn.cloneNode(true)
+      tn.parentElement.replaceChild(n, tn)
     },
-    checkAttributes(targetNode, sourceNode) {
-      const attributes = targetNode.attributes || []
-      const filteredAttrs = Object.keys(attributes).map(n => attributes[n])
-      const attributesNew = sourceNode.attributes || []
-      const filteredAttrsNew = Object.keys(attributesNew).map(
-        n => attributesNew[n]
+    checkAttrs(tn, sn) {
+      const attrs = tn.attributes || []
+      const filteredAttrs = Object.keys(attrs).map(n => attrs[n])
+      const attrsNew = sn.attributes || []
+      const filteredAttrsNew = Object.keys(attrsNew).map(
+        n => attrsNew[n]
       )
       filteredAttrs.forEach(o => {
-        return sourceNode.getAttribute(o.name) !== null
-          ? targetNode.setAttribute(o.name, sourceNode.getAttribute(o.name))
-          : targetNode.removeAttribute(o.name)
+        return sn.getAttribute(o.name) !== null
+          ? tn.setAttribute(o.name, sn.getAttribute(o.name))
+          : tn.removeAttribute(o.name)
       })
       filteredAttrsNew.forEach(a => {
         return (
-          targetNode.getAttribute(a.name) !== sourceNode.getAttribute(a.name) &&
-          targetNode.setAttribute(a.name, sourceNode.getAttribute(a.name))
+          tn.getAttribute(a.name) !== sn.getAttribute(a.name) &&
+          tn.setAttribute(a.name, sn.getAttribute(a.name))
         )
       })
     },
-    checkTextContent(targetNode, sourceNode) {
-      if (targetNode.nodeValue !== sourceNode.nodeValue) {
-        targetNode.textContent = sourceNode.textContent
+    checkCtx(tn, sn) {
+      if (tn.nodeValue !== sn.nodeValue) {
+        tn.textContent = sn.textContent
       }
     },
-    checkAdditions(targetNode, sourceNode, tParent = this.cfg.orig) {
-      if (sourceNode && targetNode === undefined) {
-        const newNode = sourceNode.cloneNode(true)
+    checkNew(tn, sn, tParent = this.cfg.orig) {
+      if (sn && tn === undefined) {
+        const newNode = sn.cloneNode(true)
         tParent.nodeType !== 3 &&
           tParent.nodeType !== 8 &&
           tParent.appendChild(newNode)
-      } else if (targetNode && sourceNode === undefined) {
-        targetNode.parentElement.removeChild(targetNode)
+      } else if (tn && sn === undefined) {
+        tn.parentElement.removeChild(tn)
       }
     }
   }
-  Object.create(worker).replace(target, source)
+  // t = target
+  // s = source
+  Object.create(job).replace(t, s)
 }
+
 
 /**
  * A stateful component creator
@@ -477,14 +484,12 @@ function Component(state, schema) {
         view = typeof c.view === "function" ? c.view(pState) : null
         c.setState(pState);
       }
-      // make sure we have the HTML Element, not just the selector for it
+      // make sure we have container as an HTML Element
       if (document && !c.html) el = document.querySelector(el)
       c.html = c.container = el
 
-      // If there's a timer, cancel it
       if (timeout) cancelAnimationFrame(timeout)
 
-      // Setup the new requestAnimationFrame()
       timeout = requestAnimationFrame(() => {
         if (c.css && c.style) c.setCss()
         if (c.container && view) {

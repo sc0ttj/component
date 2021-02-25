@@ -13,6 +13,7 @@
  *
  */
 import Component from './component.js'
+import render from './render.js'
 import tweenState from './tweenState.js'
 import emitter from './emitter.js'
 import html from './html.js'
@@ -20,4 +21,4 @@ import htmel from './htmel.js'
 import storage from './storage.js'
 import syncTabs from './syncTabs.js'
 
-export { Component, tweenState, emitter, html, htmel, storage, syncTabs }
+export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs }
