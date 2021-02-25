@@ -1033,7 +1033,7 @@ For code examples, see the nested component recipes in [examples/recipes.js](exa
 
 ### Using the standalone `render` module 
 
-You can import a standalone `render` method (only ~800 bytes), without using `Component` at all.
+You can even import a standalone `render` method (~800 bytes) that's supposed to be used _without_ `Component`.
 
 Features:
 
@@ -1060,10 +1060,9 @@ const liteComponent = props => {
 
 Writing components this way means you can replace the `this.state = { ... }` line with third-party `useState` and `redux` style state managers and lets you write more "React-like" component patterns.
 
-For better "child" components, you can move the `render` call to outside of the component function:
+For more "re-usable" components, you can move the `render` call to outside of the component function:
 
 ```js
-// define component that simply returns its view
 const liteComponent = props => {
   this.state = { ...this.state, ...props }
   return html`<div>...</div>`
