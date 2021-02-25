@@ -1037,8 +1037,8 @@ You can import a standalone `render` method (only ~800 bytes), without using `Co
 
 Features:
 
-- add your HTML or component to the page
-- update it, using DOM diffing, inside a debounced `requestAnimationFrame`
+- adds your HTML or component to the page
+- updates it using DOM diffing, inside a debounced `requestAnimationFrame`
 
 Usage:
 
