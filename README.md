@@ -17,12 +17,15 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
-- 2.2kb, minified and gzipped
 - Simple syntax, quick to learn, **easy to use**:
-  - plain JavaScript only
+  - plain, vanilla JavaScript only!
   - no compilation or build tools needed
   - no virtual DOM or JSX needed
   - should work with any test suite
+- Very **lightweight & modular** - use only what you need, for example:
+  - **~830 bytes**, if using only the `render` module (for DOM diffing)
+  - **~810 bytes**, if using only the `htmel` module (for JSX-like templating)
+  - **~2.2 kb**, if using the actual `Component` library (_lots_ of features)
 - Works **client-side**, in browsers:
   - auto re-render on state change
   - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
@@ -1027,6 +1030,45 @@ This has a number of implications:
 - calling `setState()` of a child component _will_ update its state and run its "middleware", but _doesn't_ re-render
 
 For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
+
+### Using the standalone `render` module 
+
+You can import a standalone `render` method (only ~800 bytes), without using `Component` at all.
+
+Usage:
+
+```js
+import { render } from "@scottjarvis/component"
+
+render(`<p>Hi</p>`, ".container")
+```
+
+This `render` method works with anything that returns a DOM Node or string of HTML, such as the `html` and `htmel` add-ons:
+
+```js
+// create a stateful component using only `render` and `html`
+const liteComponent = props => {
+  this.state = { ...this.state, ...props }
+  render(html`<div>...</div>`, '.container');
+}
+```
+
+Writing components this way means you can replace the `this.state = { ... }` line with third-party `useState` and `redux` style state managers and lets you write more "React-like" component patterns.
+
+For better "child" components, you can move the `render` call to outside of the component function:
+
+```js
+// define component that simply returns its view
+const liteComponent = props => {
+  this.state = { ...this.state, ...props }
+  return html`<div>...</div>`
+}
+
+// now add to page
+render(liteComponent({ ...someData }), '.container')
+
+// ...or include it inside some other components view
+```
 
 ### Using the `devtools` module
 
