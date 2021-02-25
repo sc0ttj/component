@@ -23,9 +23,9 @@ A "state" is a snapshot of your application data at a specific time.
   - no virtual DOM or JSX needed
   - should work with any test suite
 - Very **lightweight & modular** - use only what you need, for example:
-  - **~830 bytes**, if using only the `render` module (for DOM diffing)
-  - **~810 bytes**, if using only the `htmel` module (for JSX-like templating)
-  - **~2.2 kb**, if using the actual `Component` library (_lots_ of features)
+  - *~2.2 kb*, using the main `Component` library (_lots_ of features)
+  - *~810 bytes*, using only the `htmel` module (for JSX-like templating)
+  - *~830 bytes*, using only the `render` module (for DOM diffing)
 - Works **client-side**, in browsers:
   - auto re-render on state change
   - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
@@ -1034,6 +1034,11 @@ For code examples, see the nested component recipes in [examples/recipes.js](exa
 ### Using the standalone `render` module 
 
 You can import a standalone `render` method (only ~800 bytes), without using `Component` at all.
+
+Features:
+
+- add your HTML or component to the page
+- update it, using DOM diffing, inside a debounced `requestAnimationFrame`
 
 Usage:
 
