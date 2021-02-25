@@ -1033,22 +1033,23 @@ For code examples, see the nested component recipes in [examples/recipes.js](exa
 
 ### Using the standalone `render` module 
 
-You can even import a standalone `render` method (~800 bytes) that's supposed to be used _without_ `Component`.
+For a more "React-like" syntax, you can even import a standalone `render` method (~800 bytes) that's supposed to be used _without_ `Component` being installed.
 
 Features:
 
 - adds your HTML or component to the page
 - updates it using DOM diffing, inside a debounced `requestAnimationFrame`
+- that's it
 
 Usage:
 
 ```js
 import { render } from "@scottjarvis/component"
 
-render(`<p>Hi</p>`, ".container")
+render(`<p>Hey</p>`, ".container")
 ```
 
-This `render` method works with anything that returns a DOM Node or string of HTML, such as the `html` and `htmel` add-ons:
+This `render` method can take a DOM Node or string of HTML, so supports both the `html` and `htmel` add-ons:
 
 ```js
 // create a stateful component using only `render` and `html`
@@ -1060,7 +1061,7 @@ const liteComponent = props => {
 
 Writing components this way means you can replace the `this.state = { ... }` line with third-party `useState` and `redux` style state managers and lets you write more "React-like" component patterns.
 
-For more "re-usable" components, you can move the `render` call to outside of the component function:
+For "re-usable" and nested components, you should move the `render` call to outside of the component function:
 
 ```js
 const liteComponent = props => {
@@ -1068,10 +1069,10 @@ const liteComponent = props => {
   return html`<div>...</div>`
 }
 
-// now add to page
-render(liteComponent({ ...someData }), '.container')
+// ..now include it inside some other components view..
 
-// ...or include it inside some other components view
+// ..or add to page
+render(liteComponent({ ...someData }), '.container')
 ```
 
 ### Using the `devtools` module
