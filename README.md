@@ -485,7 +485,7 @@ Using the add-on [emitter](#using-the-emitter-module) module, components can lis
 
 ### Using the `emitter` module
 
-Any time a components state is changed via an "action", it can emit an event that other components can listen for.
+Any time a components state is changed via an "action", it can emit an event that other components can listen for - the "lister" will receive the state of the component that emitted the event.
 
 To achieve this, just include the emitter like so:
 
