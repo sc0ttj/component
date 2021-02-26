@@ -25,7 +25,7 @@ A "state" is a snapshot of your application data at a specific time.
 - Very **lightweight & modular** - use only what you need, for example:
   - *~2.2 kb*, using the main `Component` library (_lots_ of features)
   - *~810 bytes*, using only the `htmel` module (for JSX-like templating)
-  - *~830 bytes*, using only the `render` module (for DOM diffing)
+  - *~830 bytes*, using only the `render` module (for "debounced" DOM diffing at 60fps)
 - Works **client-side**, in browsers:
   - auto re-render on state change
   - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
