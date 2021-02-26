@@ -17,10 +17,10 @@ A "state" is a snapshot of your application data at a specific time.
 ## Features
 
 - Easy setup, zero dependencies
+  - no compilation or build tools needed
 - Simple syntax, quick to learn, **easy to use**:
   - plain, vanilla JavaScript only!
-  - no compilation or build tools needed
-  - no virtual DOM or JSX needed
+  - plain HTML & CSS, no virtual DOM or JSX
   - should work with any test suite
 - Very **lightweight & modular** - use only what you need, for example:
   - *~2.2 kb*, using the main `Component` library (_lots_ of features)
