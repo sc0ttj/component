@@ -16,13 +16,16 @@ A "state" is a snapshot of your application data at a specific time.
 
 ## Features
 
-- Easy setup, zero dependencies
-- 2.2kb, minified and gzipped
-- Simple syntax, quick to learn, **easy to use**:
-  - plain JavaScript only
+- Easy setup, **zero dependencies**:
   - no compilation or build tools needed
-  - no virtual DOM or JSX needed
+- Simple syntax, quick to learn, **easy to use**:
+  - plain, vanilla JavaScript only!
+  - plain HTML & CSS, no virtual DOM or JSX
   - should work with any test suite
+- Very **lightweight & modular** - use only what you need, for example:
+  - *~2.2 kb*, using the main `Component` library (_lots_ of features)
+  - *~810 bytes*, using only the `htmel` module (for JSX-like templating)
+  - *~830 bytes*, using only the `render` module (for "debounced" DOM diffing at 60fps)
 - Works **client-side**, in browsers:
   - auto re-render on state change
   - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
@@ -31,7 +34,7 @@ A "state" is a snapshot of your application data at a specific time.
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
 - Easy **state management**:
-  - define "actions" to easily update the state in specific ways 
+  - define "actions" to easily update the state in specific ways (bit like redux "reducers")
   - log all states in a history, for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
@@ -40,7 +43,7 @@ A "state" is a snapshot of your application data at a specific time.
   - Re-render styles on component CSS change (_optional_)
 - Supports **"middleware"** functions:
   - easily customise a components setState and re-render behaviour
-- Supports **nested components**
+- Supports **nested components**:
   - embed components in the "views" of other components
   - supports various methods and syntaxes
 - Works with these **optional add-ons**:
@@ -482,7 +485,7 @@ Using the add-on [emitter](#using-the-emitter-module) module, components can lis
 
 ### Using the `emitter` module
 
-Any time a components state is changed via an "action", it can emit an event that other components can listen for.
+Any time a components state is changed via an "action", it can emit an event that other components can listen for - the "listener" will receive the state of the component that emitted the event.
 
 To achieve this, just include the emitter like so:
 
@@ -508,57 +511,36 @@ Component.emitter = emitter;
 
 The emitter provides the following methods:
 
-- `foo.on("actionName", props => { ... })` - every time `actionName` is emitted, run the given function
-- `foo.once("actionName", props => { ... })` - run the given function only once
-- `foo.off("actionName")` - stop listening to `actionName`
+- `app.on("actionName", props => { ... })` - every time `actionName` is emitted, run the given function
+- `app.once("actionName", props => { ... })` - run the given function only once
+- `app.off("actionName")` - stop listening to `actionName`
 
 Note, `props` is the latest state of the component that emitted the event.
 
 Here's how to use the emitter:
 
-```js
-// Define a component to listen to
-
-function Foo(state) {
-  const defaults = {
-    count: 0,
-    items: [{ name: "one" }]
-  }
-  const Foo = new Component({ ...defaults, ...state })
-
-  // Define chainable "actions" that we can listen to
-  Foo.actions({
-    plus:     props => Foo.setState({ count: Foo.state.count + props }),
-    minus:    props => Foo.setState({ count: Foo.state.count - props }),
-    addItems: props => Foo.setState({ items: [...Foo.state.items, ...props] })
-  })
-
-  return Foo;
-}
-```
-
-Now let's "listen" to `foo` using another component, called `bar`:
+Let's "listen" to the `foo` component from before, using another component, called `logger`:
 
 ```js  
 // Define some other component
-const bar = new Component({})
+const logger = new Component({})
 
 // Define "listeners" for the actions above:
-bar
-  .once("minus",  props => console.log("Bar: 'minus'",    props.count))
-  .on("plus",     props => console.log("Bar: 'plus'",     props.count))
-  .on("addItems", props => console.log("Bar: 'addItems'", props.items))
+logger
+  .on('plus',     props => console.log('plus',     props.count))
+  .on('addItems', props => console.log('addItems', props.items))
+  .once('minus',  props => console.log('minus',    props.count))
 
 // ...now we're ready to run the program..
 
 const foo = new Foo();
 
-// these actions will trigger Bar
+// these actions will trigger the logger
 foo.plus(105)
 foo.minus(5)
 
 // stop listening to the "plus" action, keep listening to others..
-bar.off("plus")
+logger.off('plus')
 
 foo.minus(1)
   .minus(1)
@@ -1027,6 +1009,51 @@ This has a number of implications:
 - calling `setState()` of a child component _will_ update its state and run its "middleware", but _doesn't_ re-render
 
 For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
+
+### Using the standalone `render` module 
+
+For a more "React-like" syntax, you can even import a standalone `render` method (~800 bytes) that's supposed to be used _without_ `Component` being installed.
+
+Features:
+
+- adds your HTML or component to the page
+- updates it using DOM diffing, inside a debounced `requestAnimationFrame`
+- works nicely with the `html` and `htmel` add-ons
+- that's it
+
+Usage:
+
+```js
+import { render } from "@scottjarvis/component"
+
+render(`<p>Hey</p>`, ".container")
+```
+
+This `render` method can take a DOM Node or string of HTML, so supports both the `html` and `htmel` add-ons:
+
+```js
+// create a stateful component using only `render` and `html`
+const liteComponent = props => {
+  this.state = { ...this.state, ...props }
+  render(html`<div>...</div>`, '.container');
+}
+```
+
+Writing components this way means you can replace the `this.state = { ... }` line with third-party `useState` and `redux` style state managers and lets you write more "React-like" component patterns.
+
+For "re-usable" and nested components, you should move the `render` call to outside of the component function:
+
+```js
+const liteComponent = props => {
+  this.state = { ...this.state, ...props }
+  return html`<div>...</div>`
+}
+
+// ..now include it inside some other components view..
+
+// ..or add to page
+render(liteComponent({ ...someData }), '.container')
+```
 
 ### Using the `devtools` module
 

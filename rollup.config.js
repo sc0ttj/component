@@ -13,6 +13,15 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
   },
   {
+    input: "src/render.js",
+    output: {
+      file: "dist/render.min.js",
+      name: "render",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser()]
+  },
+  {
     input: "src/tweenState.js",
     output: {
       file: "dist/tweenState.min.js",

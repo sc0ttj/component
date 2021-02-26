@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component thing demo</title>
+  <!-- required -->
+  <script src="../dist/render.min.js"></script>
+</head>
+
+<body>
+
+  <div id="bar" class="container foo">You component will end up in here!</div>
+
+  <script>
+
+    // define a component which remembers its "state"
+    const liteComponent = props => {
+      this.state = { ...this.state, ...props }
+      const { title, desc } = this.state
+      render(`<h1>${title}</h1><p>${desc}</p>`, '.container')
+    };
+
+    // update the component 10,001 times
+    for (i = 1; i <= 10001; i++) {
+      liteComponent({ title: "I rendered " + i + " times." })
+    }
+
+    // update it again..
+    liteComponent({ desc: "This simple component uses DOM-diffing..." })
+
+  </script>
+
+  <br>
+  <br>
+
+  <p>The example above only uses the `render` module - which is only ~800 bytes, minified & gzipped!</p>
+
+</body>
+</html>
