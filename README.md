@@ -535,7 +535,7 @@ logger
 
 const foo = new Foo();
 
-// these actions will trigger Bar
+// these actions will trigger the logger
 foo.plus(105)
 foo.minus(5)
 
