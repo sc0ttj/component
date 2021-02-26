@@ -1039,6 +1039,7 @@ Features:
 
 - adds your HTML or component to the page
 - updates it using DOM diffing, inside a debounced `requestAnimationFrame`
+- works nicely with the `html` and `htmel` add-ons
 - that's it
 
 Usage:
