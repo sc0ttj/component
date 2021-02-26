@@ -527,9 +527,9 @@ const logger = new Component({})
 
 // Define "listeners" for the actions above:
 logger
-  .on("plus",     props => console.log("Bar: 'plus'",     props.count))
-  .on("addItems", props => console.log("Bar: 'addItems'", props.items))
-  .once("minus",  props => console.log("Bar: 'minus'",    props.count))
+  .on('plus',     props => console.log('plus',     props.count))
+  .on('addItems', props => console.log('addItems', props.items))
+  .once('minus',  props => console.log('minus',    props.count))
 
 // ...now we're ready to run the program..
 
@@ -540,7 +540,7 @@ foo.plus(105)
 foo.minus(5)
 
 // stop listening to the "plus" action, keep listening to others..
-logger.off("plus")
+logger.off('plus')
 
 foo.minus(1)
   .minus(1)
