@@ -34,7 +34,7 @@ A "state" is a snapshot of your application data at a specific time.
   - render your components as strings (HTML, stringified JSON)
   - render your components as data (JS objects or JSON)
 - Easy **state management**:
-  - define "actions" to easily update the state in specific ways 
+  - define "actions" to easily update the state in specific ways (bit like redux "reducers")
   - log all states in a history, for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
