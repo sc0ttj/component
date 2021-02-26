@@ -511,46 +511,25 @@ Component.emitter = emitter;
 
 The emitter provides the following methods:
 
-- `foo.on("actionName", props => { ... })` - every time `actionName` is emitted, run the given function
-- `foo.once("actionName", props => { ... })` - run the given function only once
-- `foo.off("actionName")` - stop listening to `actionName`
+- `app.on("actionName", props => { ... })` - every time `actionName` is emitted, run the given function
+- `app.once("actionName", props => { ... })` - run the given function only once
+- `app.off("actionName")` - stop listening to `actionName`
 
 Note, `props` is the latest state of the component that emitted the event.
 
 Here's how to use the emitter:
 
-```js
-// Define a component to listen to
-
-function Foo(state) {
-  const defaults = {
-    count: 0,
-    items: [{ name: "one" }]
-  }
-  const Foo = new Component({ ...defaults, ...state })
-
-  // Define chainable "actions" that we can listen to
-  Foo.actions({
-    plus:     props => Foo.setState({ count: Foo.state.count + props }),
-    minus:    props => Foo.setState({ count: Foo.state.count - props }),
-    addItems: props => Foo.setState({ items: [...Foo.state.items, ...props] })
-  })
-
-  return Foo;
-}
-```
-
-Now let's "listen" to `foo` using another component, called `bar`:
+Let's "listen" to the `foo` component from before, using another component, called `logger`:
 
 ```js  
 // Define some other component
-const bar = new Component({})
+const logger = new Component({})
 
 // Define "listeners" for the actions above:
-bar
-  .once("minus",  props => console.log("Bar: 'minus'",    props.count))
+logger
   .on("plus",     props => console.log("Bar: 'plus'",     props.count))
   .on("addItems", props => console.log("Bar: 'addItems'", props.items))
+  .once("minus",  props => console.log("Bar: 'minus'",    props.count))
 
 // ...now we're ready to run the program..
 
@@ -561,7 +540,7 @@ foo.plus(105)
 foo.minus(5)
 
 // stop listening to the "plus" action, keep listening to others..
-bar.off("plus")
+logger.off("plus")
 
 foo.minus(1)
   .minus(1)
