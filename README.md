@@ -499,7 +499,7 @@ Each method receives the latest state of the component that emitted the "action"
 
 Here's how to use the emitter:
 
-Let's "listen" to the actions of the `foo` component from earlier, using another component, called `logger`:
+Let's listen to the `foo` components actions, using another component, `logger`:
 
 ```js  
 // Define some listening component
