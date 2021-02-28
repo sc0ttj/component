@@ -31,10 +31,11 @@ A "state" is a snapshot of your application data at a specific time.
   - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
   - DOM diffing uses real DOM Nodes (not VDOM)
 - Works **server-side**, in Node:
-  - render your components as strings (HTML, stringified JSON)
-  - render your components as data (JS objects or JSON)
+  - render your components as strings (HTML, or stringified JSON)
+  - render your components as data (JS objects, Arrays, etc)
 - Easy **state management**:
-  - define "actions" to easily update the state in specific ways (bit like redux "reducers")
+  - immutable states, can only be updated through `setState()` (_optional_)
+  - define "actions" to easily update the state in specific ways
   - log all states in a history, for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
@@ -146,7 +147,7 @@ But you can also nest proper (stateful) components inside other components, too:
 ```js
 // create a re-usable button component
 function Button(state) {
-  const Button = new Component({ ...state });
+  const Button = new Component(state);
   Button.view = props => html`<button onclick="${props.fn}">${props.txt}</button>`;
 
   return Button;
@@ -246,34 +247,35 @@ These are the methods and properties attached to the components you create.
 
 - **.setState(obj)**: update the component state, triggers a re-render
 - **.render(el)**: (re)render to the given element on state change (browser)
-- **.toString()**: render your component as a string on state change (NodeJS)
-- **.view(props)**: receives a state and sets the component view to (re)render (optional)
-- **.style(props)**: receives a state and sets the `<style>` to (re)render (optional)
-- **.actions(obj)**: chainable methods that simplify updating the state (optional)
-- **.tweenState(obj[, cfg])**: set state on each frame, supports various easings (optional)
-- **.middleware**: an array of functions that run at the end of `setState()` (optional)
+- **.toString()**: render your component as a string on state change (for NodeJS)
+- **.view(props)**: receives a state and sets the component view to (re)render (_optional_)
+- **.style(props)**: receives a state and sets the `<style>` to (re)render (_optional_)
+- **.actions(obj)**: chainable methods that simplify updating the state (_optional_)
+- **.tweenState(obj[, cfg])**: set state on each frame, supports various easings (_optional_)
+- **.middleware**: an array of functions that run at the end of `setState()` (_optional_)
 - ...and more
 
 ### Properties:
 
 - **.state**: an object, contains your app data, read-only - cannot be modified directly
-- **.schema**: an object against which to validate your component state (optional) 
-- **.container**: the HTML Element into which the components view is rendered (optional)
+- **.schema**: an object against which to validate your component state (_optional)_ 
+- **.container**: the HTML Element into which the components view is rendered (_optional_)
 - **.html**: alias of `.container`
-- **.css**: the `<style>` Element which holds the component styles (optional)
+- **.css**: the `<style>` Element which holds the component styles (_optional_)
 - **.uid**: a unique string, generated once, on creation of a component
 - **.log**: an array containing a history of all component states
 - ...and more
 
 ### Settings:
 
-- **.reactive**: if `false`, disables auto re-rendering on state change
-- **.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS with the class `.${uid}`
-- **.debug**: if true, a record of states changes are kept in `.log`
+- **.immutable**: if `true`, then `setState()` updates _then "freezes"_ the current state. Default = `true`.
+- **.reactive**: if `false`, disables auto re-rendering on state change. Default = `true`.
+- **.scopedCss**: if `false`, disables auto-prefixing `.style()` CSS . Default = `true`.
+- **.debug**: if true, a record of states changes are kept in `.log`. Default = `false`.
 
 ## Using "state validation"
 
-You can validate your component state against a schema, before you set it or render anything. If the data to set doesn't match a components state schema, an error will be thrown.
+You can validate your component state against a schema, before you set state or render anything. If the data to set doesn't match a components state schema, an error will be thrown.
 
 This is a similar concept to `propTypes` in React, but a bit simpler.
 
@@ -383,10 +385,10 @@ var snapshot = foo.state
 
 // ...later
 
-foo.rw()         // go to initial state
-foo.ff()         // go to latest state
-foo.rw(2)        // rewind two steps to a previous state
-foo.ff(2)        // fast-forward two steps to a more current state
+foo.rw()    // go to initial state
+foo.ff()    // go to latest state
+foo.rw(2)   // rewind two steps to a previous state
+foo.ff(2)   // fast-forward two steps to a more current state
 
 // Set a previous state
 foo.setState(foo.log[0].state)
@@ -397,21 +399,21 @@ foo.setState(snapshot)
 
 ## Using component CSS
 
-You can insert styles into your view, and update the using `props`, like any other state properties.
+You can insert styles into your view, and update them using `props`, like any other state properties.
 
-However, with the `.style()` method you define styles for your components view separate from your view (optional):
+However, with the `.style()` method you can separate your components styles from its view (_optional_):
 
 ```js
-function Foo(state, schema) {
+function Foo(props) {
 
-  const Foo = new Component({ ... })
+  const Foo = new Component(props)
 
   Foo.view = props => `<h1>${props.txt}</h1>`
 
-  // style the view
+  // style the view with standard CSS
   Foo.style = props => `
     h1 {
-      background-color: ${props.btnColor || 'red'};
+      background-color: ${props.bgColor || 'red'};
     }
   `
 
@@ -419,13 +421,13 @@ function Foo(state, schema) {
 }
 ```
 
-If a component with a defined `style()` is added to a page with `foo.render('.container')`, the CSS is prefixed with the `id` or `className` of its container. _This CSS "auto-scoping" will prevent a components styles affecting other parts on the page_. It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself. 
+If using `style()`, the CSS will be auto-prefixed with the `id` or CSS `class` of the components container, when the component is first added to the page using `foo.render('.container')`.
 
-If your container has no class or id attributes, then a unique string, `foo.uid`, will be used instead.
+_This CSS "auto-scoping" will prevent a components styles affecting other parts on the page_. It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself. 
 
-You can disable automatic CSS "scoping"/prefixing by using `foo.scopedCss = false`.
-
-When rendering your component in NodeJS, or using `toString()`, your CSS will **not** be auto prefixed.
+- If your container has no class or id attributes, then a unique string, `foo.uid`, will be used instead.
+- You can disable automatic CSS "scoping"/prefixing by using `foo.scopedCss = false`.
+- When rendering your component in NodeJS, or using `foo.toString()`, your CSS will **not** be auto prefixed.
 
 To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
 
@@ -944,7 +946,7 @@ Components that are nested inside other components are called _child components_
 All child components have the following in common:
 - you include the child component in the "view" of the parent component
 - child components do not trigger a re-render of the page
-- to re-render a child component that has changed, you must update the parent component 
+- to re-render a child component that has changed, you must re-render the parent component 
 - nested components work with or without the `html`/`htmel` add-on(s)
 
 There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
@@ -954,10 +956,10 @@ There are two kinds of child component - _stateless_ and _stateful_ - and while 
 Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
 
 ```js
-// a stateless child component is just a function that receives `props`, and returns a view
+// a stateless child component 
 const h2 = text => `<h2>${text}</h2>`;
 
-// ...used inside the view of another component:
+// ...used inside the view of another component
 Foo.view = props => `
   <div>
     ${h2(props.text)}
@@ -974,16 +976,17 @@ Stateful components are _any components with a state_, usually created like so:
 const Foo = new Component({ ...someData });
 ```
 
-NOTE: When nested inside another component, even stateful components _do not_ run `setState()` & `render()` - they simply return their view, just like stateless child components.
+NOTE: When nested inside another component, even stateful child components _do not_ run thir own `setState()` & `render()` methods - they simply return their updated view.
 
 This has a number of implications:
 
 - better performance (fewer page re-renders)
-- enforces similar behaviour to stateless child components
-  - only parent components trigger page re-renders
-- nested components have an undefined `.container` property
-  - therefore calling the `render()` method of a child component (usually) does nothing
-- calling `setState()` of a child component _will_ update its state and run its "middleware", but _doesn't_ re-render
+- enforces similar behaviour to stateless child components:
+  - i.e, only parent components trigger page re-renders
+  - child components have no `.container` property
+- calling `setState()` of a stateful child component:
+  -  _will_ update its state and run its "middleware"
+  - will _not_ re-render anything!
 
 For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
@@ -1009,28 +1012,16 @@ render(`<p>Hey</p>`, ".container")
 This `render` method can take a DOM Node or string of HTML, so supports both the `html` and `htmel` add-ons:
 
 ```js
-// create a stateful component using only `render` and `html`
-const liteComponent = props => {
-  this.state = { ...this.state, ...props }
-  render(html`<div>...</div>`, '.container');
-}
-```
-
-Writing components this way means you can replace the `this.state = { ... }` line with third-party `useState` and `redux` style state managers and lets you write more "React-like" component patterns.
-
-For "re-usable" and nested components, you should move the `render` call to outside of the component function:
-
-```js
 const liteComponent = props => {
   this.state = { ...this.state, ...props }
   return html`<div>...</div>`
 }
 
-// ..now include it inside some other components view..
-
-// ..or add to page
+// ..add to page using render
 render(liteComponent({ ...someData }), '.container')
 ```
+
+Writing components this way lets you write in a more "React-like" pattern - you can replace the `this.state = { ... }` line with third-party `useState` and `redux` type stuff much more easily.
 
 ## Using the `devtools` module
 
@@ -1107,31 +1098,26 @@ App.render()
 console.log(App.render())
 ```
 
-If rendering a component in NodeJS that has a `.view()` and `.style()`, or if calling `.toString()` directly, the output will be a string like this one:
+If rendering a component that has a `.view()` and `.style()` in NodeJS (or if calling `.toString()` directly), the output will be a string like this one:
 
 ```
 "<style>
-#myapp {
-  border: 2px solid grey;
-  margin: 0 auto;
-  max-width: 360px;
+#foo h1 {
+  color: red;
 }
 .btn {
-  background-color: black;
-  color: white;
   padding: 6px;
 }
 </style>
-<div id=\"foo-id\">
+<div id=\"foo\">
   <h1>Total so far = 101</h1>
-  <ul><li>First</li><li>two</li><li>three</li></ul>
-  <button class=\"btn\" onclick=App.clickBtn(5)>Click here</button>
+  <button class=\"btn\" onclick=\"App.clickBtn(1);\">Click here</button>
 </div>"
 ```
 
 ^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
 
-Note: your component CSS is not auto-prefixed or "scoped" with containers class/id until/unless it's added to a container element, client-side, using `.render('.container')`.
+Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
 
 ## Making changes to `Component`
 
