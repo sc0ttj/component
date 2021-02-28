@@ -140,6 +140,8 @@ Foo.view = props =>
     ${Header(props.title)}
     ${List(props.items)}
   </div>`
+
+Foo.render('.container');  
 ```
 
 But you can also nest proper (stateful) components inside other components, too:
@@ -148,7 +150,7 @@ But you can also nest proper (stateful) components inside other components, too:
 // create a re-usable button component
 function Button(state) {
   const Button = new Component(state);
-  Button.view = props => html`<button onclick="${props.fn}">${props.txt}</button>`;
+  Button.view = props => htmel`<button onclick="${props.fn}">${props.txt}</button>`;
 
   return Button;
 }
@@ -158,10 +160,10 @@ const btn1 = new Button({ txt: "1", fn: e => alert("btn1") });
 const btn2 = new Button({ txt: "2", fn: e => alert("btn2") });
 const btn3 = new Button({ txt: "3", fn: e => alert("btn3") });
 
-// create the main (parent) component
+// create the parent component
 const Menu = new Component({ txt: 'Click the buttons!' });
 
-// create a view with our buttons included:
+// create a view with our buttons included
 Menu.view = props => htmel`
   <div>
     <h2>${props.txt}</h2>
@@ -171,7 +173,6 @@ Menu.view = props => htmel`
   </div>
 `;
 
-// add our main/parent component to page
 Menu.render('.container');
 ```
 
@@ -372,7 +373,7 @@ See [examples/usage-in-node.js](examples/usage-in-node.js) for the complete exam
 
 Here is how to "time travel" to previous states, or jump forward to more recent ones.
 
-Note: To enable the state history, `app.debug` must be `true`.
+Note: To enable the state history, `foo.debug` must be `true`.
 
 ```js
 const foo = new Foo();
@@ -438,14 +439,16 @@ Define "actions" to update your state in specific ways.
 These are like regular methods, except they're always chainable, they hook into the [emitter](#using-the-emitter-module) add-on automatically, and they're tagged by name in your components state history. 
 
 ```js
-function Foo(state, schema) {
+function Foo() {
   const Foo = new Component({ count: 0, items: [] });
+
   // define the actions
   Foo.actions({
     plus:       props => Foo({ count: Foo.state.count + props }),
     minus:      props => Foo({ count: Foo.state.count - props }),
     addItems:   props => Foo({ items: [ ...Foo.state.items, ...props ] }),
   });
+
   return Foo;
 }
 
@@ -490,23 +493,19 @@ var { Component, emitter } = require("@scottjarvis/component");
 Component.emitter = emitter;
 ```
 
-The emitter provides the following methods - `on`, `off` and `once`:
+The emitter listens for "actions" using the following "listening" methods - `on()`, `off()` and `once()`.
 
-- `listener.on("actionName", props => { ... })` - every time `actionName` is emitted, run the given function
-- `listener.once("actionName", props => { ... })` - run the given function only once
-- `listener.off("actionName")` - stop listening to `actionName`
-
-Note, `props` is the latest state of the component that emitted the event.
+Each method receives the latest state of the component that emitted the "action" being listened to.
 
 Here's how to use the emitter:
 
 Let's "listen" to the actions of the `foo` component from earlier, using another component, called `logger`:
 
 ```js  
-// Define some other component
+// Define some listening component
 const logger = new Component({})
 
-// Define "listeners" for the actions above:
+// Define "listeners"
 logger
   .on('plus',     props => console.log('plus',     props.count))
   .on('addItems', props => console.log('addItems', props.items))
@@ -516,7 +515,7 @@ logger
 
 const foo = new Foo();
 
-// these actions will trigger the logger
+// these "actions" will trigger the logger
 foo.plus(105)
 foo.minus(5)
 
@@ -554,11 +553,11 @@ foo.html.addEventListener("click", e => {
 
 ## Using the `storage` module
 
-Use the storage module to make your components remember their state between page refreshes and sessions, using `localStorage`.
+The storage module makes components remember their state between page refreshes, using `localStorage`.
 
-Note that `storage` can be polyfilled for NodeJS, so will work in Node too - by saving to JSON files. 
+Note that `storage` can be polyfilled for NodeJS, so works in Node too - by saving to JSON files. 
 
-In NodeJS, the state persists between script invocations, rather than page refreshes.
+- In NodeJS, the state persists between script invocations, rather than page refreshes.
 
 To use the `storage` add-on, include it in your project like so:
 
@@ -584,7 +583,7 @@ Component.storage = storage
 
 ```
 
-To enable persistent storage for a component, just define a **store name** (where to save your data) as `myComponent.store = "something"`.
+To enable persistent state storage, only need to define a **store name** (where to save your data), like `myComponent.store = "something"`.
 
 **In a browser**, this is how you add persistent storage to our Counter app:
 
@@ -603,8 +602,8 @@ Counter.view = props => htmel`
 // simply define a "store name" (where to save your data) before you render
 Counter.store = 'Counter';
 
-// now we can render it into the page - this will load in the persistent state 
-// from its store as the initial state for the component
+// now we can render it into the page - it'll load in the last state 
+// from its localStorage "store" as the initial state
 Counter.render('.container')
 ```
 
@@ -624,7 +623,9 @@ See [examples/usage-persistant-state.js](examples/usage-persistant-state.js) for
 
 ## Using the `syncTabs` module
 
-The `syncTabs` add-on uses localStorage and only works in browsers. It requires the `storage` add-on.
+Give your components a persistent state that is synchronized across multiple browser tabs - an update in one tab will update the others.
+
+The `syncTabs` add-on uses `storage` (above) and only works in browsers.
 
 How to use it:
 
@@ -638,8 +639,7 @@ How to use it:
   Component.storage = storage
   Component.syncTabs = syncTabs
 
-  // your components will now have a persistent state, that is synchronized 
-  // across multiple browser tabs - an update in one tab will update the others
+  // now it's enabled
 </script>
 ```
 
@@ -976,7 +976,7 @@ Stateful components are _any components with a state_, usually created like so:
 const Foo = new Component({ ...someData });
 ```
 
-NOTE: When nested inside another component, even stateful child components _do not_ run thir own `setState()` & `render()` methods - they simply return their updated view.
+NOTE: When nested inside another component, even stateful child components _do not_ run their own `setState()` & `render()` methods - they simply return their (newly updated) view.
 
 This has a number of implications:
 
