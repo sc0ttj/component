@@ -134,6 +134,7 @@ function Component(state, schema) {
   var devtools = Component.devtools
 
   c.reactive = true // if true, re-render on every state change
+  c.immutable = true // if true, freeze the state object after updating it
   c.debug = devtools ? true : false //  if true, maintain a history of state changes in `.log`
   c.scopedCss = true // auto prefix component css with a unique id
 
@@ -187,8 +188,8 @@ function Component(state, schema) {
   }
 
   this.freeze = o => {
-    if (!Object.isFrozen(o)) {
-      // Recusively call until all child objects are frozen
+    if (c.immutable && !Object.isFrozen(o)) {
+      // Recursively call until all child objects are frozen
       Object.keys(o).forEach(k => this.freeze(o[k]))
       Object.freeze(o)
     }
@@ -209,17 +210,18 @@ function Component(state, schema) {
    * Set the component state
    * @param {object} newState - the new state to update to
    */
-  c.setState = newState => {
+  c.setState = props => {
+    const newState = { ...c.state, ...props }
     // get initial state from localStorage, if it's in there
     if (storage && !c.loaded) {
-      const pState = storage.getItem(c, { ...c.state, ...newState });
+      const pState = storage.getItem(c, newState);
       if (pState) newState = { ...newState, ...pState };
     }
     c.loaded = true;
 
     // enable schema validation using @scottjarvis/validator
     if (validator && c.schema) {
-      var err = validator({ ...c.state, ...newState }, c.schema)
+      var err = validator(newState, c.schema)
       if (err.length > 0) {
         var msg = "State doesn't match schema:"
         console.error(msg, "\n", err, "\n")
@@ -230,7 +232,7 @@ function Component(state, schema) {
 
     // update previous and current state
     c.prev = c.state
-    c.state = { ...c.state, ...newState }
+    c.state = newState
 
     if (!this.eq(c.state, c.prev)) {
 
@@ -260,7 +262,6 @@ function Component(state, schema) {
             state: c.state,
             action: c.action || "setState"
           })
-          c.action = undefined
           // move along index
           c.i = c.log.length -1
         })
@@ -282,6 +283,8 @@ function Component(state, schema) {
       // run any middlware functions that were defined by the user
       c.middleware.forEach(fn => fn({ ...c.state }))
 
+      c.action = undefined
+
       return c
     }
   }
@@ -293,10 +296,10 @@ function Component(state, schema) {
    * @param {object} cfg - the settings used for the tweening
    *
    */
-  c.tweenState = (newState, cfg) => {
+  c.tweenState = (props, cfg) => {
     typeof tweenState !== "undefined"
-      ? tweenState(c, newState, cfg)
-      : c.setState(newState)
+      ? tweenState(c, props, cfg)
+      : c.setState(props)
     return c
   }
 
