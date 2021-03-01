@@ -118,7 +118,7 @@ const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=
  * @param {object} state - The component state (model).
  */
 function Component(state, schema) {
-  var c = function (state, schema) {
+  const c = function (state, schema) {
     c.setState(state, schema)
     return !state ? c.container : c
   }
@@ -126,12 +126,12 @@ function Component(state, schema) {
   c.state = state
   c.schema = schema
 
-  var self = c
-  var storage = Component.storage
-  var validator = Component.validator
-  var emitter = Component.emitter
-  var tweenState = Component.tweenState
-  var devtools = Component.devtools
+  const self = c
+  const storage = Component.storage
+  const validator = Component.validator
+  const emitter = Component.emitter
+  const tweenState = Component.tweenState
+  const devtools = Component.devtools
 
   c.reactive = true // if true, re-render on every state change
   c.immutable = true // if true, freeze the state object after updating it
@@ -139,7 +139,7 @@ function Component(state, schema) {
   c.scopedCss = true // auto prefix component css with a unique id
 
   // for debouncing render() calls
-  var timeout = undefined
+  let timeout
 
   c.isNode =
     typeof process !== "undefined" &&
@@ -210,20 +210,19 @@ function Component(state, schema) {
    * Set the component state
    * @param {object} newState - the new state to update to
    */
-  c.setState = props => {
-    const newState = { ...c.state, ...props }
+  c.setState = newState => {
     // get initial state from localStorage, if it's in there
     if (storage && !c.loaded) {
-      const pState = storage.getItem(c, newState);
+      const pState = storage.getItem(c, { ...c.state, ...newState });
       if (pState) newState = { ...newState, ...pState };
     }
     c.loaded = true;
 
     // enable schema validation using @scottjarvis/validator
     if (validator && c.schema) {
-      var err = validator(newState, c.schema)
+      const err = validator({ ...c.state, ...newState }, c.schema)
+      const msg = "State doesn't match schema:"
       if (err.length > 0) {
-        var msg = "State doesn't match schema:"
         console.error(msg, "\n", err, "\n")
         throw new Error(msg + "\n" + JSON.stringify(err) + "\n")
       }
@@ -232,7 +231,7 @@ function Component(state, schema) {
 
     // update previous and current state
     c.prev = c.state
-    c.state = newState
+    c.state = { ...c.state, ...newState }
 
     if (!this.eq(c.state, c.prev)) {
 
@@ -247,7 +246,7 @@ function Component(state, schema) {
 
       if (t && !c.isNode) cancelAnimationFrame(t)
       // for debouncing logging in browser
-      var t = undefined
+      let t
 
       // c.tt = component is "time travelling" (traversing state history)
       if (c.debug && c.tt !== true) {
@@ -333,7 +332,7 @@ function Component(state, schema) {
    * @param {string} direction - 'f' for forward, 'b' for backwards
    */
   c.go = function(num, dir) {
-    var i
+    let i
     if (dir === "f") {
       i = c.i + num
     } else {
@@ -391,22 +390,22 @@ function Component(state, schema) {
       // if a style is defined
       if (c.css && typeof c.style === "function") {
         // get the latest component style
-        var st = c.style(c.state) // the css
+        let st = c.style(c.state) // the css
 
         // auto-prefix CSS styles with a unique id,to "scope" the
         // styles to the component only
         if (c.scopedCss) {
           // get container id, or class if no id
-          var u = c.container.id ? c.container.id : c.container.className
+          let u = c.container.id ? c.container.id : c.container.className
 
           // if container has no class or id, use uid
           u = !!u ? u : c.uid
 
-          var p = c.container.id ? "#" : "."
+          const p = c.container.id ? "#" : "."
 
-          var fix1 = new RegExp(u + " ,\\s*\\.", "gm")
-          var fix2 = new RegExp(u + " ,\\s*#", "gm")
-          var fix3 = new RegExp(u + " ,\\s*([a-z\\.#])", "gmi")
+          const fix1 = new RegExp(u + " ,\\s*\\.", "gm")
+          const fix2 = new RegExp(u + " ,\\s*#", "gm")
+          const fix3 = new RegExp(u + " ,\\s*([a-z\\.#])", "gmi")
 
           st = st
             .replace(/}/g, "}\n")
@@ -422,7 +421,7 @@ function Component(state, schema) {
         }
 
         // minify the CSS
-        var minCss = st.replace(/\n/g, "").replace(/\s\s+/g, " ")
+        const minCss = st.replace(/\n/g, "").replace(/\s\s+/g, " ")
         // if the new CSS is changed from previous, re-render it
         if (c.css.innerHTML !== minCss) c.css.innerHTML = minCss
       }
@@ -434,9 +433,9 @@ function Component(state, schema) {
   * our component styling, in a <style> tag
   */
   c.toString = function() {
-    var str = ""
-    var view = c.view(c.state)
-    var style
+    let view = c.view(c.state)
+    let str
+    let style
 
     // get local state
     if (!c.loaded && storage) {
@@ -476,7 +475,7 @@ function Component(state, schema) {
    * @param {string|element} container - the element which holds the component
    */
   c.render = function(el) {
-    var view = typeof c.view === "function" ? c.view(c.state) : null
+    let view = typeof c.view === "function" ? c.view(c.state) : null
 
     if (c.isNode) {
       return c.toString()
