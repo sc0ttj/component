@@ -434,8 +434,8 @@ function Component(state, schema) {
   */
   c.toString = function() {
     let view = c.view(c.state)
-    let str
-    let style
+    let str = ''
+    let style = ''
 
     // get local state
     if (!c.loaded && storage) {
