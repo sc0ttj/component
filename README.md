@@ -1283,7 +1283,7 @@ Rebuild to `dist/` using the command `npm run build`
     - render as JSON
     - include view, actions & style as stringified HTML, CSS and JS
   - pass in config to `toString()`, to choose what to render:
-    - Component lib itself
+    - the component itself (`c`)
     - actions
     - methods
     - styles
@@ -1298,11 +1298,6 @@ Rebuild to `dist/` using the command `npm run build`
     - like current easings, but more flexible/dynamic
     - can pass params like friction, magnitude, etc, to make the anims more/less "pronounced"
     - see `react-motion`, `react-spring`, `react-move`, `pose`, etc
-    - maybe do a `Component.motion` add-on that attaches extra info to component state:
-      - component positioning and motion info:
-        - (x,y, in view or not, scroll speed & direction, accel, current momentum, etc)
-        - is inside/outside other component/element
-        - collision detection
 
 - Universal rendering (add-ons):
   - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from `x` to HTML strings:
@@ -1319,11 +1314,11 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Related projects:
 
-### DOM and DOM diffing
+### DOM diffing (no virtual-DOM)
 
 - [BAD-DOM](https://codepen.io/tevko/pen/LzXjKE?editors=0010) - a tiny (800 bytes) lazy DOM diffing function (used by this project)
-- [set-dom](https://github.com/DylanPiercey/set-dom) - tiny dom diffing library
-- [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (not vdom, real DOM)
+- [set-dom](https://github.com/DylanPiercey/set-dom) - tiny (<1kb) dom diffing library
+- [morphdom](https://github.com/patrick-steele-idem/morphdom/) - a nice, fast DOM differ (fast, but about 15kb)
 
 ### JSX-like syntax in Template Literals (alternatives to `html`/`htmel`)
 
@@ -1349,15 +1344,16 @@ Rebuild to `dist/` using the command `npm run build`
 
 ### CSS in JS
 
+- [zserge.com/posts/css-in-js](https://zserge.com/posts/css-in-js/) - 200 bytes scoped CSS
 - [twirl](https://github.com/benjamminj/twirl-js) - a tag for template literals, turns CSS into objects 
 - `/(^|,)[\.#a-z][a-zA-Z0-9_\-:]*/gm` - match first part of CSS selector in a CSS string, useful for scoping (see https://regexr.com/524pu)
-- `document.styleSheets[0].cssRules[0].style.cssText.split(/\;[\s.]/).slice(0,-1)` - convert cssText to array containing CSS proprties and values, like "margin:0 auto;"
+- `document.styleSheets[0].cssRules[0].style.cssText.split(/\;[\s.]/).slice(0,-1)` - convert cssText to array, each item like "margin:0 auto;"
 - `str.replace(/([A-Z])/g, "-$1").toLowerCase()` - camelCase to hyphen-case converter
-- `var cssClassMatchRegex = new RegExp(/\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/g)` - regex to match all classes in a string (maybe useful for "scoping")
+- `var cssClassMatchRegex = new RegExp(/\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/g)` - regex to match all classes in a string (useful for "scoping")
 - `Math.random().toString(36).split(".")[1]` - unique ID generator (create a unique id for each new component)
 - `cssString.replace(/\n/g, '').replace(/\s\s+/g, ' ')` - minify string of CSS
 
-### Animation
+### Animation (tweening)
 
 - [react-tween-state](https://github.com/chenglou/react-tween-state) - tween from one state to another (where I got `tweenState` idea from)
 - [phena](https://github.com/jeremenichelli/phena/) - a petit tweening engine based on requestAnimationFrame (adapted version inside `src/tweenState.js`)
@@ -1365,9 +1361,18 @@ Rebuild to `dist/` using the command `npm run build`
 - [react-tweenful](https://github.com/teodosii/react-tweenful) - tweening and animation for React
 - [react-state-stream](https://github.com/chenglou/react-state-stream) - instead of one state, set all the states that will ever be, aka a lazy state stream
 
+### Animation ("spring-based")
+
+- see a nice list here: https://github.com/sc0ttj/component/issues/33
+
+### Generate spring-based CSS animations
+
+- [gerardabello/spring-animation-keyframes](https://github.com/gerardabello/spring-animation-keyframes) - generate css keyframes based on spring animations 
+- [codepunkt/css-spring](https://github.com/codepunkt/css-spring) - physics based css-keyframes for css-in-js or plain css
+
 ### Routers
 
-- [router](https://github.com/sc0ttj/router) - a tiny, isomorphic router & web server, supports express middleware, runs in browsers, lambdas, NodeJS.
+- [router](https://github.com/sc0ttj/router) - a 2kb isomorphic router & web server, supports express middleware, runs in browsers, lambdas, NodeJS.
 
 ### Other tiny component libraries
 
