@@ -754,6 +754,11 @@ Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
 
 With `springTo` it's easy to do spring-physics based animations, for lively, bouncy, dynamic animations which are really hard to achieve with tweening alone.
 
+Using `springTo()` is much like using `setState()`, except:
+
+- you only pass in the state values you want to animate
+- you can pass in spring settings as a 2nd param (mass, stiffness, callbacks, etc)
+
 ### In browsers:
 
 ```html
@@ -830,7 +835,7 @@ The spring config (2nd param) takes the following properties:
 - `onUpdate()`:  called on every frame, receives as current animation values as `props`
 - `onComplete()`: called on the last frame, receives as current animation values as `props`
 
-Also see [examples/usage-spring-animation.js](examples/usage-spring-animation.js)
+Also see [examples/usage-spring-animation.html](examples/usage-spring-animation.html)
 
 ## Using `html` and `htmel` modules
 
