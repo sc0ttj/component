@@ -51,7 +51,8 @@ A "state" is a snapshot of your application data at a specific time.
   - `validator`: validate states against a schema (_like a simple PropTypes_)
   - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
   - `emitter`: an event emitter - share updates between components
-  - `tweenState`: animate nicely from one state to the next
+  - `tweenState`: animate nicely from one state to the next (tweened)
+  - `springTo`: animate nicely from one state to the next (using spring physics)
   - `storage`: enables persistent states (between page refreshes, etc)
   - `syncTabs`: Synchronize state updates & page renders between browser tabs
   - `devtools`: enables easier component debugging in the browser
@@ -748,6 +749,88 @@ The `tweenProps` object returned to callbacks provides the tweening values of th
 - and more...
 
 Also see [examples/usage-tweenState.js](examples/usage-tweenState.js)
+
+## Using the `springTo` module
+
+With `springTo` it's easy to do spring-physics based animations, for lively, bouncy, dynamic animations which are really hard to achieve with tweening alone.
+
+### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/springTo.min.js"></script>
+<script>
+  Component.springTo = springTo
+
+  // use it here
+</script>
+```
+
+### In NodeJS:
+
+Note that `springTo` includes polyfills for NodeJS, so works in Node too.
+
+```js
+var { Component, springTo } = require('@scottjarvis/component');
+Component.springTo = springTo
+
+// use it here
+
+```
+### Example usage of `springTo`:
+
+```js
+
+    // 1. define a component and render it to the page
+    const Foo = new Component({ x: 100, y: 100 });
+
+    Foo.view = props => `<div style="top:${props.y - 25}px;left:${props.x - 25}px"></div>`;
+
+    Foo.style = props => `div { 
+      background-color: #d11;
+      border: 2px solid #222;
+      border-radius: 50%;
+      height: 50px;
+      width: 50px;
+      position: absolute;
+    }`;
+
+    Foo.render('.container');
+
+    // 2. listen to clicks on the page and spring the component to click location
+    document.addEventListener('click', function(e) {
+
+      // get mouse position on click
+      const rect = e.target.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // use "springTo" to animate the component
+      Foo.springTo(
+        // 1st param - the state values to animate to (pass in only the values you want to animate!)
+        { x: mouseX, y: mouseY },
+        // 2nd param - the spring settings
+        {
+          mass: 4.0,       // higher is slower/more drag         Default = 1.0
+          stiffness: 0.5,  // higher is more "bouncy"            Default = 0.1
+          damping: 0.8,    // higher is more "friction"          Default = 0.8
+          precision: 0.01, // higher values finish anim sooner   Default = 0.01
+          onUpdate: props => Foo.setState({ x: props.x, y: props.y }),
+          onComplete: props => console.log("Moved to:", { x: props.x, y: props.y }),
+        });
+    });
+```
+
+The spring config (2nd param) takes the following properties:
+
+- `mass`: higher is slower/more drag. Default = 1.0
+- `stiffness`: higher is more "bouncy". Default = 0.1
+- `damping`: higher is more "friction". Default = 0.8
+- `precision`: higher values finish anim sooner. Default = 0.01
+- `onUpdate()`:  called on every frame, receives as current animation values as `props`
+- `onComplete()`: called on the last frame, receives as current animation values as `props`
+
+Also see [examples/usage-spring-animation.js](examples/usage-spring-animation.js)
 
 ## Using `html` and `htmel` modules
 

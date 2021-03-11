@@ -128,6 +128,7 @@ function Component(state, schema) {
   const validator = C.validator
   const emitter = C.emitter
   const tweenState = C.tweenState
+  const springTo = C.springTo
   const strg = C.storage
   const devtools = C.devtools
   const cache = C.memo ? C.memo : function(f){return f;}
@@ -315,6 +316,20 @@ function Component(state, schema) {
   c.tweenState = (props, cfg) => {
     typeof tweenState !== "undefined"
       ? tweenState(c, props, cfg)
+      : c(props)
+    return c
+  }
+
+  /**
+   * Animate from the current state to the given state, then set the given
+   * state as the new state. Uses spring-based physics.
+   *
+   * @param {object} cfg - the settings used for the spring
+   *
+   */
+  c.springTo = (props, cfg) => {
+    typeof springTo !== "undefined"
+      ? springTo(c, props, cfg)
       : c(props)
     return c
   }

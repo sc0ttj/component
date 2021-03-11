@@ -109,6 +109,45 @@ var Tween = /*#__PURE__*/ (function() {
   return Tween
 })()
 
+
+// for each property in newState, get the value from the given state
+const getStateToTween = function(state, newState) {
+  const stateToTween = {}
+  Object.entries(state).forEach(entry => {
+    const key = entry[0];
+    const val = entry[1];
+    if (newState[key]) stateToTween[key] = val;
+  })
+  return stateToTween
+}
+
+// go through properties in the given state, add to the given array
+const addValues = function(state, array) {
+  Object.keys(state).forEach((key, index) => {
+    if (typeof state[key] !== "undefined") {
+      if (typeof state[key] !== "object") {
+        array.push(state[key])
+        return
+      }
+      addValues(state[key], array)
+    }
+  })
+}
+
+const setTweenedValues = function(state, vals) {
+  function reducer(obj, [key, val]) {
+    obj[key] = val
+    if (typeof val === "number") {
+      obj[key] = vals.shift()
+    } else if (typeof val === "object") {
+      obj[key] = Object.entries(val).reduce(reducer, {})
+    }
+    return obj
+  }
+  const tweenedState = Object.entries(state).reduce(reducer, {})
+  return tweenedState
+}
+
 const tweenState = (self, newState, cfg) => {
   // define default callbacks
   var onStart = cfg.onStart ? cfg.onStart : noop
@@ -122,45 +161,8 @@ const tweenState = (self, newState, cfg) => {
   cfg.frame = 1
   cfg.frameTotal = Math.ceil((60 / 1000) * (cfg.delay + cfg.duration)) + 2
 
-  // for each property in newState, get the value from the given state
-  function getStateToTween(state) {
-    var stateToTween = {}
-    Object.entries(state).forEach(entry => {
-      var key = entry[0]
-      var val = entry[1]
-      if (newState[key]) stateToTween[key] = val
-    })
-    return stateToTween
-  }
   // get a state matching the shape of newState, but with values from self.state
-  var stateToTween = getStateToTween(self.state)
-
-  // go through properties in the given state, add to the given array
-  function addValues(state, array) {
-    Object.keys(state).forEach((key, index) => {
-      if (typeof state[key] !== "undefined") {
-        if (typeof state[key] !== "object") {
-          array.push(state[key])
-          return
-        }
-        addValues(state[key], array)
-      }
-    })
-  }
-
-  function setTweenedValues(state, vals) {
-    function reducer(obj, [key, val]) {
-      obj[key] = val
-      if (typeof val === "number") {
-        obj[key] = vals.shift()
-      } else if (typeof val === "object") {
-        obj[key] = Object.entries(val).reduce(reducer, {})
-      }
-      return obj
-    }
-    var tweenedState = Object.entries(state).reduce(reducer, {})
-    return tweenedState
-  }
+  var stateToTween = getStateToTween(self.state, newState)
 
   var startValuesArr = []
   var endValuesArr = []
