@@ -40,7 +40,7 @@ export default [
       name: "springTo",
       format: "umd"
     },
-    plugins: [resolve({ modulesOnly: true }), commonjs(), sourcemaps()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
     input: "src/emitter.js",
