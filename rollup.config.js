@@ -33,6 +33,16 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
+    input: "src/springTo.js",
+    output: {
+      file: "dist/springTo.min.js",
+      sourcemap: true,
+      name: "springTo",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
     input: "src/emitter.js",
     output: {
       file: "dist/emitter.min.js",
