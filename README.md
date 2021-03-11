@@ -992,15 +992,14 @@ For code examples, see the nested component recipes in [examples/recipes.js](exa
 
 ## Using a more "React-like" pattern 
 
-For more "React-like" patterns, you can import a standalone `render` method (~800 bytes) that's supposed to be used _without_ `Component`, and some *optional* React-like "hooks" (~1.5kb).
-
+For more "React-like" patterns, you can import a standalone `render` method (~800 bytes) that's supposed to be used with some *optional* React-like "hooks" (~1.5kb), but _without_ `Component` itself.
 
 Features of `render`:
 
 - adds your HTML or component to the page
 - updates the page using DOM diffing, inside a debounced `requestAnimationFrame`
-- works nicely with the `html` and add-on
-- works nicely with the optional `hooks` add-on (which provides `useState`, etc) 
+- works nicely with the optional `html` and add-on
+- works nicely with the optional `hooks` add-on 
 - a React-like API in 2.3kb (inc all the hooks)
 - that's it
 
