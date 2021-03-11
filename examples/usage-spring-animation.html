@@ -54,8 +54,13 @@
           stiffness: 0.5,  // higher is more "bouncy"            Default = 0.1
           damping: 0.8,    // higher is more "friction"          Default = 0.8
           precision: 0.01, // higher values finish anim sooner   Default = 0.01
-          onUpdate: props => Foo.setState({ x: props.x, y: props.y }),
-          onComplete: props => console.log("Moved to:", { x: props.x, y: props.y }),
+          onUpdate: props => {
+            // console.log(props);
+            Foo.setState({ x: props.x, y: props.y });
+          },
+          onComplete: props => {
+            console.log("Moved to:", { x: props.x, y: props.y });
+          },
         });
     });
   </script>

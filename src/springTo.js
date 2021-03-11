@@ -9,283 +9,284 @@ const requestAnimationFrame =
 
 // Taken from https://github.com/raphaelameaume/lemonade-spring
 const config = {
-    stiffness: 0.1,
-    damping: 0.8,
-    mass: 1,
-    precision: 0.01,
+  mass: 1,
+  stiffness: 0.1,
+  damping: 0.8,
+  precision: 0.01,
 };
 
 function noop() {}
 
 function isAtTarget(curr, dest, precision = config.precision) {
-    return curr < dest + precision && curr > dest - precision;
+  return curr < dest + precision && curr > dest - precision;
 }
 
 function createValueSpring(start, {
-    stiffness = config.stiffness,
-    damping = config.damping,
-    mass = config.mass,
-    precision = config.precision,
-    onUpdate = noop,
-    onComplete = noop,
+  stiffness = config.stiffness,
+  damping = config.damping,
+  mass = config.mass,
+  precision = config.precision,
+  onUpdate = noop,
+  onComplete = noop,
 } = config) {
-    let previous, current;
-    let destination = null;
+  let previous, current;
+  let destination = null;
 
-    function target(dest) {
-        if (dest !== current) {
-            destination = dest;
-            spring.completed = false;
-        }
+  function target(dest) {
+    if (dest !== current) {
+      destination = dest;
+      spring.completed = false;
     }
+  }
 
-    function update() {
-        if (destination !== null) {
-            let velocity = (current - previous);
-            let acceleration = (destination - current) * spring.stiffness - velocity * spring.damping;
-            acceleration /= spring.mass;
+  function update(frame) {
+    if (destination !== null) {
+      let velocity = (current - previous);
+      let acceleration = (destination - current) * spring.stiffness - velocity * spring.damping;
+      acceleration /= spring.mass;
 
-            previous = current;
-            current += velocity + acceleration;
+      previous = current;
+      current += velocity + acceleration;
 
-            if (isAtTarget(current, destination, spring.precision) && !spring.completed) {
-                spring.completed = true;
-                current = destination;
-                onUpdate(getValue());
-                onComplete(getValue());
-            } else if (!spring.completed) {
-                onUpdate(getValue());
-            }
-        }
+      if (isAtTarget(current, destination, spring.precision) && !spring.completed) {
+        spring.completed = true;
+        current = destination;
+        onUpdate(getValue());
+        onComplete(getValue());
+      } else if (!spring.completed) {
+        onUpdate({ ...getValue(), velocity, acceleration, frame });
+      }
     }
+  }
 
-    function getValue() {
-        return current;
-    }
+  function getValue() {
+    return current;
+  }
 
-    function setValue(value) {
-        previous = value;
-        current = value;
-        
-        destination = null;
-        spring.completed = false;
-    }
+  function setValue(value) {
+    previous = value;
+    current = value;
+    
+    destination = null;
+    spring.completed = false;
+  }
 
-    const spring = {
-        completed: false,
-        stiffness,
-        damping,
-        precision,
-        mass,
-        update,
-        getValue,
-        setValue,
-        target
-    };
+  const spring = {
+    completed: false,
+    stiffness,
+    damping,
+    precision,
+    mass,
+    update,
+    getValue,
+    setValue,
+    target
+  };
 
-    spring.setValue(start);
+  spring.setValue(start);
 
-    return spring;
+  return spring;
 }
 
 function createObjectSpring(start, {
-    stiffness = config.stiffness,
-    damping = config.damping,
-    mass = config.mass,
-    precision = config.precision,
-    onUpdate = noop,
-    onComplete = noop,
+  stiffness = config.stiffness,
+  damping = config.damping,
+  mass = config.mass,
+  precision = config.precision,
+  onUpdate = noop,
+  onComplete = noop,
 } = config) {
-    let keys, previous, current;
-    let destination = {};
-    let completedKeys = [];
+  let keys, previous, current;
+  let destination = {};
+  let completedKeys = [];
 
-    function target(dest) {
-        Object.keys(dest).forEach(key => {
-            let completedKeyIndex = completedKeys.indexOf(key);
-            if (completedKeyIndex >= 0) {
-                completedKeys.splice(completedKeyIndex, 1);
-            }
+  function target(dest) {
+    Object.keys(dest).forEach(key => {
+      let completedKeyIndex = completedKeys.indexOf(key);
+      if (completedKeyIndex >= 0) {
+        completedKeys.splice(completedKeyIndex, 1);
+      }
 
-            destination[key] = dest[key];
-        });
+      destination[key] = dest[key];
+    });
 
-        spring.completed = false;
-    }
+    spring.completed = false;
+  }
 
-    function update() {
-        if (Object.keys(destination).length > 0) {
-            for (let i = 0; i < keys.length; i++) {
-                let key = keys[i];
+  function update(frame) { // pass in frame, so it can be receved by users callbacks (for convenience)
+    if (Object.keys(destination).length > 0) {
+      let velocity;
+      let acceleration;
+      for (let i = 0; i < keys.length; i++) {
+        let key = keys[i];
 
-                if (destination[key] !== undefined && !completedKeys.includes(key)) {
-                    let velocity = (current[key] - previous[key]);
-                    let acceleration = (destination[key] - current[key]) * spring.stiffness - velocity * spring.damping;
-                    acceleration /= spring.mass;
+        if (destination[key] !== undefined && !completedKeys.includes(key)) {
+          velocity = (current[key] - previous[key]);
+          acceleration = (destination[key] - current[key]) * spring.stiffness - velocity * spring.damping;
+          acceleration /= spring.mass;
 
-                    previous[key] = current[key];
-                    current[key] += velocity + acceleration;
-                    start[key] = current[key];
+          previous[key] = current[key];
+          current[key] += velocity + acceleration;
+          start[key] = current[key];
 
-                    if (isAtTarget(current[key], destination[key], spring.precision) && !completedKeys.includes(key)) {
-                        completedKeys.push(key);
-                    }
-                }
-            }
-
-            let isComplete = Object.keys(destination).every(key => completedKeys.includes(key));
-
-            if (isComplete && !spring.completed) {
-                spring.completed = true;
-
-                Object.keys(destination).forEach(key => {
-                    current[key] = destination[key];
-                })
-
-                onUpdate(getValue());
-                onComplete(getValue());
-            } else if (!spring.completed) {
-                onUpdate(getValue());
-            }
+          if (isAtTarget(current[key], destination[key], spring.precision) && !completedKeys.includes(key)) {
+              completedKeys.push(key);
+          }
         }
+      }
+
+      let isComplete = Object.keys(destination).every(key => completedKeys.includes(key));
+
+      if (isComplete && !spring.completed) {
+        spring.completed = true;
+
+        Object.keys(destination).forEach(key => {
+            current[key] = destination[key];
+        })
+
+        onUpdate(getValue());
+        onComplete(getValue());
+      } else if (!spring.completed) {
+        onUpdate({ ...getValue(), velocity, acceleration, frame });
+      }
     }
+  }
 
-    function setValue(value) {
-        keys = Object.keys(value);
+  function setValue(value) {
+    keys = Object.keys(value);
 
-        previous = keys.reduce((obj, key) => {
-            obj[key] = value[key];
+    previous = keys.reduce((obj, key) => {
+      obj[key] = value[key];
 
-            return obj;
-        }, {});
+      return obj;
+    }, {});
 
-        current = keys.reduce((obj, key) => {
-            obj[key] = value[key];
+    current = keys.reduce((obj, key) => {
+      obj[key] = value[key];
 
-            return obj;
-        }, {});
+      return obj;
+    }, {});
 
-        destination = {};
-        completedKeys = [];
-        spring.completed = false;
-    }
+    destination = {};
+    completedKeys = [];
+    spring.completed = false;
+  }
 
-    function getValue() {
-        return current;
-    }
+  function getValue() {
+      return current;
+  }
 
-    const spring = {
-        completed: false,
-        stiffness,
-        damping,
-        precision,
-        mass,
-        update,
-        getValue,
-        setValue,
-        target
-    };
+  const spring = {
+    completed: false,
+    stiffness,
+    damping,
+    precision,
+    mass,
+    update,
+    getValue,
+    setValue,
+    target
+  };
 
-    spring.setValue(start);
+  spring.setValue(start);
 
-    return spring;
+  return spring;
 }
 
 function createArraySpring(start, {
-    stiffness = config.stiffness,
-    damping = config.damping,
-    mass = config.mass,
-    precision = config.precision,
-    onUpdate = noop,
-    onComplete = noop,
+  stiffness = config.stiffness,
+  damping = config.damping,
+  mass = config.mass,
+  precision = config.precision,
+  onUpdate = noop,
+  onComplete = noop,
 } = config) {
-    let previous = [];
-    let current = [];
-    let destination = null;
-    let completedIndexes = [];
+  let previous = [];
+  let current = [];
+  let destination = null;
+  let completedIndexes = [];
 
-    function target(dest) {
-        if (!Array.isArray(dest)) {
-            console.error("Spring: target must match the type of startValue");
-            return;
+  function target(dest) {
+    if (!Array.isArray(dest)) {
+      console.error("Spring: target must match the type of startValue");
+      return;
+    }
+
+    if (dest.length !== current.length) {
+      console.error("Spring: target length must match the length of the first argument.");
+      return;
+    }
+
+    destination = dest;
+    completedIndexes = [];
+    spring.completed = false;
+  }
+
+  function update(frame) {
+    if (destination !== null) {
+      current.forEach((element, index) => {
+        let velocity = current[index] - previous[index];
+        let acceleration = (destination[index] - current[index]) * spring.stiffness - velocity * spring.damping;
+        acceleration /= spring.mass;
+
+        previous[index] = current[index];
+        current[index] += velocity + acceleration;
+        start[index] = current[index];
+
+        if (isAtTarget(current[index], destination[index], spring.precision) && !completedIndexes.includes(index)) {
+          completedIndexes.push(index);
+
+          if (completedIndexes.length === start.length) {
+            spring.completed = true;
+            onUpdate(destination);
+            onComplete();
+          }
+        } else if (!completedIndexes.length === start.length) {
+          onUpdate({ ...getValue(), velocity, acceleration, frame });
         }
-
-        if (dest.length !== current.length) {
-            console.error("Spring: target length must match the length of the first argument.");
-            return;
-        }
-
-        destination = dest;
-        completedIndexes = [];
-        spring.completed = false;
+      });
     }
+  }
 
-    function update() {
-        if (destination !== null) {
-            current.forEach((element, index) => {
-                let velocity = current[index] - previous[index];
-                let acceleration = (destination[index] - current[index]) * spring.stiffness - velocity * spring.damping;
-                acceleration /= spring.mass;
+  function getValue() {
+    return current;
+  }
 
-                previous[index] = current[index];
-                current[index] += velocity + acceleration;
-                start[index] = current[index];
+  function setValue(value) {
+    current = value.map(element => element);
+    previous = value.map(element => element);
+    completedIndexes = [];
+    destination = null;
+    spring.completed = false;
+  }
 
+  const spring = {
+    completed: false,
+    stiffness,
+    damping,
+    precision,
+    mass,
+    update,
+    getValue,
+    setValue,
+    target
+  };
 
-                if (isAtTarget(current[index], destination[index], spring.precision) && !completedIndexes.includes(index)) {
-                    completedIndexes.push(index);
+  spring.setValue(start);
 
-                    if (completedIndexes.length === start.length) {
-                        spring.completed = true;
-                        onUpdate(destination);
-                        onComplete();
-                    }
-                } else if (!completedIndexes.length === start.length) {
-                    onUpdate(getValue());
-                }
-            });
-        }
-    }
-
-    function getValue() {
-        return current;
-    }
-
-    function setValue(value) {
-        current = value.map(element => element);
-        previous = value.map(element => element);
-        completedIndexes = [];
-        destination = null;
-        spring.completed = false;
-    }
-
-    const spring = {
-        completed: false,
-        stiffness,
-        damping,
-        precision,
-        mass,
-        update,
-        getValue,
-        setValue,
-        target
-    };
-
-    spring.setValue(start);
-
-    return spring;
+  return spring;
 }
 
 function createSpring(start, options) {
-    if (Array.isArray(start)) {
-        return createArraySpring(start, options);
-    }
+  if (Array.isArray(start)) {
+    return createArraySpring(start, options);
+  }
 
-    if (typeof start === "object") {
-        return createObjectSpring(start, options);
-    }
+  if (typeof start === "object") {
+    return createObjectSpring(start, options);
+  }
 
-    return createValueSpring(start, options);
+  return createValueSpring(start, options);
 }
 
 // sc0ttj - component specific stuff below
@@ -329,22 +330,26 @@ const springTo = function(self, newState, springCfg) {
   };
 
   const cfg = {
-      ...defaults,
-      ...springCfg,
-      // wrap the users callbacks, so they receive the current tweened values as props
-      onStart: props => {
-        const tweenedState = setTweenedValues(newState, [...props.values])
-        return springCfg.onStart(tweenedState)
-      },
-      onUpdate: props => {
-        const tweenedState = setTweenedValues(newState, [...props.values])
-        if (frame === 1) cfg.onStart(props);
-        return springCfg.onUpdate(tweenedState)
-      },
-      onComplete: props => {
-        const tweenedState = setTweenedValues(newState, [...props.values])
-        return springCfg.onComplete(tweenedState)
-      },
+    ...defaults,
+    ...springCfg,
+    // wrap the users callbacks, so they receive the current tweened values as props
+    onStart: props => {
+      console.log('onStart => props', props);
+      const tweenedState = setTweenedValues(newState, [...props.values])
+      return springCfg.onStart(tweenedState)
+    },
+    onUpdate: props => {
+      console.log('onUpdate => props', props);
+      const tweenedState = setTweenedValues(newState, [...props.values])
+      console.log('onUpdate => tweenedState', tweenedState);
+      if (frame === 1) cfg.onStart(props);
+      return springCfg.onUpdate(tweenedState)
+    },
+    onComplete: props => {
+      console.log('onComplete => props', props);
+      const tweenedState = setTweenedValues(newState, [...props.values])
+      return springCfg.onComplete(tweenedState)
+    },
   };
 
   // get a state matching the shape of newState, but with values from self.state
@@ -365,7 +370,7 @@ const springTo = function(self, newState, springCfg) {
 
   // define the animation loop
   function loop() {
-    spring.update();
+    spring.update(frame);
     frame += 1;
     timeout = requestAnimationFrame(loop);
   }

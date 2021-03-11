@@ -831,8 +831,15 @@ The spring config (2nd param) takes the following properties:
 - `stiffness`: higher is more "bouncy". Default = 0.1
 - `damping`: higher is more "friction". Default = 0.8
 - `precision`: higher values finish anim sooner. Default = 0.01
-- `onUpdate()`:  called on every frame, receives as current animation values as `props`
-- `onComplete()`: called on the last frame, receives as current animation values as `props`
+- `onUpdate()`:  called on every frame, receives current animation values as `props`
+- `onComplete()`: called on the last frame, receives current animation values as `props`
+
+The `props` object returned to the callbacks contains:
+
+- any properties that you passed in, with their current value(s)
+- `frame` - the current frame number
+- `acceleration` - the acceleration of the spring at current frame
+- `velocity` - the velocity of the spring at current frame
 
 Also see [examples/usage-spring-animation.html](examples/usage-spring-animation.html)
 
