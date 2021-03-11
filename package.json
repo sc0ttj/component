@@ -16,7 +16,7 @@
 	"module": "dist/index.esm.js",
 	"source": "src/index.js",
 	"scripts": {
-		"build": "rollup -c rollup.config.js && for x in dist/*.min.js; do gzip -9 -c $x > $x.gz; done",
+		"build": "rollup -c rollup.config.js && for x in dist/*.esm.js dist/*.min.js; do gzip -9 -c $x > $x.gz; done",
 		"test": "echo 'Build complete... nothing to do, yet..'"
 	},
 	"keywords": [
@@ -55,6 +55,7 @@
 		"@scottjarvis/validator": "^1.0.2",
 		"node-localstorage": "^2.1.6",
 		"rollup": "^2.38.4",
+		"rollup-plugin-sourcemaps": "^0.6.3",
 		"rollup-plugin-terser": "^6.1.0"
 	},
 	"bugs": {

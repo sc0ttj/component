@@ -24,7 +24,9 @@ const htmel = (strings, ...vals) => {
   var t = document.createElement('template');
   t.innerHTML = out;
   // get all elems inside our template
-  var elems = t.content.firstChild.children;
+  var elems = t.content.firstChild.children.length > 0 
+    ? t.content.firstChild.children 
+    : t.content.firstChild;
   // for each elem, get its attributes
   for (var i = 0; i < elems.length; i++) {
     var attrs = elems[i].attributes;

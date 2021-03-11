@@ -118,27 +118,47 @@ const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=
  * @param {object} state - The component state (model).
  */
 function Component(state, schema) {
-  var c = function (state, schema) {
+  const c = function c(state, schema) {
     c.setState(state, schema)
     return !state ? c.container : c
   }
 
-  c.state = state
-  c.schema = schema
+  const C = Component
+  // register the add-ons
+  const validator = C.validator
+  const emitter = C.emitter
+  const tweenState = C.tweenState
+  const strg = C.storage
+  const devtools = C.devtools
+  const cache = C.memo ? C.memo : function(f){return f;}
+  // used by storage add-on.. maybe try to remove at some point
+  const self = c
+  // re-used a lot..
+  const O = Object
+  const R = RegExp
 
-  var self = c
-  var storage = Component.storage
-  var validator = Component.validator
-  var emitter = Component.emitter
-  var tweenState = Component.tweenState
-  var devtools = Component.devtools
+  // for debouncing render() calls, and window, document
+  let timeout, w, d, raf, t
 
-  c.reactive = true // if true, re-render on every state change
-  c.debug = devtools ? true : false //  if true, maintain a history of state changes in `.log`
-  c.scopedCss = true // auto prefix component css with a unique id
+  c.reactive = true                   // if true, re-render on every state change
+  c.immutable = true                  // if true, freeze the state object after updating it
+  c.debug = devtools ? true : false   //  if true, maintain a history of state changes in `.log`
+  c.scopedCss = true                  // auto prefix component css with a unique id
+  c.state = state                     // component state
+  c.schema = schema                   // component schema (optional)
 
-  // for debouncing render() calls
-  var timeout = undefined
+  // on init, add our initial state to the state history
+  c.log = [{ id: 0, state: state, action: "init" }]
+  c.i = c.log.length
+
+  c.view = props => props // the default view (just return the props)
+
+  c.middleware = []
+
+  // a unique ID, used for scoping component CSS and by devtools to register them
+  c.uid = Math.random()
+    .toString(36)
+    .split(".")[1]
 
   c.isNode =
     typeof process !== "undefined" &&
@@ -146,25 +166,15 @@ function Component(state, schema) {
     process.versions !== null &&
     process.versions.node !== null
 
-  c.view = props => props // the default view (just return the props)
-
-  c.middleware = []
-
-  // a unique ID, used for scoping component CSS
-  c.uid = Math.random()
-    .toString(36)
-    .split(".")[1]
-
   if (!c.isNode) {
+    w = window
+    d = document
+    raf = requestAnimationFrame
     // the <style> elem into which we put our component CSS
-    c.css = document.createElement("style")
+    c.css = d.createElement("style")
     c.css.id = c.uid
-    document.head.appendChild(c.css)
+    d.head.appendChild(c.css)
   }
-
-  // on init, add our initial state to the state history
-  c.log = [{ id: 0, state: state, action: "init" }]
-  c.i = c.log.length
 
   /**
    * Define chainable named "actions" that will update our
@@ -173,55 +183,67 @@ function Component(state, schema) {
   c.actions = actions => {
     c.actionsList = actions
     // convert each key/value to set state function:
-    Object.keys(actions).forEach(action => {
-      if (typeof c[action] !== "undefined") return false
+    O.keys(actions).forEach(axn => {
+      if (typeof c[axn] !== "undefined") return false
       // add the action as a function
-      c[action] = newState => {
-        c.action = action
-        actions[action](newState)
-        // return itself, so it's always chainable
+      c[axn] = newState => {
+        // set current action
+        c.action = axn
+        // run action
+        actions[axn](newState)
+        // make sure the component returns itself, so it's always chainable
         return c
       }
     })
     return c
   }
 
-  this.freeze = o => {
-    if (!Object.isFrozen(o)) {
-      // Recusively call until all child objects are frozen
-      Object.keys(o).forEach(k => this.freeze(o[k]))
-      Object.freeze(o)
+  /**
+   * Used to freeze the component state
+   * @param {object} o - the object to freeze
+   */
+  c.freeze = cache(o => {
+    if (!O.isFrozen(o)) {
+      // Recursively call until all child objects are frozen
+      O.keys(o).forEach(k => c.freeze(o[k]))
+      O.freeze(o)
     }
     return o
-  }
+  })
 
-  this.eq = (x, y) => {
-    const ok = Object.keys,
+  /**
+   * Used to compare the current and next component state
+   * @param {object} x - the object to compare with y
+   * @param {object} y - the object to compare with x
+   */
+  c.eq = cache((x, y) => {
+    const ok = O.keys,
       tx = typeof x,
       ty = typeof y
     return x && y && tx === "object" && tx === ty
       ? ok(x).length === ok(y).length &&
-          ok(x).every(key => this.eq(x[key], y[key]))
+          ok(x).every(key => c.eq(x[key], y[key]))
       : String(x) === String(y)
-  }
+  })
 
   /**
    * Set the component state
    * @param {object} newState - the new state to update to
    */
   c.setState = newState => {
+    const nextState = { ...c.state, ...newState };
     // get initial state from localStorage, if it's in there
-    if (storage && !c.loaded) {
-      const pState = storage.getItem(c, { ...c.state, ...newState });
+    if (strg && !c.done) {
+      const pState = strg.getItem(c, nextState);
       if (pState) newState = { ...newState, ...pState };
     }
-    c.loaded = true;
+    c.done = true;
 
     // enable schema validation using @scottjarvis/validator
     if (validator && c.schema) {
-      var err = validator({ ...c.state, ...newState }, c.schema)
+      const err = cache(validator(nextState, c.schema))
+      const msg = "State doesn't match schema:"
       if (err.length > 0) {
-        var msg = "State doesn't match schema:"
         console.error(msg, "\n", err, "\n")
         throw new Error(msg + "\n" + JSON.stringify(err) + "\n")
       }
@@ -230,37 +252,32 @@ function Component(state, schema) {
 
     // update previous and current state
     c.prev = c.state
-    c.state = { ...c.state, ...newState }
+    c.state = { ...c.state, ...nextState }
 
-    if (!this.eq(c.state, c.prev)) {
+    if (!c.eq(c.state, c.prev)) {
 
-      if (storage && c.loaded) {
+      if (strg && c.done) {
         // c.store is just the name of the key in localStorage,
         // where we keep our JSON stringified state
-        storage.setItem(c, c.state)
+        strg.setItem(c, c.state)
       }
 
       // re-render component
       if (c.reactive) c.render(c.container)
 
       if (t && !c.isNode) cancelAnimationFrame(t)
-      // for debouncing logging in browser
-      var t = undefined
 
       // c.tt = component is "time travelling" (traversing state history)
       if (c.debug && c.tt !== true) {
-        if (c.isNode && !requestAnimationFrame) {
-          requestAnimationFrame = function raf(logFn) { setTimeout(() => logFn(), 1); };
-        }
-
-        t = requestAnimationFrame(() => {
+        // if node, just use setTimeout
+        if (c.isNode) raf = (logFn) => setTimeout(() => logFn(), 1)
+        t = raf(() => {
           // we are not traversing state history, so add the new state to the log
           c.log.push({
             id: c.log.length,
             state: c.state,
             action: c.action || "setState"
           })
-          c.action = undefined
           // move along index
           c.i = c.log.length -1
         })
@@ -270,17 +287,19 @@ function Component(state, schema) {
       //if (c.debug) console.log(c.i, [c.state, ...c.log])
 
       // freeze state so it can only be changed through setState()
-      this.freeze(c.state)
+      if (c.immutable) c.freeze(c.state)
 
       // if we updated using an "action" method, and emitter is avail,
       // then emit an event with same name as the "action" called,
       // passing in the current state
       if (typeof emitter !== "undefined" && !!c.action) {
-        emitter.emit(`${c.action}`, c.state)
+        emitter.emit(`${c.action}`, { ...c.state })
       }
 
       // run any middlware functions that were defined by the user
       c.middleware.forEach(fn => fn({ ...c.state }))
+
+      c.action = undefined
 
       return c
     }
@@ -293,10 +312,10 @@ function Component(state, schema) {
    * @param {object} cfg - the settings used for the tweening
    *
    */
-  c.tweenState = (newState, cfg) => {
+  c.tweenState = (props, cfg) => {
     typeof tweenState !== "undefined"
-      ? tweenState(c, newState, cfg)
-      : c.setState(newState)
+      ? tweenState(c, props, cfg)
+      : c(props)
     return c
   }
 
@@ -330,7 +349,7 @@ function Component(state, schema) {
    * @param {string} direction - 'f' for forward, 'b' for backwards
    */
   c.go = function(num, dir) {
-    var i
+    let i
     if (dir === "f") {
       i = c.i + num
     } else {
@@ -339,7 +358,7 @@ function Component(state, schema) {
     if (c.log[i]) {
       c.i = i
       c.tt = true;
-      c.setState(c.log[i].state)
+      c(c.log[i].state) // set state
       c.tt = false;
     }
     return c
@@ -353,7 +372,7 @@ function Component(state, schema) {
     if (!num) {
       if (c.log[0]) {
         c.tt = true;
-        c.setState(c.log[0].state)
+        c(c.log[0].state) // set state
         c.tt = false;
       }
       c.i = 0
@@ -370,7 +389,7 @@ function Component(state, schema) {
     if (!num) {
       if (c.log[c.log.length - 1]) {
         c.tt = true;
-        c.setState(c.log[c.log.length - 1].state)
+        c(c.log[c.log.length - 1].state) // set state
         c.tt = false;
       }
       c.i = c.log.length -1
@@ -388,42 +407,67 @@ function Component(state, schema) {
       // if a style is defined
       if (c.css && typeof c.style === "function") {
         // get the latest component style
-        var st = c.style(c.state) // the css
+        let st = c.style(c.state) // the css
 
         // auto-prefix CSS styles with a unique id,to "scope" the
         // styles to the component only
         if (c.scopedCss) {
+          const p = c.container.id ? "#" : "."
           // get container id, or class if no id
-          var u = c.container.id ? c.container.id : c.container.className
-
+          let u = c.container.id ? c.container.id : c.container.className
           // if container has no class or id, use uid
           u = !!u ? u : c.uid
 
-          var p = c.container.id ? "#" : "."
-
-          var fix1 = new RegExp(u + " ,\\s*\\.", "gm")
-          var fix2 = new RegExp(u + " ,\\s*#", "gm")
-          var fix3 = new RegExp(u + " ,\\s*([a-z\\.#])", "gmi")
-
-          st = st
-            .replace(/}/g, "}\n")
-            .replace(/\;\s*\n/g, ";")
-            .replace(/{\s*\n/g, "{ ")
-            .replace(/^\s+|\s+$/gm, "\n")
-            .replace(/(^[\.#\w][\w\-]*|\s*,[\.#\w][\w\-]*)/gm, p + u + " $1")
-            .replace(fix1, ", " + p + u + " ")
-            .replace(fix2, ", " + p + u + " #")
-            .replace(fix3, ", " + p + u + " $1")
-            .replace(/\n/g, "")
-            .replace(/\s\s+/g, " ")
+          // ..these 3 are used for scoping CSS, in setCss()
+          const fx1 = new R(u + " ,\\s*\\.", "gm")
+          const fx2 = new R(u + " ,\\s*#", "gm")
+          const fx3 = new R(u + " ,\\s*([a-z\\.#])", "gmi")
+          // func to scope css
+          const fx = (v,p,u) =>
+            v.replace(/}/g, "}\n")
+             .replace(/\;\s*\n/g, ";")
+             .replace(/{\s*\n/g, "{ ")
+             .replace(/^\s+|\s+$/gm, "\n")
+             .replace(/(^[\.#\w][\w\-]*|\s*,[\.#\w][\w\-]*)/gm, p + u + " $1")
+             .replace(fx1, ", " + p + u + " ")
+             .replace(fx2, ", " + p + u + " #")
+             .replace(fx3, ", " + p + u + " $1")
+             .replace(/\n/g, "")
+             .replace(/\s\s+/g, " ")
+           // scope the css
+           st = cache(fx(st,p,u))
         }
 
         // minify the CSS
-        var minCss = st.replace(/\n/g, "").replace(/\s\s+/g, " ")
+        const minCss = st.replace(/\n/g, "").replace(/\s\s+/g, " ")
         // if the new CSS is changed from previous, re-render it
         if (c.css.innerHTML !== minCss) c.css.innerHTML = minCss
       }
     }
+  }
+
+  // used by .toString()
+  const toStr = (view, style) => {
+    let s = '';
+    if (view.outerHTML) {
+      if (style) s = `<style>${style}\n</style>\n`
+      s += `${view.outerHTML}`.replace(/^ {4}/gm, "")
+    } else if (typeof view === "string") {
+      try {
+        // if view is a JSON string
+        s = JSON.parse(view)
+        // return the view as prettified JSON
+        s = JSON.stringify(s, null, 2)
+      } catch (err) {
+        if (style) s = `<style>${style}\n</style>\n`
+        s += `${view}`.replace(/^ {4}/gm, "")
+      }
+    } else if (typeof view === "object" || Array.isArray(view)) {
+      // return the view as prettified JSON
+      s = JSON.stringify(view, null, 2)
+    }
+    //if (c.debug) console.log(s)
+    return s
   }
 
   /*
@@ -431,14 +475,14 @@ function Component(state, schema) {
   * our component styling, in a <style> tag
   */
   c.toString = function() {
-    var str = ""
-    var view = c.view(c.state)
-    var style
+    let view = c.view(c.state)
+    let str = ''
+    let style = ''
 
     // get local state
-    if (!c.loaded && storage) {
-      const pState = storage.getItem(c, c.state);
-      c.setState(pState);
+    if (!c.done && strg) {
+      const pState = strg.getItem(c, c.state);
+      c(pState);
       view = typeof c.view === "function" ? c.view(pState) : view
     }
 
@@ -447,25 +491,7 @@ function Component(state, schema) {
       style = c.style(c.state).replace(/^ {4}/gm, "")
     }
 
-    if (view.outerHTML) {
-      if (style) str = `<style>${style}\n</style>\n`
-      str += `${view.outerHTML}`.replace(/^ {4}/gm, "")
-    } else if (typeof view === "string") {
-      try {
-        // if view is a JSON string
-        str = JSON.parse(view)
-        // return the view as prettified JSON
-        str = JSON.stringify(str, null, 2)
-      } catch (err) {
-        if (style) str = `<style>${style}\n</style>\n`
-        str += `${view}`.replace(/^ {4}/gm, "")
-      }
-    } else if (typeof view === "object" || Array.isArray(view)) {
-      // return the view as prettified JSON
-      str = JSON.stringify(view, null, 2)
-    }
-    //if (c.debug) console.log(str)
-    return str
+    return cache(toStr(view,style))
   }
 
   /**
@@ -473,54 +499,53 @@ function Component(state, schema) {
    * @param {string|element} container - the element which holds the component
    */
   c.render = function(el) {
-    var view = typeof c.view === "function" ? c.view(c.state) : null
+    if (c.isNode) return c.toString()
 
-    if (c.isNode) {
-      return c.toString()
-    } else {
-      // get state from localStorage, if it's in there
-      if (!c.html && storage) {
-        const pState = storage.getItem(c, c.state);
-        view = typeof c.view === "function" ? c.view(pState) : null
-        c.setState(pState);
-      }
-      // make sure we have container as an HTML Element
-      if (document && !c.html) el = document.querySelector(el)
-      c.html = c.container = el
+    let view = typeof c.view === "function" ? c.view(c.state) : null
 
-      if (timeout) cancelAnimationFrame(timeout)
+    // get state from localStorage, if it's in there
+    if (!c.html && strg) {
+      const pState = strg.getItem(c, c.state);
+      view = typeof c.view === "function" ? c.view(pState) : null
+      c(pState); // set state
+    }
+    // make sure we have container as an HTML Element
+    if (d && !c.html) el = d.querySelector(el)
+    c.html = c.container = el
 
-      timeout = requestAnimationFrame(() => {
-        if (c.css && c.style) c.setCss()
-        if (c.container && view) {
-          try {
-            domDiff(c.container.firstElementChild, view.outerHTML ? view.outerHTML : view)
-            // console.log('diffed')
-          } catch (err) {
-            if (view.outerHTML) {
-              c.container.innerHTML = ''
-              c.container.append(view)
-              // console.log('cleared & appended')
-            } else {
-              c.container.innerHTML = view
-              // console.log('replaced innerHTML')
-            }
+    if (timeout) cancelAnimationFrame(timeout)
+
+    timeout = raf(() => {
+      if (c.css && c.style) c.setCss()
+      if (c.container && view) {
+        try {
+          domDiff(c.container.firstElementChild, view.outerHTML ? view.outerHTML : view)
+          // console.log('diffed')
+        } catch (err) {
+          if (view.outerHTML) {
+            c.container.innerHTML = ''
+            c.container.append(view)
+            // console.log('cleared & appended')
+          } else {
+            c.container.innerHTML = view
+            // console.log('replaced innerHTML')
           }
         }
-        // for devtools
-        if (devtools && c.container) {
-          c.container.firstChild.setAttribute('data-uid', c.uid)
-          devtools.populateUI(c.container)
-        }
-      })
-    }
+      }
+      // for devtools
+      if (devtools && c.container) {
+        c.container.firstChild.setAttribute('data-uid', c.uid)
+        devtools.populateUI(c.container)
+      }
+    })
+
     return c.container
   }
 
   // for devtools
   if (!c.isNode) {
-    window.sjComponents = window.sjComponents || {};
-    window.sjComponents[c.uid] = c;
+    w.sjComponents = w.sjComponents || {};
+    w.sjComponents[c.uid] = c;
   }
 
   return c
