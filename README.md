@@ -990,15 +990,16 @@ This has a number of implications:
 
 For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
-## Using the standalone `render` module 
+## Using a more "React-like" pattern 
 
-For a more "React-like" syntax or pattern, you can even import a standalone `render` method (~800 bytes) that's supposed to be used _without_ `Component`.
+For a more "React-like" syntax or pattern, you can even import a standalone `render` method (~800 bytes) that's supposed to be used _without_ `Component`, and some React-like "hooks" (~1.5kb).
 
 Features of `render`:
 
 - adds your HTML or component to the page
 - updates the page using DOM diffing, inside a debounced `requestAnimationFrame`
-- works nicely with the `html` and `htmel` add-ons
+- works nicely with the `html` and add-on
+- works nicely with the `hooks` add-on module (which provides `useState`, etc) 
 - that's it
 
 Usage:
@@ -1009,7 +1010,7 @@ import { render } from "@scottjarvis/component"
 render(`<p>Hey</p>`, ".container")
 ```
 
-This `render` method can take a DOM Node or string of HTML, so supports both the `html` and `htmel` add-ons:
+Example without any "hooks" addons:
 
 ```js
 const liteComponent = props => {
@@ -1021,7 +1022,32 @@ const liteComponent = props => {
 render(liteComponent({ ...someData }), '.container')
 ```
 
-Writing components this way lets you write in a more "React-like" pattern - you can replace the `this.state = { ... }` line with third-party `useState` and `redux` type stuff much more easily.
+Example using "hooks":
+
+- Supported hooks: `useState`, `useReducer`, `useEffect`, `useMemo`, `useCallback`, `useRef`, `useDeferred`, `useThrottle`
+
+```js
+import { render, html, hooks } from "@scottjarvis/component"
+
+// import "useHooks", and the hooks you want to use
+const { useHooks, useState } = hooks
+
+const countUp = props => {
+  [ count, setCount ] = useState(0)
+  setCount(count + props)
+  return html`<div>${count}</div>`
+}
+
+// this is required to "connect" the hooks to your component
+countUp = useHooks(countUp);
+
+// re-render to page, counting up each time
+render(countUp(1), '.container')
+render(countUp(1), '.container')
+render(countUp(1), '.container')
+```
+
+Note, this "React-like" pattern uses the excellent [getify/TNG-Hooks](https://github.com/getify/TNG-Hooks) under the hood, but is less heavily tested than using `new Component()`, and `htmel` seems to have issues attaching event handlers :/ but it otherwise works well.
 
 ## Using the `devtools` module
 

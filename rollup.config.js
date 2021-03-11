@@ -23,16 +23,6 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
-    input: "src/render.js",
-    output: {
-      file: "dist/render.min.js",
-      sourcemap: true,
-      name: "render",
-      format: "umd"
-    },
-    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
-  },
-  {
     input: "src/tweenState.js",
     output: {
       file: "dist/tweenState.min.js",
@@ -88,6 +78,26 @@ export default [
       file: "dist/syncTabs.min.js",
       sourcemap: true,
       name: "syncTabs",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
+    input: "src/render.js",
+    output: {
+      file: "dist/render.min.js",
+      sourcemap: true,
+      name: "render",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
+    input: "src/hooks.js",
+    output: {
+      file: "dist/hooks.min.js",
+      sourcemap: true,
+      name: "hooks",
       format: "umd"
     },
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]

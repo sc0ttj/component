@@ -112,13 +112,13 @@ let timeout;
 const render = (view, sel) => {
   if (!window) return v
 
-  const v = view
+  const v = typeof view === 'function' ? view() : view
   const c = document.querySelector(sel)
 
   if (timeout) cancelAnimationFrame(timeout)
 
   timeout = requestAnimationFrame(() => {
-    if (c.nodeName && v) {
+    if (c && c.nodeName && v) {
       domDiff(
         c,
         v.outerHTML ? v.outerHTML : `<${c.nodeName} ${c.id ? `id="${c.id}"` : ''} ${c.className ? `class="${c.className}"` : ''}>${v}</${c.nodeName}>`

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="../dist/render.min.js"></script>
+<script src="../dist/hooks.min.js"></script>
+</head>
+<body>
+
+  <div class="container"></div>
+
+<script>
+  const { useHooks, useState } = hooks;
+
+  // now we can define a (silly) counter app
+  function Counter() {
+    const [count, setCount] = useState(0);
+
+    setCount(count + 1)
+    
+    return `
+    <div>
+      <h1>Count: ${count}</h1>
+    </div>`;
+  }
+
+  // required to attach the hooks to the Counter function
+  Counter = useHooks(Counter);
+
+  // increment the counter by 1 each time it's called
+  Counter()
+  Counter()
+  Counter()
+  Counter()
+  Counter()
+
+  // and (re)render it to page
+  render(Counter, '.container');
+</script>
+</body>
+
+</html>

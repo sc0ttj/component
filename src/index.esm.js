@@ -20,5 +20,7 @@ import html from './html.js'
 import htmel from './htmel.js'
 import storage from './storage.js'
 import syncTabs from './syncTabs.js'
+// react-like hooks
+import { hooks } from "./hooks.js"
 
-export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs }
+export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs, hooks }

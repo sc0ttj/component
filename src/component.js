@@ -155,7 +155,7 @@ function Component(state, schema) {
 
   c.middleware = []
 
-  // a unique ID, used for scoping component CSS
+  // a unique ID, used for scoping component CSS and by devtools to register them
   c.uid = Math.random()
     .toString(36)
     .split(".")[1]
