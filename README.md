@@ -998,7 +998,7 @@ Features of `render`:
 
 - adds your HTML or component to the page
 - updates the page using DOM diffing, inside a debounced `requestAnimationFrame`
-- works nicely with the optional `html` and add-on
+- works nicely with the optional `html` add-on
 - works nicely with the optional `hooks` add-on 
 - a React-like API in 2.3kb (inc all the hooks)
 - that's it
