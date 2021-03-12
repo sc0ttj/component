@@ -1396,9 +1396,6 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Future improvements
 
-- Store manager
-  - like redux, storeon, etc
-   
 - Better SSR
   - an `toEnvelope()` add-on method, to render components as JSON envelopes:
     - render as JSON
@@ -1414,11 +1411,13 @@ Rebuild to `dist/` using the command `npm run build`
   - create a `Component.useScroll(scrollProps => { ... })` add-on module:
     - see [sc0ttj/scrollstory](https://github.com/sc0ttj/scrollstory) for tiny scroll library
 
-- Better animations: 
-  - create a physics based timing functions module:
-    - like current easings, but more flexible/dynamic
-    - can pass params like friction, magnitude, etc, to make the anims more/less "pronounced"
-    - see `react-motion`, `react-spring`, `react-move`, `pose`, etc
+- Better game support:
+  - an `audio()` addon, with loops, panning, volume, effects 
+  - a `tick()` addon (time-based animation): 
+    - a gameloop with ticker that emits "ticks" at set intervals (always 30 times/second, for example)
+    - rendering de-coupled from gameloop (fps can vary)
+  - render to canvas
+    - define views as function which receives props and draws to a canvas
 
 - Universal rendering (add-ons):
   - use [tagged templates](https://codeburst.io/javascript-es6-tagged-template-literals-a45c26e54761) to render from `x` to HTML strings:
