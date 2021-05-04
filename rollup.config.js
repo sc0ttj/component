@@ -93,6 +93,16 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
+    input: "src/useAudio.js",
+    output: {
+      file: "dist/useAudio.min.js",
+      sourcemap: true,
+      name: "useAudio",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), sourcemaps()]
+  },
+  {
     input: "src/render.js",
     output: {
       file: "dist/render.min.js",
