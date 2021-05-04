@@ -278,84 +278,83 @@ const useAudio = function(sounds, c) {
     switch (type) {
       case 'panning':
         n = audioCtx.createStereoPanner();
-  	    n.type = type;
-        n.pan.value = typeof o === 'number' ? o : 0;
         break;
       case 'panning3d':
         n = audioCtx.createPanner();
-  	    n.type = type;
-        // TODO
         break;
       case 'delay':
         n = audioCtx.createDelay();
-  	    n.type = type;
+        break;
+      case 'lowpass':
+      case 'highpass':
+      case 'bandpass':
+      case 'lowshelf':
+      case 'highshelf':
+      case 'peaking':
+      case 'notch':
+        n = audioCtx.createBiquadFilter();
+        break;
+      case 'equalizer':
+      case 'reverb':
+        n = audioCtx.createConvolver();
+      case 'randomization':
+        // not an audio node, set in state, applied in play()
+      case 'compression':
+        n = audioCtx.createDynamicsCompressor();
+        break;
+    }
+    // set a type (used in createNodes() to filter node list)
+    n.type = type;
+
+    // helper functions to check and set filter values
+    const has = prop => typeof o[prop] === 'number';
+    const setFreq = () => n.frequency.value = o.freq;
+    const setGain = () => n.gain.value = o.gain;
+    const setQ = () => n.Q.value = o.q;
+
+    // now set its initial values
+    switch (type) {
+      case 'panning':
+        n.pan.value = typeof o === 'number' ? o : 0;
+        break;
+      case 'panning3d':
+        // TODO
+        break;
+      case 'delay':
         n.delayTime.value = typeof o === 'number' ? o : 0;
         break;
       case 'lowpass':
-      	n = audioCtx.createBiquadFilter();
-  	    n.type = type;
-      	n.frequency.value = o.freq ? o.freq : 320.0;
-      	n.Q.value = o.q ? o.q : 0.0;
-        break;
       case 'highpass':
-      	n = audioCtx.createBiquadFilter();
-  	    n.type = type;
-      	n.frequency.value = o.freq ? o.freq : 1000.0;
-      	n.Q.value = o.q ? o.q : 0.0;
+      case 'lowshelf':
+      case 'highshelf':
+      case 'peaking':
+      case 'notch':
+      	if (has('freq')) setFreq();
+      	if (has('gain')) setGain();
+      	if (has('q')) setQ();
         break;
       case 'bandpass':
-        const from = o.from ? o.from : 300.0;
+        const from = o.from;
         const to = o.to ? o.to : audioCtx.sampleRate;
         const geometricMean = Math.sqrt(from * to);
-      	n = audioCtx.createBiquadFilter();
-  	    n.type = type;
-        n.frequency.value = o.freq ? o.freq : 320.0;
-        n.Q.value = geometricMean / (to - from);
-        break;
-      case 'lowshelf':
-      	n = audioCtx.createBiquadFilter();
-  	    n.type = type;
-      	n.frequency.value = o.freq ? o.freq : 320.0;
-      	n.gain.value = o.gain ? o.gain : 0.0;
-        break;
-      case 'highshelf':
-      	n = audioCtx.createBiquadFilter();
-  	    n.type = type;
-      	n.frequency.value = o.freq ? o.freq : 1000.0;
-      	n.gain.value = o.gain ? o.gain : 0.0;
-        break;
-      case 'peaking':
-      	n = audioCtx.createBiquadFilter();
-  	    n.type = type;
-      	n.frequency.value = o.freq ? o.freq : 1000.0;
-      	n.gain.value = o.gain ? o.gain : 0.0;
-      	n.Q.value = o.q ? o.q : 0.1; // "width" of freqs covered, 0.1 is 1/10th ??
-        break;
-      case 'notch':
-      	n = audioCtx.createBiquadFilter();
-  	    n.type = type;
-      	n.frequency.value = o.freq ? o.freq : 1000.0;
-      	n.Q.value = o.q ? o.q : 0.0;
+      	if (has('freq')) setFreq();
+      	if (has('q')) n.Q.value = geometricMean / (to - from);
         break;
       case 'equalizer':
         // TODO
         break;
       case 'reverb':
-        n = audioCtx.createConvolver();
-  	    n.type = type;
         // TODO
         break;
       case 'randomization':
-        // TODO
+        // not an audio node, set in state, applied in play()
         break;
       case 'compression':
-        n = audioCtx.createDynamicsCompressor();
-  	    n.type = type;
-        n.threshold = o.threshold ? o.threshold : n.threshold;
-        n.knee = o.knee ? o.knee : n.knee;
-        n.ratio = o.ratio ? o.ratio : n.ratio;
-        n.attack = o.attack ? o.attack : n.attack;
-        n.release = o.release ? o.release : n.release;
+        if (has('threshold')) n.threshold = o.threshold;
+        if (has('knee')) n.knee = o.knee;
+        if (has('ratio')) n.ratio = o.ratio;
+        if (has('attack')) n.attack = o.attack;
+        if (has('release')) n.release = o.release;
         break;
       default:
         break;
@@ -383,6 +382,8 @@ const useAudio = function(sounds, c) {
     // s = current sound object
     const s = soundObj;
     const ct = audioCtx.currentTime;
+    // helper func
+    const setVal = (prop, v) => n[prop].setValueAtTime(v, ct);
     // for each sound property in soundObject.state
     Object.keys(soundObj.state).forEach(key => {
       const nodeType = key === 'volume' ? 'gain' : key;
@@ -392,7 +393,7 @@ const useAudio = function(sounds, c) {
       switch (key) {
         case 'volume':
         case 'gain':
-          n.gain.setValueAtTime(s.mute ? 0 : val, ct);
+          setVal('gain', s.mute ? 0 : val);
           break;
         case 'loop':
           s.loop = val;
@@ -406,39 +407,26 @@ const useAudio = function(sounds, c) {
             otherSounds.forEach(sound => library[sound].mute());
           }
           break;
-        case 'fadeIn':
-        case 'fadeOut':
-          // not set in audio nodes props, set in s.state, checked in play()
-          break;
         // filters
         case 'panning':
-          n.pan.setValueAtTime(o, ct);
+          setVal('pan', val);
           break;
         case 'panning3d':
           // TODO
           break;
         case 'delay':
-          n.delayTime.setValueAtTime(o, ct);
+          setVal('delayTime', val);
           break;
         case 'lowpass':
         case 'highpass':
         case 'bandpass':
-          n.frequency.setValueAtTime(o.freq, ct);
-          n.Q.setValueAtTime(o.q, ct);
-          break;
         case 'lowshelf':
         case 'highshelf':
-          n.frequency.setValueAtTime(o.freq, ct);
-          n.gain.setValueAtTime(o.gain, ct);
-          break;
         case 'peaking':
-          n.frequency.setValueAtTime(o.freq, ct);
-          n.gain.setValueAtTime(o.gain, ct);
-          n.Q.setValueAtTime(o.q, ct);
-          break;
         case 'notch':
-          n.frequency.setValueAtTime(o.freq, ct);
-          n.gain.setValueAtTime(o.gain, ct);
+          if (val.freq) setVal('frequency', val.freq);
+          if (val.gain) setVal('gain', val.gain);
+          if (val.q) setVal('Q', val.q);
           break;
         case 'reverb':
           // TODO
@@ -446,15 +434,17 @@ const useAudio = function(sounds, c) {
         case 'equalizer':
           // TODO
           break;
-        case 'randomization':
-          // not set in audio nodes props, set in state, checked in play()
-          break;
         case 'compression':
-          n.threshold.setValueAtTime(o.threshold, ct);
-          n.knee.setValueAtTime(o.knee, ct);
-          n.ratio.setValueAtTime(o.ratio, ct);
-          n.attack.setValueAtTime(o.attack, ct);
-          n.release.setValueAtTime(o.release, ct);
+          if (val.threshold) setVal('threshold', val.threshold);
+          if (val.knee) setVal('knee', val.knee);
+          if (val.ratio) setVal('ratio', val.ratio);
+          if (val.attack) setVal('attack', val.attack);
+          if (val.release) setVal('release', val.release);
+          break;
+        // not set in audio nodes props, set in s.state, checked in play()
+        case 'fadeIn':
+        case 'fadeOut':
+        case 'randomization':
           break;
         default:
           break;
