@@ -299,6 +299,9 @@ const useAudio = function(sounds, c) {
   const createFilterNode = (type, o) => {
     let n = undefined; // the node to return
     switch (type) {
+      case 'gain':
+        n = audioCtx.createGain();
+        break;
       case 'panning':
         n = audioCtx.createStereoPanner();
         break;
@@ -318,11 +321,11 @@ const useAudio = function(sounds, c) {
       case 'notch':
         n = audioCtx.createBiquadFilter();
         break;
-      case 'reverb':
-        n = audioCtx.createConvolver();
-        break;
       case 'equalizer':
         // TODO
+        break;
+      case 'reverb':
+        n = audioCtx.createConvolver();
         break;
       case 'randomization':
         // not an audio node, set in state, applied in play()
@@ -337,6 +340,10 @@ const useAudio = function(sounds, c) {
     n.type = type;
     // now set its initial values
     switch (type) {
+      case 'volume':
+      case 'gain':
+        n.gain.value = typeof o === 'number' ? o : 1
+        break;
       case 'panning':
         n.pan.value = typeof o === 'number' ? o : 0;
         break;
