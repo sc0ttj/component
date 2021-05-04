@@ -160,97 +160,10 @@ const useAudio = function(sounds, c) {
         library[name].state[filterName] = filters[filterName];
       });
     }
-  }
-
-
-
-  // play the sound
-  const play = () => {
-    // get the input node
-    const input = library[name].input;
-    // only get buffer if input is buffer source node, else get sound objects
-    // in src, and play each one of those instead
-    if (!input) {
-      [...src].forEach(inputSound => inputSound.play());
-      return;
-    }
-    // set the sound nodes buffer property to the (down)loaded sound
-    if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
     // create all audio nodes that we need
     library[name].audioNodes = createNodes();
-    // now connect them up, in the proper order
-    connectNodes();
-    // randomise sound if need be
-    const sound = typeof library[name].state.randomization === 'object'
-      ? randomiseSound(library[name])
-      : library[name];
-    // set all properties on the relevent audio nodes to match the sounds "state"
-    configureAudioNodesFor(sound);
-    // normalize for better browser support
-    if (!input.start) input.start = input.noteOn;
-    // play the sound
-    input.start(sound.startTime);
-    // if "solo" enabled, mute all other sounds.. TODO unmute them when this one pauses/stops/ends
-    if (library[name].solo) muteAllExcept(name);
-    // enable fade in if needed
-    if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
-      fadeIn(library[name].fadeIn);
-    }
-    // enabling looping on node if set in the state props
-    if (library[name].state.loop) input.loop = true;
-  };
-
-
-  // mute all sounds in library except the given sound
-  const muteAllExcept = name => {
-    // get all other sounds
-    const otherSounds = Object.keys(library).filter(key !== name);
-    // mute them
-    otherSounds.forEach(snd => library[snd].mute());
-  };
-
-  // returns a slightly randomised version of the given sound
-  const randomiseSound = soundObj => {
-    const s = { ...soundObj };
-    const r = soundObj.state.randomization;
-    s.state.volume = s.state.volume + (Math.random() * r.volume);
-    s.state.playbackRate = s.state.playbackRate + (Math.random() * r.playbackRate);
-    s.state.startTime = s.state.startTime + 1 * (0.01 + Math.random() * r.startTime);
-    return s;
-  };
-
-  // play a sound multiple times, with (slightly) randomised volume, pitch and tempo
-  const rapidFire = (num) => {
-    if (!num) return;
-    const t = audioCtx.currentTime;
-    const input = library[name].input;
-    // only get buffer if input is buffer source node, else get sound objects
-    // in src, and play each one of those instead
-    if (!input) {
-      [...src].forEach(inputSound => inputSound.rapidFire(num));
-      return;
-    }
-    // Make multiple sources using the same buffer and play in quick succession.
-    for (let i = 0; i < num; i++) {
-      if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
-      // create all audio nodes that we need
-      library[name].audioNodes = createNodes();
-      // now connect them up, in the proper order
-      connectNodes();
-      // set randomised volume and playback rate
-      const randomisedSound = randomiseSound(library[name]);
-      // set all properties on the relevent audio nodes to match the sounds "state"
-      configureAudioNodesFor(randomisedSound);
-      // normalize for better browser support
-      if (!input.start) input.start = input.noteOn;
-      // play, with randomised start point
-      input.start(randomisedSound.startTime);
-      // enable fade in if needed
-      if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
-        fadeIn(library[name].fadeIn);
-      }
-    }
   }
+
 
 
   // check if an audio node is disabled in the options
@@ -396,19 +309,6 @@ const useAudio = function(sounds, c) {
 
 
 
-  const connectNodes = () => {
-    // connect all enabled audio nodes
-    library[name].audioNodes.forEach((n, i) => {
-      const curr = n;
-      const next = library[name].audioNodes[i + 1];
-      if (curr && next) {
-        curr.connect(next);
-      }
-    });
-  };
-
-
-
   // helper func to set value of an audio nodes property
   const setVal = (prop, v) => n[prop].setValueAtTime(v, ct);
 
@@ -494,6 +394,103 @@ const useAudio = function(sounds, c) {
 
 
 
+  // play the sound
+  const play = () => {
+    // get the input node
+    const input = library[name].input;
+    // only get buffer if input is buffer source node, else get sound objects
+    // in src, and play each one of those instead
+    if (!input) {
+      [...src].forEach(inputSound => inputSound.play());
+      return;
+    }
+    // set the sound nodes buffer property to the (down)loaded sound
+    if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
+    // now connect the audio nodes, in the proper order
+    connectNodes();
+    // randomise sound if need be
+    const sound = typeof library[name].state.randomization === 'object'
+      ? randomiseSound(library[name])
+      : library[name];
+    // set all properties on the relevent audio nodes to match the sounds "state"
+    configureAudioNodesFor(sound);
+    // normalize for better browser support
+    if (!input.start) input.start = input.noteOn;
+    // play the sound
+    input.start(sound.startTime);
+    // if "solo" enabled, mute all other sounds.. TODO unmute them when this one pauses/stops/ends
+    if (library[name].solo) muteAllExcept(name);
+    // enable fade in if needed
+    if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
+      fadeIn(library[name].fadeIn);
+    }
+    // enabling looping on node if set in the state props
+    if (library[name].state.loop) input.loop = true;
+  };
+
+
+  const connectNodes = () => {
+    // connect all enabled audio nodes
+    library[name].audioNodes.forEach((n, i) => {
+      const curr = n;
+      const next = library[name].audioNodes[i + 1];
+      if (curr && next) {
+        curr.connect(next);
+      }
+    });
+  };
+
+
+  // mute all sounds in library except the given sound
+  const muteAllExcept = name => {
+    // get all other sounds
+    const otherSounds = Object.keys(library).filter(key !== name);
+    // mute them
+    otherSounds.forEach(snd => library[snd].mute());
+  };
+
+  // returns a slightly randomised version of the given sound
+  const randomiseSound = soundObj => {
+    const s = { ...soundObj };
+    const r = soundObj.state.randomization;
+    s.state.volume = s.state.volume + (Math.random() * r.volume);
+    s.state.playbackRate = s.state.playbackRate + (Math.random() * r.playbackRate);
+    s.state.startTime = s.state.startTime + 1 * (0.01 + Math.random() * r.startTime);
+    return s;
+  };
+
+  // play a sound multiple times, with (slightly) randomised volume, pitch and tempo
+  const rapidFire = (num) => {
+    if (!num) return;
+    const t = audioCtx.currentTime;
+    const input = library[name].input;
+    // only get buffer if input is buffer source node, else get sound objects
+    // in src, and play each one of those instead
+    if (!input) {
+      [...src].forEach(inputSound => inputSound.rapidFire(num));
+      return;
+    }
+    // Make multiple sources using the same buffer and play in quick succession.
+    for (let i = 0; i < num; i++) {
+      if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
+      // now connect up the audio nodes, in the proper order
+      connectNodes();
+      // set randomised volume and playback rate
+      const randomisedSound = randomiseSound(library[name]);
+      // set all properties on the relevent audio nodes to match the sounds "state"
+      configureAudioNodesFor(randomisedSound);
+      // normalize for better browser support
+      if (!input.start) input.start = input.noteOn;
+      // play, with randomised start point
+      input.start(randomisedSound.startTime);
+      // enable fade in if needed
+      if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
+        fadeIn(library[name].fadeIn);
+      }
+    }
+  }
+
+
   const fadeIn = function(durationInSeconds) {
       const gainNode = input.audioNodes[1];
       gainNode.gain.value = 0;
@@ -553,6 +550,22 @@ const useAudio = function(sounds, c) {
     return impulse;
   }
 
+
+
+  // connect other soundObjects to the gain node of "library[name]".. checks
+  // library[name].src for the soundObjects to connect
+  const connectSourcesTo(soundObj) {
+    if (Array.isArray(src)) {
+      // for each item in array, set the output to the gain node of this sound
+      src.forEach(item => item.output = soundObj.audioNodes[1]);
+    } else if (src.output) {
+      // set the output to the gain node of this sound
+      src.output = soundObj.audioNodes[1];
+    }
+  };
+
+
+
   //
   // main loop - parse each sound given in 'sounds' param
   //
@@ -575,18 +588,15 @@ const useAudio = function(sounds, c) {
       // add the current sound to the library of sounds to be returned (namely,
       // add library[name] and populate it with all the sounds props)
       addToLibrary();
-      // update other song objects if they're names as src inputs to this one
-      if (Array.isArray(src)) {
-        // for each item in array, set the output to the gain node of this sound
-        src.forEach(item => item.output = library[name].audioNodes[1]);
-      } else if (src.output) {
-        // set the output to the gain node of this sound
-        src.output = library[name].audioNodes[1];
+      // if the input is another sound object, connect it up to the gain
+      // node of this one
+      if (Array.isArray(src) || src.output) {
+        connectSourcesTo(library[name]);
+        // add to count of files now loaded and check if all done
+        checkAllFilesLoaded();
+        // autoplay if needed
+        if (library[name].autoplay === true) library[name].play();
       }
-      // add to count of files now loaded and check if all done
-      checkAllFilesLoaded();
-      // autoplay if needed
-      if (library[name].autoplay === true) library[name].play();
     }
   });
 
