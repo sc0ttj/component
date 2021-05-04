@@ -163,13 +163,6 @@ const useAudio = function(sounds, c) {
         return library[name];
       },
     };
-    // add filter settings to library[name].state
-    if (filters) {
-      Object.keys(filters).forEach(filterName => {
-        // add filter settings to state
-        library[name].state[filterName] = filters[filterName];
-      });
-    }
     // create all audio nodes that we need
     library[name].audioNodes = createNodes();
   }
@@ -186,7 +179,6 @@ const useAudio = function(sounds, c) {
     ];
     if (hasFilters) {
       // get filter opts
-      const filters = item[1].filters; // from given user opts
       const filterNodes = {};
       // create a filter node for each one that given
       Object.keys(filters).forEach(type => {
@@ -195,6 +187,8 @@ const useAudio = function(sounds, c) {
         if (isDisabled(opts)) return;
         // create filter and add to a list of all enabled filters
         filterNodes[type] = createFilterNode(type, opts);
+        // add filter settings to state
+        library[name].state[type] = filters[type];
       });
       // now sort all filterNodes into the "proper" order
       [
@@ -223,6 +217,7 @@ const useAudio = function(sounds, c) {
     let n = undefined; // the node to return
     switch (type) {
       case 'gain':
+      case 'volume':
         n = audioCtx.createGain();
         break;
       case 'panning':
@@ -331,7 +326,7 @@ const useAudio = function(sounds, c) {
     Object.keys(soundObj.state).forEach(key => {
       const nodeType = key === 'volume' ? 'gain' : key;
       // get the the audio node of type 'nodeType'
-      const n = library[name].audioNodes.filter(n => n.type === nodeType);
+      const n = getAudioNode(library[name], nodeType);
       // get value of current item in soundObject.state[key]
       const val = s.state[key];
       // set the value based on the property (key) in the state
@@ -523,6 +518,15 @@ const useAudio = function(sounds, c) {
   };
 
 
+
+  // helper func to get an audio node by type (useAudio always add a type
+  // property to audio nodes, even if they don't normally have them)
+  const getAudioNode = (soundObj, type) => {
+    if (!soundObj.audioNodes) return;
+    return soundObj.audioNodes.filter(n => n.type === type);
+  };
+
+
   const fadeIn = function(durationInSeconds) {
       const gainNode = getAudioNode(input, 'gain');
       gainNode.gain.value = 0;
@@ -585,10 +589,7 @@ const useAudio = function(sounds, c) {
     return impulse;
   }
 
-  const getAudioNode = (soundObj, type) => {
-    if (!soundObj.audioNodes) return;
-    return soundObj.audioNodes.filter(n => n.type === type);
-  };
+
 
   // connect other soundObjects to the gain node of "library[name]".. checks
   // library[name].src for the soundObjects to connect
