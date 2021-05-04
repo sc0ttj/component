@@ -175,31 +175,33 @@ const useAudio = function(sounds, c) {
   const createNodes = () => {
     // define a list of all audio nodes needed in the chain
     const graph = [
-      library[name].input,
+      library[name].input, // the input node
     ];
-    if (hasFilters) {
-      // get filter opts
-      const filterNodes = {};
-      // create a filter node for each one that given
-      Object.keys(filters).forEach(type => {
-        const opts = filters[type];
-        // skip filter is no valid settings given
-        if (isDisabled(opts)) return;
-        // create filter and add to a list of all enabled filters
-        filterNodes[type] = createFilterNode(type, opts);
-        // add filter settings to state
-        library[name].state[type] = filters[type];
-      });
-      // now sort all filterNodes into the "proper" order
-      [
-       'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
-       'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
-       'allpass', 'randomization', 'compression'
-      ].forEach(filterName => {
-        if (filterNodes[filterName]) graph.push(filterNodes[filterName]);
-      });
-    }
-    // add the output to the graph
+    // get filter opts
+    const filterNodes = {};
+    // always create a gain node, as they're not listed with the other filters
+    // in the config pass to us by user
+    const allfilters = { gain: library[name].state.volume, ...filters };
+    // create a filter node for each one defined
+    Object.keys(allFilters).forEach(type => {
+      // get the options for this filter
+      const opts = allFilters[type];
+      // skip filter is no valid settings given
+      if (isDisabled(opts)) return;
+      // create filter and add to a list of all enabled filters
+      filterNodes[type] = createFilterNode(type, opts);
+      // add filter settings to state
+      library[name].state[type] = opts;
+    });
+    // now sort all filterNodes into the "proper" order
+    [
+     'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
+     'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
+     'allpass', 'randomization', 'compression'
+    ].forEach(type => {
+      if (filterNodes[type]) graph.push(filterNodes[type]);
+    });
+    // add the output node to the graph
     graph.push(library[name].output)
     return graph;
   };
