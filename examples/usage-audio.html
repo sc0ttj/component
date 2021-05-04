@@ -53,7 +53,7 @@
       playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
       solo: false,
       fadeIn: false,      // give a duration, in seconds, like 0.2
-      fadeOut: false,     // give a duration, in seconds, like 0.2
+      fadeOut: false,     // give a duration, in seconds, like 0.2 TODO
       filters: {
         delay: 0,         // give a duration, in seconds, like 0.2
         panning: 0,       // -1 is left, 0 is center, 1 is right
@@ -118,7 +118,7 @@
   const effects = Effects.audio;
   // or grab individual sounds as variables
   const { ok, back, exit } = effects;
-  // then use those..
+  // then use the methods on each sound.. TODO:
   ok.play();
   ok.pause();
   ok.stop();
@@ -135,10 +135,9 @@
   effects.settings({
     volume: 0.9,
     reverb: {
-      dry: 0.15,
-      wet: 0.15,
-      gain: 0.15,
-      delay: 0.15,
+      duration: 0.75,
+      decay: 1.1,
+      reverse: true,
     },
   });
 
