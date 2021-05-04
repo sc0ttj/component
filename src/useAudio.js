@@ -106,12 +106,14 @@ const useAudio = function(sounds, c) {
       src: src,
       // TODO: the main methods
       play: play,
+      playFrom: playFrom,
       rapidFire: rapidFire,
-      pause: noop,
+      pause: pause,
+      fadeIn: fadeIn,
+      fadeOut: fadeOut,
       stop: noop,
       mute: noop,
       connectTo: noop,  // for changing the output of the sound (audioCtx.destination, etc)
-      remove: noop,
       // TODO: callbacks
       onPlay: item[1].onPlay || noop,
       onPause: item[1].onPause || noop,
@@ -409,15 +411,15 @@ const useAudio = function(sounds, c) {
     // now connect the audio nodes, in the proper order
     connectNodes();
     // randomise sound if need be
-    const sound = typeof library[name].state.randomization === 'object'
+    const s = typeof library[name].state.randomization === 'object'
       ? randomiseSound(library[name])
       : library[name];
     // set all properties on the relevent audio nodes to match the sounds "state"
-    configureAudioNodesFor(sound);
+    configureAudioNodesFor(s);
     // normalize for better browser support
     if (!input.start) input.start = input.noteOn;
     // play the sound
-    input.start(sound.startTime);
+    input.start(s.startTime, s.startOffset % input.buffer.duration);
     // if "solo" enabled, mute all other sounds.. TODO unmute them when this one pauses/stops/ends
     if (library[name].solo) muteAllExcept(name);
     // enable fade in if needed
@@ -434,7 +436,7 @@ const useAudio = function(sounds, c) {
     library[name].audioNodes.forEach((n, i) => {
       const curr = n;
       const next = library[name].audioNodes[i + 1];
-      if (curr && next) {
+      if (curr && next && curr.connect) {
         curr.connect(next);
       }
     });
@@ -449,6 +451,7 @@ const useAudio = function(sounds, c) {
     otherSounds.forEach(snd => library[snd].mute());
   };
 
+
   // returns a slightly randomised version of the given sound
   const randomiseSound = soundObj => {
     const s = { ...soundObj };
@@ -458,6 +461,7 @@ const useAudio = function(sounds, c) {
     s.state.startTime = s.state.startTime + 1 * (0.01 + Math.random() * r.startTime);
     return s;
   };
+
 
   // play a sound multiple times, with (slightly) randomised volume, pitch and tempo
   const rapidFire = (num) => {
@@ -482,13 +486,33 @@ const useAudio = function(sounds, c) {
       // normalize for better browser support
       if (!input.start) input.start = input.noteOn;
       // play, with randomised start point
-      input.start(randomisedSound.startTime);
+      input.start(randomisedSound.startTime, sound.startOffset % input.buffer.duration);
       // enable fade in if needed
       if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
         fadeIn(library[name].fadeIn);
       }
     }
   }
+
+
+  const pause = () => {
+      //Pause the sound if it's playing, and calculate the
+      //`startOffset` to save the current position.
+      if (library[name].state.isPlaying) {
+        library[name].input.stop(0);
+        library[name].startOffset += audioCtx.currentTime - library[name].state.startTime;
+        library[name].state.isPlaying = false;
+      }
+  };
+
+
+  const playFrom = (time) => {
+      if (library[name].state.isPlaying) {
+        library[name].input.stop(0);
+      }
+      library[name].startOffset = time;
+      library[name].play();
+  };
 
 
   const fadeIn = function(durationInSeconds) {
@@ -498,11 +522,14 @@ const useAudio = function(sounds, c) {
       fade(input.state.volume, input.state.fadeIn);
   };
 
+
   const fadeOut = function (durationInSeconds) {
       if (durationInSeconds) input.state.fadeOut = durationInSeconds;
       fade(0, input.state.fadeOut);
   };
 
+
+  // helper func called by fadeIn() and fadeOut()
   const fade = function (endValue, durationInSeconds) {
       const gainNode = input.audioNodes[1];
       if (input.state.isPlaying) {
