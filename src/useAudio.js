@@ -275,9 +275,9 @@ const useAudio = function(sounds, c) {
       });
       // now sort all filterNodes into the "proper" order
       [
-       'gain', 'panning', 'panning3d', 'lowpass', 'lowshelf', 'peaking',
-       'notch', 'highpass', 'highshelf', 'bandpass', 'allpass',
-       'randomization', 'equalizer', 'reverb', 'compression'
+       'gain', 'reverb', 'panning', 'panning3d', 'lowpass', 'lowshelf',
+       'peaking', 'notch', 'highpass', 'highshelf', 'bandpass', 'allpass',
+       'randomization', 'equalizer', 'compression'
       ].forEach(filterName => {
         if (filterNodes[filterName]) graph.push(filterNodes[filterName]);
       });
@@ -318,18 +318,23 @@ const useAudio = function(sounds, c) {
       case 'notch':
         n = audioCtx.createBiquadFilter();
         break;
-      case 'equalizer':
       case 'reverb':
         n = audioCtx.createConvolver();
+        break;
+      case 'equalizer':
+        // TODO
+        break;
       case 'randomization':
         // not an audio node, set in state, applied in play()
+        break;
       case 'compression':
         n = audioCtx.createDynamicsCompressor();
+        break;
+      default:
         break;
     }
     // set a type (used in createNodes() to filter node list)
     n.type = type;
-
     // now set its initial values
     switch (type) {
       case 'panning':
@@ -357,7 +362,14 @@ const useAudio = function(sounds, c) {
         // TODO
         break;
       case 'reverb':
-        // TODO
+        if (o.duration === undefined) o.duration = 2;
+        if (o.decay === undefined) o.decay = 2;
+        if (o.reverse === undefined) o.reverse = false;
+        n.buffer = impulseResponse(
+          o.duration,
+          o.decay,
+          o.reverse
+        );
         break;
       case 'randomization':
         // not an audio node, set in state, applied in play()
@@ -443,7 +455,14 @@ const useAudio = function(sounds, c) {
           if (val.q) setVal('Q', val.q);
           break;
         case 'reverb':
-          // TODO
+          if (val.duration === undefined) val.duration = 2;
+          if (val.decay === undefined) val.decay = 2;
+          if (val.reverse === undefined) val.reverse = false;
+          n.buffer = impulseResponse(
+            val.duration,
+            val.decay,
+            val.reverse
+          );
           break;
         case 'equalizer':
           // TODO
@@ -493,6 +512,39 @@ const useAudio = function(sounds, c) {
   };
 
 
+
+  // simulate a model of sound reverberation in an acoustic space which
+  // a convolver node can blend with the source sound.
+  function impulseResponse(duration, decay, reverse) {
+    //The length of the buffer.
+    const length = audioCtx.sampleRate * duration;
+    //Create an audio buffer to store the reverb effect.
+    const impulse = audioCtx.createBuffer(2, length, audioCtx.sampleRate);
+    //Use `getChannelData` to initialize empty arrays to store sound data for
+    //the left and right channels.
+    const left  = impulse.getChannelData(0);
+    const right = impulse.getChannelData(1);
+    //Loop through each sample-frame and fill the channel
+    //data with random noise.
+    let n;
+    if (reverse) {
+      //Apply the reverse effect, if `reverse` is `true`.
+      for (let i = 0; i < length; i++) {
+        let multi = Math.pow(1 - n / length, decay)
+        left[n] = (Math.random() * 0.5) * multi;
+        right[n] = (Math.random() * 0.5) * multi;
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        n = reverse ? length - i : i;
+        let multi = Math.pow(1 - n / length, decay)
+        left[i] = (Math.random() * 0.5) * multi;
+        right[i] = (Math.random() * 0.5) * multi;
+      }
+    }
+    //Return the `impulse`.
+    return impulse;
+  }
 
   //
   // main loop - parse each sound given in 'sounds' param

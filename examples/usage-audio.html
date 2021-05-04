@@ -60,19 +60,21 @@
         panning3d: { x: 0, y: 10, z: 0 }, //TODO
         lowshelf:  { freq:  200, gain: 0.1 },
         highshelf: { freq: 1200, gain: 0.1 },
-        bandpass:  { from: 600, to: 1000, q: 0.1 }, // from/to is the freq range
+        randomization: {
+          volume: 0.05,
+          playbackRate: 0.05,
+          startTime: 0.05,
+        },
         // TODO
         equalizer: [
           { freq:  200, q: 0.25 },
           { freq:  800, q: 0.25 },
           { freq:  1200, q: 0.25 },
         ],
-        // TODO
         reverb: {
-          dry: 0.5,
-          wet: 0.5,
-          gain: 0.5,
-          delay: 0.5,
+          duration: 0.5,
+          decay: 1.0,
+          reverse: false,
         },
         compression: {
           threshold: -50.0,
@@ -80,11 +82,6 @@
           ratio: 12.0,
           attack: 0.0,
           release: 0.25,
-        },
-        randomization: {
-          volume: 0.05,
-          playbackRate: 0.05,
-          startTime: 0.05,
         },
       },
       // lots of callbacks are available //TODO
