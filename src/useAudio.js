@@ -203,9 +203,9 @@ const useAudio = function(sounds, c) {
   const randomiseSound = soundObj => {
     const s = { ...soundObj };
     const r = soundObj.state.randomization;
-    s.state.volume = 1 + Math.random() * r.volume;
-    s.state.playbackRate = 1 + Math.random() * r.playbackRate;
-    s.state.startTime = t + i * 0.01 + Math.random() * r.startTime;
+    s.state.volume = s.state.volume + (Math.random() * r.volume);
+    s.state.playbackRate = s.state.playbackRate + (Math.random() * r.playbackRate);
+    s.state.startTime = s.state.startTime + 1 * (0.01 + Math.random() * r.startTime);
     return s;
   };
 
@@ -265,9 +265,9 @@ const useAudio = function(sounds, c) {
       });
       // now sort all filterNodes into the "proper" order
       [
-       'gain', 'panning', 'panning3d', 'lowpass', 'lowshelf',
-       'peaking', 'notch', 'highpass', 'highshelf', 'equalizer',
-       'reverb', 'randomization', 'compression'
+       'gain', 'panning', 'panning3d', 'lowpass', 'lowshelf', 'peaking',
+       'notch', 'highpass', 'highshelf', 'bandpass', 'allpass', 'equalizer',
+       'randomization', 'reverb', 'compression'
       ].forEach(filterName => {
         if (filterNodes[filterName]) graph.push(filterNodes[filterName]);
       });
@@ -301,6 +301,7 @@ const useAudio = function(sounds, c) {
       case 'lowpass':
       case 'highpass':
       case 'bandpass':
+      case 'allpass':
       case 'lowshelf':
       case 'highshelf':
       case 'peaking':
@@ -332,6 +333,8 @@ const useAudio = function(sounds, c) {
         break;
       case 'lowpass':
       case 'highpass':
+      case 'bandpass':
+      case 'allpass':
       case 'lowshelf':
       case 'highshelf':
       case 'peaking':
@@ -339,13 +342,6 @@ const useAudio = function(sounds, c) {
       	if (has('freq')) setFreq();
       	if (has('gain')) setGain();
       	if (has('q')) setQ();
-        break;
-      case 'bandpass':
-        const from = o.from;
-        const to = o.to ? o.to : audioCtx.sampleRate;
-        const geometricMean = Math.sqrt(from * to);
-      	if (has('freq')) setFreq();
-      	if (has('q')) n.Q.value = geometricMean / (to - from);
         break;
       case 'equalizer':
         // TODO
@@ -430,6 +426,7 @@ const useAudio = function(sounds, c) {
         case 'lowpass':
         case 'highpass':
         case 'bandpass':
+        case 'allpass':
         case 'lowshelf':
         case 'highshelf':
         case 'peaking':
