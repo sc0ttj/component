@@ -36,8 +36,17 @@ const useAudio = function(sounds, c) {
   // download the given audio file, decode it, save it as a buffer into
   // cache[name], then run the given callback, which is fileLoaded()
   const loadFile = (url, callback) => {
-    if (cache[name]) return cache[name];
-    // else, create a request
+    if (cache[name]) {
+      callback(cache[name]);
+      return;
+    }
+    // if "url" is a sound object, and has a buffer as input,
+    // use that buffer as the input for this object, no need to AJAX
+    if (url.input && url.input.buffer) {
+      callback(url.input.buffer);
+      return;
+    }
+    // else, create a AJAX request
     const req = new XMLHttpRequest();
     req.open("GET", url);
     req.responseType = "arraybuffer";
@@ -51,7 +60,6 @@ const useAudio = function(sounds, c) {
     };
     // send the request
     req.send();
-    callback();
   };
 
 
@@ -190,9 +198,9 @@ const useAudio = function(sounds, c) {
       });
       // now sort all filterNodes into the "proper" order
       [
-       'gain', 'reverb', 'panning', 'panning3d', 'lowpass', 'lowshelf',
-       'peaking', 'notch', 'highpass', 'highshelf', 'bandpass', 'allpass',
-       'randomization', 'equalizer', 'compression'
+       'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
+       'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
+       'allpass', 'randomization', 'compression'
       ].forEach(filterName => {
         if (filterNodes[filterName]) graph.push(filterNodes[filterName]);
       });
@@ -516,7 +524,7 @@ const useAudio = function(sounds, c) {
 
 
   const fadeIn = function(durationInSeconds) {
-      const gainNode = input.audioNodes[1];
+      const gainNode = getAudioNode(input, 'gain');
       gainNode.gain.value = 0;
       if (durationInSeconds) input.state.fadeIn = durationInSeconds;
       fade(input.state.volume, input.state.fadeIn);
@@ -531,7 +539,7 @@ const useAudio = function(sounds, c) {
 
   // helper func called by fadeIn() and fadeOut()
   const fade = function (endValue, durationInSeconds) {
-      const gainNode = input.audioNodes[1];
+      const gainNode = getAudioNode(input, 'gain');
       if (input.state.isPlaying) {
         gainNode.gain.linearRampToValueAtTime(
           gainNode.gain.value, audioCtx.currentTime
@@ -577,17 +585,23 @@ const useAudio = function(sounds, c) {
     return impulse;
   }
 
-
+  const getAudioNode = (soundObj, type) => {
+    if (!soundObj.audioNodes) return;
+    return soundObj.audioNodes.filter(n => n.type === type);
+  };
 
   // connect other soundObjects to the gain node of "library[name]".. checks
   // library[name].src for the soundObjects to connect
   const connectSourcesTo = (soundObj) => {
+    // get the gain node to connect to
+    const n = getAudioNode(soundObj, 'gain');
+    // if src has multiple items to connect
     if (Array.isArray(src)) {
       // for each item in array, set the output to the gain node of this sound
-      src.forEach(item => item.output = soundObj.audioNodes[1]);
+      src.forEach(item => item.output = n);
     } else if (src.output) {
       // set the output to the gain node of this sound
-      src.output = soundObj.audioNodes[1];
+      src.output = n;
     }
   };
 
