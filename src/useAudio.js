@@ -181,7 +181,7 @@ const useAudio = function(sounds, c) {
     // now connect them up, in the proper order
     connectNodes();
     // randomise sound if need be
-    const sound = library[name].state.randomization
+    const sound = typeof library[name].state.randomization === 'object'
       ? randomiseSound(library[name])
       : library[name];
     // set all properties on the relevent audio nodes to match the sounds "state"
