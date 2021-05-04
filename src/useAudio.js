@@ -181,7 +181,7 @@ const useAudio = function(sounds, c) {
     const filterNodes = {};
     // always create a gain node, as they're not listed with the other filters
     // in the config pass to us by user
-    const allfilters = { gain: library[name].state.volume, ...filters };
+    const allFilters = { gain: library[name].state.volume, ...filters };
     // create a filter node for each one defined
     Object.keys(allFilters).forEach(type => {
       // get the options for this filter
