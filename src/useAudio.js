@@ -554,7 +554,7 @@ const useAudio = function(sounds, c) {
 
   // connect other soundObjects to the gain node of "library[name]".. checks
   // library[name].src for the soundObjects to connect
-  const connectSourcesTo(soundObj) {
+  const connectSourcesTo = (soundObj) => {
     if (Array.isArray(src)) {
       // for each item in array, set the output to the gain node of this sound
       src.forEach(item => item.output = soundObj.audioNodes[1]);
