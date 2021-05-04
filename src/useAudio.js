@@ -369,9 +369,9 @@ const useAudio = function(sounds, c) {
         // TODO
         break;
       case 'reverb':
-        if (o.duration === undefined) o.duration = 2;
-        if (o.decay === undefined) o.decay = 2;
-        if (o.reverse === undefined) o.reverse = false;
+        if (!has('duration')) o.duration = 2;
+        if (!has('decay')) o.decay = 2;
+        if (!has('reverse')) o.reverse = false;
         n.buffer = impulseResponse(
           o.duration,
           o.decay,
