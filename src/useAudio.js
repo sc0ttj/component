@@ -190,6 +190,8 @@ const useAudio = function(sounds, c) {
     if (!input.start) input.start = input.noteOn;
     // play the sound
     input.start(sound.startTime);
+    // if "solo" enabled, mute all other sounds.. TODO unmute them when this one pauses/stops/ends
+    if (library[name].solo) muteAllExcept(name);
     // enable fade in if needed
     if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
       fadeIn(library[name].fadeIn);
@@ -198,6 +200,14 @@ const useAudio = function(sounds, c) {
     if (library[name].state.loop) input.loop = true;
   };
 
+
+  // mute all sounds in library except the given sound
+  const muteAllExcept = name => {
+    // get all other sounds
+    const otherSounds = Object.keys(library).filter(key !== name);
+    // mute them
+    otherSounds.forEach(snd => library[snd].mute());
+  };
 
   // returns a slightly randomised version of the given sound
   const randomiseSound = soundObj => {
@@ -408,10 +418,7 @@ const useAudio = function(sounds, c) {
           s.playbackRate = val;
           break;
         case 'solo':
-          if (p === true) {
-            const otherSounds = Object.keys(library).filter(key !== s.name);
-            otherSounds.forEach(sound => library[sound].mute());
-          }
+          if (val === true) muteAllExcept(s.name);
           break;
         // filters
         case 'panning':
