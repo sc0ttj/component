@@ -266,8 +266,8 @@ const useAudio = function(sounds, c) {
       // now sort all filterNodes into the "proper" order
       [
        'gain', 'panning', 'panning3d', 'lowpass', 'lowshelf', 'peaking',
-       'notch', 'highpass', 'highshelf', 'bandpass', 'allpass', 'equalizer',
-       'randomization', 'reverb', 'compression'
+       'notch', 'highpass', 'highshelf', 'bandpass', 'allpass',
+       'randomization', 'equalizer', 'reverb', 'compression'
       ].forEach(filterName => {
         if (filterNodes[filterName]) graph.push(filterNodes[filterName]);
       });
