@@ -64,18 +64,20 @@ const useAudio = function(sounds, c) {
     // add the current sound to the library of sounds to be returned (namely,
     // add library[name] and populate it with all the sounds props)
     addToLibrary();
-    // add to count of files now loaded
+    // add to count of files now loaded and check if all done
+    checkAllFilesLoaded();
+    // autoplay if needed
+    if (library[name].autoplay === true) library[name].play();
+  };
+
+  const checkAllFilesLoaded = () => {
     loadedFiles += 1;
     // check if all files loaded
     if (totalFiles === loadedfiles) {
       document.dispatchEvent(new CustomEvent("audioLoaded", library));
       console.log('audioLoaded', library);
     }
-    // autoplay if needed
-    if (library[name].autoplay === true) library[name].play();
   };
-
-
 
   // clone a buffer object, so we can save it to the cache before playing it
   // (after which the buffer normally disappears and is garbage collected)
@@ -518,8 +520,8 @@ const useAudio = function(sounds, c) {
         // set the output to the gain node of this sound
         src.output = library[name].audioNodes[1];
       }
-      // add to count of files now loaded
-      loadedFiles += 1;
+      // add to count of files now loaded and check if all done
+      checkAllFilesLoaded();
       // autoplay if needed
       if (library[name].autoplay === true) library[name].play();
     }
