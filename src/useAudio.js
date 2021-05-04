@@ -601,10 +601,10 @@ const useAudio = function(sounds, c) {
     // if src has multiple items to connect
     if (Array.isArray(src)) {
       // for each item in array, set the output to the gain node of this sound
-      src.forEach(item => item.output = n);
+      src.forEach(item => item.output.connect(n));
     } else if (src.output) {
       // set the output to the gain node of this sound
-      src.output = n;
+      src.output.connect(n);
     }
   };
 
