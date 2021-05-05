@@ -440,19 +440,11 @@ const useAudio = function(sounds, c) {
     });
   };
 
-  const restoreVolumeOf = (soundObj) => {
-    const s = soundObj.state;
-    soundObj.settings({
-      muted: false,
-      volume: s.prevVol ? s.prevVol : 1,
-      prevVol: undefined,
-    });
-  }
 
   // mute all sounds in library except the given sound
   const muteAllExcept = soundObj => {
     // enable sound for "name" if needed
-    restoreVolumeOf(soundObj)
+    unmute(soundObj)
     // get all other sounds
     const otherSounds = Object.keys(library).filter(key !== soundObj.name);
     // mute them
@@ -622,7 +614,7 @@ const useAudio = function(sounds, c) {
   }
 
 
-
+  // TODO disconnect them from their outputs first!
   // connect other soundObjects to the gain node of "library[name]".. checks
   // library[name].src for the soundObjects to connect
   const connectSourcesTo = (soundObj) => {
