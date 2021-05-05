@@ -116,6 +116,7 @@ const useAudio = function(sounds, c) {
       fadeOut: fadeOut,
       stop: stop,
       mute: mute,
+      unmute: unmute,
       connectTo: noop,  // TODO for changing the output of the sound (audioCtx.destination, etc)
       // callbacks
       onPlay: item[1].onPlay || noop,
@@ -537,6 +538,15 @@ const useAudio = function(sounds, c) {
     library[name].state.prevVol = library[name].state.volume;
     library[name].settings({
       volume: 0,
+      muted: true,
+    });
+  }
+
+  const unmute = () => {
+    library[name].settings({
+      volume: library[name].state.prevVol,
+      prevVol: undefined,
+      muted: false,
     });
   }
 
