@@ -144,7 +144,6 @@ const useAudio = function(sounds, c) {
         playbackRate: item[1].playbackRate || 1,  // 1 is normal speed, 2 is double speed
         startTime: item[1].startTime || 0,        // start time of the sound, when played
         startOffset: item[1].startOffset || 0,    // used to help track pause/resume/play times
-        solo: item[1].solo || false,              // boolean
         fadeIn: item[1].fadeIn || 0,              // duration in seconds
         fadeOut: item[1].fadeOut || 0,            // duration in seconds
       },
@@ -380,7 +379,6 @@ const useAudio = function(sounds, c) {
         // in s.state, and checked in play(), etc
         case 'loop':
         case 'playbackRate':
-        case 'solo':
         case 'fadeIn':
         case 'fadeOut':
         case 'randomization':
@@ -417,9 +415,6 @@ const useAudio = function(sounds, c) {
     if (!input.start) input.start = input.noteOn;
     // play the sound
     input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
-    // if "solo" enabled, mute all other sounds
-    // TODO on end/pause/stop, restore all volumes
-    if (library[name].solo) muteAllExcept(library[name]);
     // enable fade in if needed
     if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
       fadeIn(library[name].fadeIn);
@@ -438,17 +433,6 @@ const useAudio = function(sounds, c) {
         curr.connect(next);
       }
     });
-  };
-
-
-  // mute all sounds in library except the given sound
-  const muteAllExcept = soundObj => {
-    // enable sound for "name" if needed
-    unmute(soundObj)
-    // get all other sounds
-    const otherSounds = Object.keys(library).filter(key !== soundObj.name);
-    // mute them
-    otherSounds.forEach(snd => library[snd].mute());
   };
 
 
