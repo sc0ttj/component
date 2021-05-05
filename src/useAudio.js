@@ -117,7 +117,7 @@ const useAudio = function(sounds, c) {
       stop: stop,
       mute: mute,
       unmute: unmute,
-      connectTo: noop,  // TODO for changing the output of the sound (audioCtx.destination, etc)
+      connectTo: connectTo,
       // callbacks
       onPlay: item[1].onPlay || noop,
       onPause: item[1].onPause || noop,
@@ -543,6 +543,14 @@ const useAudio = function(sounds, c) {
   }
 
 
+  const connectTo = (soundObj) => {
+    const n = library[name].audioNodes;
+    const lastNode = n[n.length - 2];
+    lastNode.disconnect(audioCtx.destination);
+    lastNode.connect(getAudioNode(soundObj, 'pan'));
+  };
+
+
   // helper func to get an audio node by type (useAudio always add a type
   // property to audio nodes, even if they don't normally have them)
   const getAudioNode = (soundObj, type) => {
@@ -614,21 +622,27 @@ const useAudio = function(sounds, c) {
   }
 
 
-  // connect other soundObjects to the gain node of "library[name]".. checks
+
+  // helper func, connect other nodes to library[name].. checks
   // library[name].src for the soundObjects to connect
   const connectSourcesTo = (soundObj) => {
     // get the gain node to connect to
-    const n = getAudioNode(soundObj, 'gain');
+    const n = getAudioNode(soundObj, 'pan');
     // if src has multiple items to connect
     if (Array.isArray(src)) {
-      // for each item in array, set the output to the gain node of this sound
-      src.forEach(item => {
-        item.output.disconnect(audioCtx.destination);
+      // the "src" variable contains one or more "other" sound objects that will
+      // feed their outputs into the pan node of soundObj, which is
+      soundObj.src.forEach(item => {
+        item.output.disconnect(
+          item.output.audioNodes[item.output.audioNodes.length - 2]
+        );
         item.output.connect(n);
       });
     } else if (src.output) {
-      src.output.disconnect(audioCtx.destination);
-      src.output.connect(n);
+      soundObj.src.output.disconnect(
+        soundObj.src.output.audioNodes[soundObj.src.output.audioNodes.length - 2]
+      );
+      soundObj.src.output.connect(n);
     }
   };
 
