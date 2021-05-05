@@ -441,6 +441,7 @@ const useAudio = function(sounds, c) {
 
   const restoreVolumeOf = (soundObj) => {
     const s = soundObj.state;
+    s.state.muted = false;
     if (isDefined(s.prevVol)) return s.prevVol;
     if (isDefined(s.volume))  return s.volume;
     return 1;
