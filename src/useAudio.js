@@ -36,14 +36,9 @@ const useAudio = function(sounds, c) {
   // download the given audio file, decode it, save it as a buffer into
   // cache[name], then run the given callback, which is fileLoaded()
   const loadFile = (url, callback) => {
+    // if we already cached it, use the cached one
     if (cache[name]) {
       callback(cache[name]);
-      return;
-    }
-    // if "url" is a sound object, and has a buffer as input,
-    // use that buffer as the input for this object, no need to AJAX
-    if (url.input && url.input.buffer) {
-      callback(url.input.buffer);
       return;
     }
     // else, create a AJAX request
