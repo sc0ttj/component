@@ -107,17 +107,17 @@ const useAudio = function(sounds, c) {
       // set some properties
       name: name,
       src: src,
-      // TODO: the main methods
+      // the main methods
       play: play,
       playFrom: playFrom,
       rapidFire: rapidFire,
       pause: pause,
       fadeIn: fadeIn,
       fadeOut: fadeOut,
-      stop: noop,
-      mute: noop,
-      connectTo: noop,  // for changing the output of the sound (audioCtx.destination, etc)
-      // TODO: callbacks
+      stop: stop,
+      mute: mute,
+      connectTo: noop,  // TODO for changing the output of the sound (audioCtx.destination, etc)
+      // callbacks
       onPlay: item[1].onPlay || noop,
       onPause: item[1].onPause || noop,
       onResume: item[1].onResume || noop,
@@ -137,6 +137,7 @@ const useAudio = function(sounds, c) {
       state: {
         isPlaying: false,                         // boolean
         volume: item[1].volume || 1,              // 0 is slient, 1 is 100%, 2 is 200%
+        muted: item[1].muted || false,            // false is not muted
         autoplay: item[1].autoplay || false,      // boolean
         loop: item[1].loop || false,              // boolean
         playbackRate: item[1].playbackRate || 1,  // 1 is normal speed, 2 is double speed
@@ -331,18 +332,8 @@ const useAudio = function(sounds, c) {
       switch (key) {
         case 'volume':
         case 'gain':
-          setVal('gain', s.mute ? 0 : val);
+          setVal('gain', s.state.muted ? 0 : val);
           break;
-        case 'loop':
-          s.loop = val;
-          break;
-        case 'playbackRate':
-          s.playbackRate = val;
-          break;
-        case 'solo':
-          if (val === true) muteAllExcept(s.name);
-          break;
-        // filters
         case 'panning':
           setVal('pan', val);
           break;
@@ -384,7 +375,11 @@ const useAudio = function(sounds, c) {
           if (val.attack) setVal('attack', val.attack);
           if (val.release) setVal('release', val.release);
           break;
-        // not set in audio nodes props, set in s.state, checked in play()
+        // the following are not set in audio nodes props, they're already set
+        // in s.state, and checked in play(), etc
+        case 'loop':
+        case 'playbackRate':
+        case 'solo':
         case 'fadeIn':
         case 'fadeOut':
         case 'randomization':
@@ -421,8 +416,9 @@ const useAudio = function(sounds, c) {
     if (!input.start) input.start = input.noteOn;
     // play the sound
     input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
-    // if "solo" enabled, mute all other sounds.. TODO unmute them when this one pauses/stops/ends
-    if (library[name].solo) muteAllExcept(name);
+    // if "solo" enabled, mute all other sounds
+    // TODO on end/pause/stop, restore all volumes
+    if (library[name].solo) muteAllExcept(library[name]);
     // enable fade in if needed
     if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
       fadeIn(library[name].fadeIn);
@@ -443,11 +439,19 @@ const useAudio = function(sounds, c) {
     });
   };
 
+  const restoreVolumeOf = (soundObj) => {
+    const s = soundObj.state;
+    if (isDefined(s.prevVol)) return s.prevVol;
+    if (isDefined(s.volume))  return s.volume;
+    return 1;
+  }
 
   // mute all sounds in library except the given sound
-  const muteAllExcept = name => {
+  const muteAllExcept = soundObj => {
+    // enable sound for "name" if needed
+    restoreVolumeOf(soundObj)
     // get all other sounds
-    const otherSounds = Object.keys(library).filter(key !== name);
+    const otherSounds = Object.keys(library).filter(key !== soundObj.name);
     // mute them
     otherSounds.forEach(snd => library[snd].mute());
   };
@@ -525,6 +529,14 @@ const useAudio = function(sounds, c) {
       library[name].state.startOffset = 0;
     }
   };
+
+  const mute = () => {
+    // set a previous volume, so we can restore it
+    library[name].state.prevVol = library[name].state.volume;
+    library[name].settings({
+      volume: 0,
+    });
+  }
 
 
   // helper func to get an audio node by type (useAudio always add a type
