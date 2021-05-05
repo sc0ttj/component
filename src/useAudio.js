@@ -141,6 +141,7 @@ const useAudio = function(sounds, c) {
         loop: item[1].loop || false,              // boolean
         playbackRate: item[1].playbackRate || 1,  // 1 is normal speed, 2 is double speed
         startTime: item[1].startTime || 0,        // start time of the sound, when played
+        startOffset: item[1].startOffset || 0,    // used to help track pause/resume/play times
         solo: item[1].solo || false,              // boolean
         fadeIn: item[1].fadeIn || 0,              // duration in seconds
         fadeOut: item[1].fadeOut || 0,            // duration in seconds
@@ -419,7 +420,7 @@ const useAudio = function(sounds, c) {
     // normalize for better browser support
     if (!input.start) input.start = input.noteOn;
     // play the sound
-    input.start(s.startTime, s.startOffset % input.buffer.duration);
+    input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
     // if "solo" enabled, mute all other sounds.. TODO unmute them when this one pauses/stops/ends
     if (library[name].solo) muteAllExcept(name);
     // enable fade in if needed
@@ -486,7 +487,7 @@ const useAudio = function(sounds, c) {
       // normalize for better browser support
       if (!input.start) input.start = input.noteOn;
       // play, with randomised start point
-      input.start(randomisedSound.startTime, sound.startOffset % input.buffer.duration);
+      input.start(randomisedSound.state.startTime, sound.state.startOffset % input.buffer.duration);
       // enable fade in if needed
       if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
         fadeIn(library[name].fadeIn);
@@ -500,7 +501,7 @@ const useAudio = function(sounds, c) {
       //`startOffset` to save the current position.
       if (library[name].state.isPlaying) {
         library[name].input.stop(0);
-        library[name].startOffset += audioCtx.currentTime - library[name].state.startTime;
+        library[name].state.startOffset += audioCtx.currentTime - library[name].state.startTime;
         library[name].state.isPlaying = false;
       }
   };
@@ -510,10 +511,20 @@ const useAudio = function(sounds, c) {
       if (library[name].state.isPlaying) {
         library[name].input.stop(0);
       }
-      library[name].startOffset = time;
+      library[name].state.startOffset = time;
       library[name].play();
   };
 
+
+  const stop = () => {
+    //Stop the sound if it's playing, reset the start and offset times,
+    //then call the `play` method again.
+    if (library[name].state.isPlaying) {
+      library[name].input.stop(0);
+      library[name].state.isPlaying = false;
+      library[name].state.startOffset = 0;
+    }
+  };
 
 
   // helper func to get an audio node by type (useAudio always add a type
