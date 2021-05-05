@@ -123,9 +123,7 @@ const useAudio = function(sounds, c) {
       onPause: item[1].onPause || noop,
       onResume: item[1].onResume || noop,
       onStop: item[1].onStop || noop,
-      onEnd: item[1].onEnd || noop,
       onChange: item[1].onChange || noop,  // fired when a prop in state changes
-      onRemove: item[1].onRemove || noop,
       // the default input and output nodes
       // if src is an array of soundObjects, use them as inputs, else create
       // a buffer source node
@@ -415,6 +413,8 @@ const useAudio = function(sounds, c) {
     if (!input.start) input.start = input.noteOn;
     // play the sound
     input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
+    // run the onPlay callback
+    library[name].onPlay(s.state);
     // enable fade in if needed
     if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
       fadeIn(library[name].fadeIn);
@@ -471,6 +471,8 @@ const useAudio = function(sounds, c) {
       if (!input.start) input.start = input.noteOn;
       // play, with randomised start point
       input.start(randomisedSound.state.startTime, sound.state.startOffset % input.buffer.duration);
+      // run the onPlay callback
+      library[name].onPlay(s.state);
       // enable fade in if needed
       if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
         fadeIn(library[name].fadeIn);
@@ -486,6 +488,8 @@ const useAudio = function(sounds, c) {
         library[name].input.stop(0);
         library[name].state.startOffset += audioCtx.currentTime - library[name].state.startTime;
         library[name].state.isPlaying = false;
+        // run the callback
+        library[name].onPause(library[name].state);
       }
   };
 
@@ -506,6 +510,8 @@ const useAudio = function(sounds, c) {
       library[name].input.stop(0);
       library[name].state.isPlaying = false;
       library[name].state.startOffset = 0;
+      // run the callback
+      library[name].onStop(library[name].state);
     }
   };
 
