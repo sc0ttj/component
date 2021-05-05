@@ -413,8 +413,9 @@ const useAudio = function(sounds, c) {
     if (!input.start) input.start = input.noteOn;
     // play the sound
     input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
-    // run the onPlay callback
-    library[name].onPlay(s.state);
+    // run the callbacks
+    if (s.state.startOffset === 0) library[name].onPlay(s.state);
+    if (s.state.startOffset > 0) library[name].onResume(s.state);
     // enable fade in if needed
     if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
       fadeIn(library[name].fadeIn);
@@ -471,8 +472,9 @@ const useAudio = function(sounds, c) {
       if (!input.start) input.start = input.noteOn;
       // play, with randomised start point
       input.start(randomisedSound.state.startTime, sound.state.startOffset % input.buffer.duration);
-      // run the onPlay callback
-      library[name].onPlay(s.state);
+      // run the callbacks
+      if (library[name].state.startOffset === 0) library[name].onPlay(library[name].state);
+      if (library[name].state.startOffset > 0) library[name].onResume(library[name].state);
       // enable fade in if needed
       if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
         fadeIn(library[name].fadeIn);
@@ -533,11 +535,11 @@ const useAudio = function(sounds, c) {
   }
 
 
-  const connectTo = (soundObj) => {
+  const connectTo = (otherSound) => {
     const n = library[name].audioNodes;
     const lastNode = n[n.length - 2];
     lastNode.disconnect(audioCtx.destination);
-    lastNode.connect(getAudioNode(soundObj, 'pan'));
+    lastNode.connect(getAudioNode(otherSound, 'pan'));
   };
 
 
