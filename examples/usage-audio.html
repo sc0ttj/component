@@ -64,7 +64,6 @@
           playbackRate: 0.05,
           startTime: 0.05,
         },
-        // TODO
         equalizer: [
           { freq:  200, q: 0.25 },
           { freq:  800, q: 0.25 },
@@ -124,14 +123,27 @@
   ok.pause();
   // etc..
 
+  // update a sounds properties using the settings() method, which is like a
+  // setState for sound objects - pass in only the properties you want to change
+  ok.settings({ volume: 2 });
+
   heroVoice.settings({
-    playbackRate: 0.75,
-    solo: true,
     highshelf: { gain: 0.2 },
     fadeIn: 2,
   });
 
-  // update the properties of all sounds at once
+  // or name settings objects to easily create "presets"
+  const outside = { volume: 0.9 };
+  heroVoice.settings(outside);
+
+  // or combine them
+  heroVoice.settings({
+    ...outside,
+    fadeOut: 1,
+  });
+
+  // you can also update the properties of all sounds at once - call settings()
+  // on the library object itself, instead of on its sounds
   effects.settings({
     volume: 0.9,
     reverb: {
@@ -141,8 +153,13 @@
     },
   });
 
-  // update a sounds properties
-  ok.settings({ volume: 2 });
+
+  // or you can re-route sounds into other sounds.. this will connect song1 to
+  // the "pan" node of track1:
+  song1.connect(track1);
+
+
+
 
 
  /*

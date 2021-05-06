@@ -1,11 +1,23 @@
 /**
- * Main function - Create audio objects from a library of sounds, such as mp3 files
+  The useAudio() function uses lots of code and ideas from these projects:
+
+    - https://github.com/kittykatattack/sound.js
+    - https://github.com/madebywild/audioFX
+
+  To add more features or extend useAudio, take a look at Tuna.js
+*/
+
+
+
+/**
+ * useAudio - main function, creates audio objects from a library of sounds, such as mp3 files
  *
  * param sounds - an Object containing the library of sounds to create (required)
  * param c      - the Component to attach the library of sounds to (optional)
  *
  */
 const useAudio = function(sounds, c) {
+  // if not in browser, exit
   if (!document || !window || typeof sounds !== 'object') return;
 
   // a "no operation" function, used as a default setting for some callbacks
@@ -194,7 +206,17 @@ const useAudio = function(sounds, c) {
      'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
      'allpass', 'randomization', 'compression'
     ].forEach(type => {
-      if (filterNodes[type]) graph.push(filterNodes[type]);
+      // attach the node in the list (type)
+      if (filterNodes[type] && type !== 'equalizer') {
+        graph.push(filterNodes[type]);
+      }
+      // add all the equalizer nodes, which are not in filterNodes,
+      // but in the library[name].eq array
+      else if (type === 'equalizer') {
+        library[name].eq.forEach(node => {
+          graph.push(node);
+        });
+      }
     });
     // add the output node to the graph
     graph.push(library[name].output)
@@ -237,7 +259,26 @@ const useAudio = function(sounds, c) {
         n = audioCtx.createBiquadFilter();
         break;
       case 'equalizer':
-        // TODO
+        // create an array to hold each filter node (each is a eq band)
+        library[name].eq = [];
+        // each obj in o is a filter settings obj, so create an audio node
+        // for each one, with the correct type
+        let i = 1;
+        o.forEach((eq) => {
+          const eqNode = audioCtx.createBiquadFilter();
+          if (i === 1) {
+            eqNode.type = 'lowshelf';
+          }
+          else if (i === o.length) {
+            eqNode.type = 'highshelf';
+          }
+          else {
+            eqNode.type = 'peaking';
+          }
+          // and each audio node to the "equalizer" array
+          library[name].eq.push(eqNode);
+          i++;
+        });
         break;
       case 'reverb':
         n = audioCtx.createConvolver();
@@ -252,7 +293,7 @@ const useAudio = function(sounds, c) {
         break;
     }
     // set a type (used in createNodes() to filter node list)
-    n.type = type;
+    if (n) n.type = type;
     // now set its initial values
     switch (type) {
       case 'volume':
@@ -281,7 +322,14 @@ const useAudio = function(sounds, c) {
       	if (has('q')) setQ();
         break;
       case 'equalizer':
-        // TODO
+        if (!library[name].eq) break;
+        // get each filter in equalizer, and apply the settings in 'o'
+        o.forEach((opts, i) => {
+          const node = library[name].eq[i];
+          if (typeof opts.freq === 'number') node.frequency.value = opts.freq;
+          if (typeof opts.gain === 'number') node.gain.value = opts.gain;
+          if (typeof opts.q === 'number') node.Q.value = opts.q;
+        });
         break;
       case 'reverb':
         if (!has('duration')) o.duration = 2;
@@ -324,22 +372,22 @@ const useAudio = function(sounds, c) {
       const nodeType = key === 'volume' ? 'gain' : key;
       // get the the audio node of type 'nodeType'
       const n = getAudioNode(library[name], nodeType);
-      // get value of current item in soundObject.state[key]
-      const val = s.state[key];
+      // get opts/values of the current prop (key) in sound objects state
+      const o = s.state[key];
       // set the value based on the property (key) in the state
       switch (key) {
         case 'volume':
         case 'gain':
-          setVal('gain', s.state.muted ? 0 : val);
+          setVal('gain', s.state.muted ? 0 : o);
           break;
         case 'panning':
-          setVal('pan', val);
+          setVal('pan', o);
           break;
         case 'panning3d':
           // TODO
           break;
         case 'delay':
-          setVal('delayTime', val);
+          setVal('delayTime', o);
           break;
         case 'lowpass':
         case 'highpass':
@@ -349,29 +397,36 @@ const useAudio = function(sounds, c) {
         case 'highshelf':
         case 'peaking':
         case 'notch':
-          if (val.freq) setVal('frequency', val.freq);
-          if (val.gain) setVal('gain', val.gain);
-          if (val.q) setVal('Q', val.q);
+          if (o.freq) setVal('frequency', o.freq);
+          if (o.gain) setVal('gain', o.gain);
+          if (o.q) setVal('Q', o.q);
           break;
         case 'reverb':
-          if (val.duration === undefined) val.duration = 2;
-          if (val.decay === undefined) val.decay = 2;
-          if (val.reverse === undefined) val.reverse = false;
+          if (o.duration === undefined) o.duration = 2;
+          if (o.decay === undefined) o.decay = 2;
+          if (o.reverse === undefined) o.reverse = false;
           n.buffer = impulseResponse(
-            val.duration,
-            val.decay,
-            val.reverse
+            o.duration,
+            o.decay,
+            o.reverse
           );
           break;
         case 'equalizer':
-          // TODO
+          if (!library[name].eq) break;
+          // get each filter in equalizer, and apply the settings in 'o'
+          o.forEach((opts, i) => {
+            const node = library[name].eq[i];
+            if (typeof opts.freq === 'number') node.frequency.value = opts.freq;
+            if (typeof opts.gain === 'number') node.gain.value = opts.gain;
+            if (typeof opts.q === 'number') node.Q.value = opts.q;
+          });
           break;
         case 'compression':
-          if (val.threshold) setVal('threshold', val.threshold);
-          if (val.knee) setVal('knee', val.knee);
-          if (val.ratio) setVal('ratio', val.ratio);
-          if (val.attack) setVal('attack', val.attack);
-          if (val.release) setVal('release', val.release);
+          if (o.threshold) setVal('threshold', o.threshold);
+          if (o.knee) setVal('knee', o.knee);
+          if (o.ratio) setVal('ratio', o.ratio);
+          if (o.attack) setVal('attack', o.attack);
+          if (o.release) setVal('release', o.release);
           break;
         // the following are not set in audio nodes props, they're already set
         // in s.state, and checked in play(), etc
