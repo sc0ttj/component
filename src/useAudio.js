@@ -204,7 +204,7 @@ const useAudio = function(sounds, c) {
     [
      'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
      'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
-     'allpass', 'randomization', 'compression'
+     'allpass', 'compression'
     ].forEach(type => {
       // attach the node in the list (type)
       if (filterNodes[type] && type !== 'equalizer') {
@@ -283,9 +283,6 @@ const useAudio = function(sounds, c) {
       case 'reverb':
         n = audioCtx.createConvolver();
         break;
-      case 'randomization':
-        // not an audio node, set in state, applied in play()
-        break;
       case 'compression':
         n = audioCtx.createDynamicsCompressor();
         break;
@@ -295,6 +292,7 @@ const useAudio = function(sounds, c) {
     // set a type (used in createNodes() to filter node list)
     if (n) n.type = type;
     // now set its initial values
+    // TODO extract bit below out to its own function called setAudioNodeProps(node, props)
     switch (type) {
       case 'volume':
       case 'gain':
@@ -321,16 +319,6 @@ const useAudio = function(sounds, c) {
       	if (has('gain')) setGain();
       	if (has('q')) setQ();
         break;
-      case 'equalizer':
-        if (!library[name].eq) break;
-        // get each filter in equalizer, and apply the settings in 'o'
-        o.forEach((opts, i) => {
-          const node = library[name].eq[i];
-          if (typeof opts.freq === 'number') node.frequency.value = opts.freq;
-          if (typeof opts.gain === 'number') node.gain.value = opts.gain;
-          if (typeof opts.q === 'number') node.Q.value = opts.q;
-        });
-        break;
       case 'reverb':
         if (!has('duration')) o.duration = 2;
         if (!has('decay')) o.decay = 2;
@@ -341,8 +329,15 @@ const useAudio = function(sounds, c) {
           o.reverse
         );
         break;
-      case 'randomization':
-        // not an audio node, set in state, applied in play()
+      case 'equalizer':
+        if (!library[name].eq) break;
+        // get each filter in equalizer, and apply the settings in 'o'
+        o.forEach((opts, i) => {
+          const node = library[name].eq[i];
+          if (typeof opts.freq === 'number') node.frequency.value = opts.freq;
+          if (typeof opts.gain === 'number') node.gain.value = opts.gain;
+          if (typeof opts.q === 'number') node.Q.value = opts.q;
+        });
         break;
       case 'compression':
         if (has('threshold')) n.threshold = o.threshold;
@@ -375,6 +370,7 @@ const useAudio = function(sounds, c) {
       // get opts/values of the current prop (key) in sound objects state
       const o = s.state[key];
       // set the value based on the property (key) in the state
+      // TODO replace bit below with call to setAudioNodeProps(node, props)
       switch (key) {
         case 'volume':
         case 'gain':
@@ -428,8 +424,8 @@ const useAudio = function(sounds, c) {
           if (o.attack) setVal('attack', o.attack);
           if (o.release) setVal('release', o.release);
           break;
-        // the following are not set in audio nodes props, they're already set
-        // in s.state, and checked in play(), etc
+        // the following are not set here, they're already set by settings(),
+        // and checked in play(), pause(), etc
         case 'loop':
         case 'playbackRate':
         case 'fadeIn':
