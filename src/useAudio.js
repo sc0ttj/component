@@ -373,18 +373,18 @@ const useAudio = function(sounds, c) {
           // get each filter in equalizer, and apply the settings in 'o'
           o.forEach((opts, i) => {
             const node = library[name].eq[i];
-            if (typeof opts.freq === 'number') node.frequency.value = opts.freq;
-            if (typeof opts.gain === 'number') node.gain.value = opts.gain;
-            if (typeof opts.q === 'number') node.Q.value = opts.q;
+            if (typeof opts.freq === 'number') node.frequency.setValueAtTime(opts.freq, ct);
+            if (typeof opts.gain === 'number') node.gain.setValueAtTime(opts.gain, ct);
+            if (typeof opts.q === 'number') node.Q.setValueAtTime(opts.q, ct);
           });
         }
         break;
       case 'compression':
-        if (has('threshold')) n.threshold = o.threshold;
-        if (has('knee')) n.knee = o.knee;
-        if (has('ratio')) n.ratio = o.ratio;
-        if (has('attack')) n.attack = o.attack;
-        if (has('release')) n.release = o.release;
+        if (has('threshold')) n.threshold.setValueAtTime(o.threshold, ct);
+        if (has('knee')) n.knee.setValueAtTime(o.knee, ct);
+        if (has('ratio')) n.ratio.setValueAtTime(o.ratio, ct);
+        if (has('attack')) n.attack.setValueAtTime(o.attack, ct);
+        if (has('release')) n.release.setValueAtTime(o.release, ct);
         break;
       default:
         break;
