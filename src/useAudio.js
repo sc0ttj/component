@@ -380,11 +380,11 @@ const useAudio = function(sounds, c) {
         }
         break;
       case 'compression':
-        if (has('threshold')) n.threshold.setValueAtTime(o.threshold, ct);
-        if (has('knee')) n.knee.setValueAtTime(o.knee, ct);
-        if (has('ratio')) n.ratio.setValueAtTime(o.ratio, ct);
-        if (has('attack')) n.attack.setValueAtTime(o.attack, ct);
-        if (has('release')) n.release.setValueAtTime(o.release, ct);
+        if (has('threshold')) setVal('threshold', o.threshold);
+        if (has('knee')) setVal('knee', o.knee);
+        if (has('ratio')) setVal('ratio', o.ratio);
+        if (has('attack')) setVal('attack', o.attack);
+        if (has('release')) setVal('release', o.release).
         break;
       default:
         break;
