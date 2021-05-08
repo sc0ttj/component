@@ -202,7 +202,7 @@ const useAudio = function(sounds, c) {
     // for each sound property in soundObject.state
     Object.keys(soundObj.state).forEach(key => {
       const nodeType = key === 'volume' ? 'gain' : key;
-      // get the the audio node of type 'nodeType'
+      // get the audio node of type 'nodeType'
       const node = getAudioNode(library[name], nodeType);
       // get opts/values of the current prop (key) in sound objects state
       const opts = soundObj.state[key];
@@ -345,7 +345,7 @@ const useAudio = function(sounds, c) {
   const setGain = () => n.gain.setValueAtTime(o.gain, ct);
   const setQ = () => n.Q.setValueAtTime(o.q, ct)
 
-  // the the props of the given audio node (n) to match the values in the
+  // set the props of the given audio node (n) to match the values in the
   // current sounds state options (o)
   const setNodeProps = (n, o) => {
     const type = n.type;
