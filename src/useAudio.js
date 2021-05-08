@@ -116,9 +116,9 @@ const useAudio = function(sounds, c) {
 
   // create the sound Object and add it to the library that we return
   const addToLibrary = () => {
-    // library is the main object returned, and "name" is the name of the current
-    // sound object. The library object contains all our sounds - here, we add
-    // the sound (name) as an object to the "library" of sounds to be returned
+    // library is the main object returned by useAudio(), and "name" is the
+    // name of the current sound object being added ("name" is defined in main
+    // loop near end of the script)
     library[name] = {
       // set some properties
       name: name,
@@ -169,8 +169,8 @@ const useAudio = function(sounds, c) {
         fadeOut: item[1].fadeOut || 0,            // duration in seconds
       },
       // this is the mySound.settings() method... it allows updating the props
-      // or individual sounds with mySound.settings({ ... }) - you need pass in
-      // only the options you want to change.
+      // of individual sounds with mySound.settings({ ... }) - pass in only
+      // the options you want to change.
       settings: function(props, cb) {
         // update the state
         library[name].state = { ...library[name].state, ...props };
@@ -674,7 +674,7 @@ const useAudio = function(sounds, c) {
 
 
   //
-  // main loop - parse each sound given in 'sounds' param
+  // MAIN LOOP - parse each sound given in 'sounds' param
   //
   Object.entries(sounds).forEach(item => {
     // work out some info about the sound
