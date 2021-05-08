@@ -384,7 +384,7 @@ const useAudio = function(sounds, c) {
         // Note - the equalizer is an array of nodes, so don't set props on 'n',
         // instead loop over the array and set props for each
         if (Array.isArray(library[name].eq)) {
-          // get each filter in equalizer, and apply the settings in 'o'
+          // get each filter in equalizer, and apply the settings in 'opts'
           o.forEach((opts, i) => {
             const node = library[name].eq[i];
             if (typeof opts.freq === 'number') node.frequency.setValueAtTime(opts.freq, ct);
