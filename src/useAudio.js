@@ -154,8 +154,8 @@ const useAudio = function(sounds, c) {
       audioNodes: [],
       // audio properties - all audio nodes have these settings applied to them
       // where relevant, and the play(), pause() etc  methods check for and
-      // respect these settings. The state is hould be updated using the
-      // mySound.settings({ ... }) method.
+      // respect these settings. All filter settings will be added to state too.
+      // The state should be updated using the mySound.settings({ ... }) method.
       state: {
         isPlaying: false,                         // boolean
         volume: item[1].volume || 1,              // 0 is slient, 1 is 100%, 2 is 200%
@@ -189,8 +189,8 @@ const useAudio = function(sounds, c) {
 
 
 
-  // apply the properties in soundObj.state to each relevant audio node
-  // - this function is called by the setting() method and play(), etc.
+  // for each audio node in soundObj, apply settings from state - this function
+  // is called by the setting() method and play(), etc.
   const configureAudioNodesFor = (soundObj) => {
     // s = current sound object
     const s = soundObj;
@@ -207,7 +207,7 @@ const useAudio = function(sounds, c) {
   };
 
 
-  // check if an audio node is disabled in the options
+  // helper func - check if an audio node is disabled in the options
   const isDisabled = n => n === undefined || n === null || n === false;
 
   // create all audio nodes defines in sound settings, and return them in an array
