@@ -339,6 +339,7 @@ const useAudio = function(sounds, c) {
 
 
   // helper functions used in setNodeProps(), to check and set filter values
+  // TODO maybe replace "setValueAtTime" with "linearRampToValueAtTime"
   const has = prop => typeof o[prop] === 'number';
   const setVal = (prop, v) => n[prop].setValueAtTime(v, ct);
   const setFreq = () => n.frequency.setValueAtTime(o.freq, ct);
