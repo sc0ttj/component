@@ -29,7 +29,7 @@ const useAudio = function(sounds, c) {
   // normalize browser syntax
   if (!audioCtx.createGain) audioCtx.createGain = audioCtx.createGainNode;
   if (!audioCtx.createDelay) audioCtx.createDelay = audioCtx.createDelayNode;
-  if (!audioCtx.createScriptProcessor) audioCtx.createScriptProcessor = audioCtx.createJavaScriptNode;
+  // if (!audioCtx.createScriptProcessor) audioCtx.createScriptProcessor = audioCtx.createJavaScriptNode;
 
 
   // the library of the sounds Nodes returned by this function
@@ -122,7 +122,7 @@ const useAudio = function(sounds, c) {
     library[name] = {
       // set some properties
       name: name,
-      src: src, // should be a string, another sound object, or an array of sound objects
+      src: src, // should be a string (URL to audio file), another sound object, or an array of sound objects
       // the main methods
       play: play,
       playFrom: playFrom,
@@ -140,11 +140,17 @@ const useAudio = function(sounds, c) {
       onResume: item[1].onResume || noop,
       onStop: item[1].onStop || noop,
       onChange: item[1].onChange || noop,  // fired when a prop in state changes or sound is -reconnected
-      // the default input and output nodes:
-      // if src is an array of soundObjects, use them as inputs, else create
-      // a buffer source node
-      input: typeof src === 'object' ? null : audioCtx.createBufferSource(),
+      // set input node:
+      // - if "src" is a string, assume it's a URL to a file we'll download and
+      //   convert to a buffer, and make the input a buffer source node.
+      // - if "src" is another soundObject, or an array of soundObjects, then
+      //   we'll connect them to the pan node of this sound, so this sound
+      //   wont need its own input node.
+      input: typeof src === 'string' ? audioCtx.createBufferSource() : null,
+      // set output node:
+      // - output to the default output of the Audio Context all our sounds use
       output: audioCtx.destination,
+      // set audio nodes:
       // the actual audio nodes that will be connected and form the audio graph..
       // this will be created by the play() method, and will include input/output
       // above... NOTE: if defined, equaliser nodes end up in their own array,
@@ -152,10 +158,11 @@ const useAudio = function(sounds, c) {
       // which nodes are used for what, and that the equaliser can be adjusted
       // as a single "thing", via settings
       audioNodes: [],
-      // audio properties - all audio nodes have these settings applied to them
-      // where relevant, and the play(), pause() etc  methods check for and
-      // respect these settings. All filter settings will be added to state too.
-      // The state should be updated using the mySound.settings({ ... }) method.
+      // set audio properties:
+      // all audio nodes have these settings applied to them where relevant,
+      // and the play(), pause() etc  methods check for and respect these
+      // settings. All filter settings will be added to state too. The state
+      // should be updated using the mySound.settings({ ... }) method.
       state: {
         isPlaying: false,                         // boolean
         volume: item[1].volume || 1,              // 0 is slient, 1 is 100%, 2 is 200%
