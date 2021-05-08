@@ -452,6 +452,10 @@ const useAudio = function(sounds, c) {
       const curr = n;
       const next = soundObj.audioNodes[i + 1];
       if (curr && next && curr.connect) {
+        // TODO connect the equalizer nodes here
+        //   - if next.type === 'equalizer', connect to its nodes in soundObj.eq,
+        //     and connect the last eq node to (soundObj.audioNodes[i + 2])
+        //   - else just connect up the current node "curr" to "next"
         curr.connect(next);
       }
     });
@@ -461,10 +465,14 @@ const useAudio = function(sounds, c) {
   // returns a slightly randomised version of the given sound
   const randomiseSound = soundObj => {
     const s = { ...soundObj };
-    const r = soundObj.state.randomization;
-    s.state.volume = s.state.volume + (Math.random() * r.volume);
-    s.state.playbackRate = s.state.playbackRate + (Math.random() * r.playbackRate);
-    s.state.startTime = s.state.startTime + 1 * (0.01 + Math.random() * r.startTime);
+    const st = s.state;
+    const r = st.randomization;
+    st.volume = st.volume + (Math.random() * r.volume);
+    st.playbackRate = st.playbackRate + (Math.random() * r.playbackRate);
+    st.startTime = st.startTime + 1 * (0.01 + Math.random() * r.startTime);
+    // TODO if soundObj has delay and reverb nodes, and state.randomization
+    //      includes "delay" and "reverb" props, then use setNodeProps() to
+    //      update those nodes, with randomised settings
     return s;
   };
 
