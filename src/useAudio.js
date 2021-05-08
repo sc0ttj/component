@@ -417,12 +417,6 @@ const useAudio = function(sounds, c) {
   const play = () => {
     // get the input node
     const input = library[name].input;
-    // only get buffer if input is buffer source node, else get sound objects
-    // in src, and play each one of those instead
-    if (!input) {
-      [...src].forEach(inputSound => inputSound.play());
-      return;
-    }
     // set the sound nodes buffer property to the (down)loaded sound
     if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
     // now connect the audio nodes, in the proper order
@@ -484,36 +478,18 @@ const useAudio = function(sounds, c) {
 
   // public method on soundObjs
   // play a sound multiple times, with (slightly) randomised volume, pitch and tempo
-  const rapidFire = (num) => {
-    if (!num) return;
-    const t = audioCtx.currentTime;
-    const input = library[name].input;
-    // only get buffer if input is buffer source node, else get sound objects
-    // in src, and play each one of those instead
-    if (!input) {
-      [...src].forEach(inputSound => inputSound.rapidFire(num));
-      return;
-    }
+  // param "count" is number of times to play the sound
+  // param "delay" is number of milliseconds delay between in play
+  const rapidFire = (count, delay) => {
+    const num = count ? count : 3;
     // Make multiple sources using the same buffer and play in quick succession.
     for (let i = 0; i < num; i++) {
-      if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
-      // now connect up the audio nodes, in the proper order
-      connectNodes(library[name]);
-      // set randomised volume and playback rate
-      const randomisedSound = randomiseSound(library[name]);
-      // set all properties on the relevent audio nodes to match the sounds "state"
-      configureAudioNodesFor(randomisedSound);
-      // normalize for better browser support
-      if (!input.start) input.start = input.noteOn;
-      // play, with randomised start point
-      input.start(randomisedSound.state.startTime, sound.state.startOffset % input.buffer.duration);
-      // run the callbacks
-      if (library[name].state.startOffset === 0) library[name].onPlay(library[name].state);
-      if (library[name].state.startOffset > 0) library[name].onResume(library[name].state);
-      // enable fade in if needed
-      if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
-        fadeIn(library[name].fadeIn);
-      }
+      // disable looping for this sound while rapid firing
+      const loopSetting = library[name].state.loop;
+      library[name].state.loop = false;
+      setTimeout(play, delay);
+      // restore loop setting
+      library[name].state.loop = loopSetting;
     }
   }
 
@@ -710,10 +686,12 @@ const useAudio = function(sounds, c) {
     // be another, already existing, sound object
     else {
       // so add the current sound to the library of sounds to be returned (namely,
-      // add library[name] and populate it with all the sounds props)
+      // add library[name] and populate it with all the sounds props and audio
+      // nodes already created, ready to be connected up)
       addToLibrary();
       // and if the input (src) is another sound object, connect it up to the
-      // gain node of this one
+      // gain node of this one (the gain node was create by createNodes(), which
+      // is called in addToLibrary(), above)
       if (Array.isArray(src) || src.output) {
         connectSourcesTo(library[name]);
         // add to count of files now loaded and check if all done
