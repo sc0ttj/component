@@ -199,15 +199,13 @@ const useAudio = function(sounds, c) {
   // for each audio node in soundObj, apply settings from state - this function
   // is called by the setting() method and play(), etc.
   const configureAudioNodesFor = (soundObj) => {
-    // s = current sound object
-    const s = soundObj;
     // for each sound property in soundObject.state
     Object.keys(soundObj.state).forEach(key => {
       const nodeType = key === 'volume' ? 'gain' : key;
       // get the the audio node of type 'nodeType'
       const node = getAudioNode(library[name], nodeType);
       // get opts/values of the current prop (key) in sound objects state
-      const opts = s.state[key];
+      const opts = soundObj.state[key];
       // set the value based on the property (key) in the state
       setNodesProps(node, opts);
     });
@@ -217,7 +215,7 @@ const useAudio = function(sounds, c) {
   // helper func - check if an audio node is disabled in the options
   const isDisabled = n => n === undefined || n === null || n === false;
 
-  // create all audio nodes defines in sound settings, and return them in an array
+  // create all audio nodes defined in sound settings, and return them in an array
   const createNodes = () => {
     // define a list of all audio nodes needed in the chain
     const graph = [
