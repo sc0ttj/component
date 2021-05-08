@@ -85,6 +85,8 @@ const useAudio = function(sounds, c) {
     if (library[name].autoplay === true) library[name].play();
   };
 
+
+  // count each file downloaded via AJAX, check if num loaded matches total
   const checkAllFilesLoaded = () => {
     loadedFiles += 1;
     // check if all files loaded
@@ -114,11 +116,13 @@ const useAudio = function(sounds, c) {
 
   // create the sound Object and add it to the library that we return
   const addToLibrary = () => {
-    // add the audio as an object, to the "library" of sounds
+    // library is the main object returned, and "name" is the name of the current
+    // sound object. The library object contains all our sounds - here, we add
+    // the sound (name) as an object to the "library" of sounds to be returned
     library[name] = {
       // set some properties
       name: name,
-      src: src,
+      src: src, // should be a string, another sound object, or an array of sound objects
       // the main methods
       play: play,
       playFrom: playFrom,
@@ -135,16 +139,23 @@ const useAudio = function(sounds, c) {
       onPause: item[1].onPause || noop,
       onResume: item[1].onResume || noop,
       onStop: item[1].onStop || noop,
-      onChange: item[1].onChange || noop,  // fired when a prop in state changes
-      // the default input and output nodes
+      onChange: item[1].onChange || noop,  // fired when a prop in state changes or sound is -reconnected
+      // the default input and output nodes:
       // if src is an array of soundObjects, use them as inputs, else create
       // a buffer source node
       input: typeof src === 'object' ? null : audioCtx.createBufferSource(),
       output: audioCtx.destination,
       // the actual audio nodes that will be connected and form the audio graph..
-      // this will be created by the play() method, and will include input/output above
+      // this will be created by the play() method, and will include input/output
+      // above... NOTE: if defined, equaliser nodes end up in their own array,
+      // separate from this list of audio nodes, so that we can keep track of
+      // which nodes are used for what, and that the equaliser can be adjusted
+      // as a single "thing", via settings
       audioNodes: [],
-      // audio properties
+      // audio properties - all audio nodes have these settings applied to them
+      // where relevant, and the play(), pause() etc  methods check for and
+      // respect these settings. The state is hould be updated using the
+      // mySound.settings({ ... }) method.
       state: {
         isPlaying: false,                         // boolean
         volume: item[1].volume || 1,              // 0 is slient, 1 is 100%, 2 is 200%
@@ -157,7 +168,9 @@ const useAudio = function(sounds, c) {
         fadeIn: item[1].fadeIn || 0,              // duration in seconds
         fadeOut: item[1].fadeOut || 0,            // duration in seconds
       },
-      // allow updating individual sounds with mySound.settings({ ... })
+      // this is the mySound.settings() method... it allows updating the props
+      // or individual sounds with mySound.settings({ ... }) - you need pass in
+      // only the options you want to change.
       settings: function(props, cb) {
         // update the state
         library[name].state = { ...library[name].state, ...props };
@@ -176,7 +189,8 @@ const useAudio = function(sounds, c) {
 
 
 
-  // apply the properties in soundObj.state to its relevant audio nodes and filters
+  // apply the properties in soundObj.state to each relevant audio node
+  // - this function is called by the setting() method and play(), etc.
   const configureAudioNodesFor = (soundObj) => {
     // s = current sound object
     const s = soundObj;
@@ -297,7 +311,7 @@ const useAudio = function(sounds, c) {
           else {
             eqNode.type = 'peaking';
           }
-          // and each audio node to the "equalizer" array
+          // add each audio node to the "equalizer" array
           library[name].eq.push(eqNode);
           i++;
         });
@@ -393,6 +407,7 @@ const useAudio = function(sounds, c) {
 
 
 
+  // public method on soundObjs
   // play the sound
   const play = () => {
     // get the input node
@@ -406,7 +421,7 @@ const useAudio = function(sounds, c) {
     // set the sound nodes buffer property to the (down)loaded sound
     if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
     // now connect the audio nodes, in the proper order
-    connectNodes();
+    connectNodes(library[name]);
     // randomise sound if need be
     const s = typeof library[name].state.randomization === 'object'
       ? randomiseSound(library[name])
@@ -429,11 +444,13 @@ const useAudio = function(sounds, c) {
   };
 
 
-  const connectNodes = () => {
+  // internal method, used by play(), rapidFire(), to connect up the audio nodes
+  // before playing the sound
+  const connectNodes = (soundObj) => {
     // connect all enabled audio nodes
-    library[name].audioNodes.forEach((n, i) => {
+    soundObj.audioNodes.forEach((n, i) => {
       const curr = n;
-      const next = library[name].audioNodes[i + 1];
+      const next = soundObj.audioNodes[i + 1];
       if (curr && next && curr.connect) {
         curr.connect(next);
       }
@@ -452,6 +469,7 @@ const useAudio = function(sounds, c) {
   };
 
 
+  // public method on soundObjs
   // play a sound multiple times, with (slightly) randomised volume, pitch and tempo
   const rapidFire = (num) => {
     if (!num) return;
@@ -467,7 +485,7 @@ const useAudio = function(sounds, c) {
     for (let i = 0; i < num; i++) {
       if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
       // now connect up the audio nodes, in the proper order
-      connectNodes();
+      connectNodes(library[name]);
       // set randomised volume and playback rate
       const randomisedSound = randomiseSound(library[name]);
       // set all properties on the relevent audio nodes to match the sounds "state"
@@ -487,6 +505,7 @@ const useAudio = function(sounds, c) {
   }
 
 
+  // public method on soundObjs
   const pause = () => {
       //Pause the sound if it's playing, and calculate the
       //`startOffset` to save the current position.
@@ -500,6 +519,7 @@ const useAudio = function(sounds, c) {
   };
 
 
+  // public method on soundObjs
   const playFrom = (time) => {
       if (library[name].state.isPlaying) {
         library[name].input.stop(0);
@@ -509,6 +529,7 @@ const useAudio = function(sounds, c) {
   };
 
 
+  // public method on soundObjs
   const stop = () => {
     //Stop the sound if it's playing, reset the start and offset times,
     //then call the `play` method again.
@@ -521,6 +542,7 @@ const useAudio = function(sounds, c) {
     }
   };
 
+  // public method on soundObjs
   const mute = () => {
     // set a previous volume, so we can restore it
     library[name].state.prevVol = library[name].state.volume;
@@ -530,6 +552,7 @@ const useAudio = function(sounds, c) {
     });
   }
 
+  // public method on soundObjs
   const unmute = () => {
     library[name].settings({
       volume: library[name].state.prevVol,
@@ -539,11 +562,16 @@ const useAudio = function(sounds, c) {
   }
 
 
+  // public method on soundObjs
+  // method added to sound object to let users re-connect sounds, by doing
+  // soundObj.connect(otherSoundObj);
   const connectTo = (otherSound) => {
     const n = library[name].audioNodes;
     const lastNode = n[n.length - 2];
     lastNode.disconnect(audioCtx.destination);
     lastNode.connect(getAudioNode(otherSound, 'pan'));
+    // setting have changed, call the relevant callback
+    library[name].onChange(library[name].state);
   };
 
 
@@ -554,7 +582,7 @@ const useAudio = function(sounds, c) {
     return soundObj.audioNodes.filter(n => n.type === type);
   };
 
-
+  // public method on soundObjs
   const fadeIn = function(durationInSeconds) {
       const gainNode = getAudioNode(input, 'gain');
       gainNode.gain.value = 0;
@@ -563,6 +591,7 @@ const useAudio = function(sounds, c) {
   };
 
 
+  // public method on soundObjs
   const fadeOut = function (durationInSeconds) {
       if (durationInSeconds) input.state.fadeOut = durationInSeconds;
       fade(0, input.state.fadeOut);
@@ -619,7 +648,7 @@ const useAudio = function(sounds, c) {
 
 
 
-  // helper func, connect other nodes to library[name].. checks
+  // internal helper func, connect other nodes to library[name].. checks
   // library[name].src for the soundObjects to connect
   const connectSourcesTo = (soundObj) => {
     // get the gain node to connect to
@@ -657,17 +686,21 @@ const useAudio = function(sounds, c) {
     // create an item in cache that will hold a  buffer, in which we will store
     // the audio data returned from an AJAX request
     cache[name] = null;
+    // if the src of this sound is a string, we assume it's a URL, and AJAX in
+    // the file, saving it to a buffer, to be re-used by bufferSourceNodes
     if (typeof src === 'string') {
-      // download audio file, save it as a buffer, in the fileLoaded callback,
-      // and add it to the library of sounds to be returned
+      // download audio file, save it as a buffer in the fileLoaded callback,
+      // then add the sound to the library to be returned
       loadFile(src, fileLoaded);
     }
+    // if the 'src' is not a string, it's not a URL to download, it'll likely
+    // be another, already existing, sound object
     else {
-      // add the current sound to the library of sounds to be returned (namely,
+      // so add the current sound to the library of sounds to be returned (namely,
       // add library[name] and populate it with all the sounds props)
       addToLibrary();
-      // if the input is another sound object, connect it up to the gain
-      // node of this one
+      // and if the input (src) is another sound object, connect it up to the
+      // gain node of this one
       if (Array.isArray(src) || src.output) {
         connectSourcesTo(library[name]);
         // add to count of files now loaded and check if all done
@@ -678,7 +711,9 @@ const useAudio = function(sounds, c) {
     }
   });
 
-  // allow updating all sounds at once via audio.settings({ ... })
+  // add the .settings({ ... }) method, for updating a sounds props, to the
+  // library collection itself - calling it will update all sounds in the
+  // library object
   library.settings = (props, cb) => {
     // update all sounds
     Object.keys(library).forEach(audioObj => {
