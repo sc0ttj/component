@@ -476,10 +476,9 @@ const useAudio = function(sounds, c) {
   };
 
 
-  // public method on soundObjs
-  // play a sound multiple times, with (slightly) randomised volume, pitch and tempo
-  // param "count" is number of times to play the sound
-  // param "delay" is number of milliseconds delay between in play
+  // public method on soundObjs - play a sound multiple times
+  // param "count"    number of times to play the sound
+  // param "delay"    number of milliseconds delay between in play
   const rapidFire = (count, delay) => {
     const num = count ? count : 3;
     const dly = delay ? delay : 200;
