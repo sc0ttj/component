@@ -482,12 +482,13 @@ const useAudio = function(sounds, c) {
   // param "delay" is number of milliseconds delay between in play
   const rapidFire = (count, delay) => {
     const num = count ? count : 3;
+    const dly = delay ? delay : 200;
     // Make multiple sources using the same buffer and play in quick succession.
     for (let i = 0; i < num; i++) {
       // disable looping for this sound while rapid firing
       const loopSetting = library[name].state.loop;
       library[name].state.loop = false;
-      setTimeout(play, delay);
+      setTimeout(play, dly);
       // restore loop setting
       library[name].state.loop = loopSetting;
     }
