@@ -451,12 +451,28 @@ const useAudio = function(sounds, c) {
     soundObj.audioNodes.forEach((n, i) => {
       const curr = n;
       const next = soundObj.audioNodes[i + 1];
+      const prev =  i > 0 ? soundObj.audioNodes[i - 1] : null;
       if (curr && next && curr.connect) {
-        // TODO connect the equalizer nodes here
-        //   - if next.type === 'equalizer', connect to its nodes in soundObj.eq,
-        //     and connect the last eq node to (soundObj.audioNodes[i + 2])
-        //   - else just connect up the current node "curr" to "next"
-        curr.connect(next);
+        // if next node is the equalizer, connect the equalizer nodes
+        if (next.type === 'equalizer') {
+          curr.connect(soundObj.eq[0]);
+          // go through each eq node and connect them up
+          soundObj.eq.forEach((eqNode, num) => {
+            if (soundObj.eq[num] && soundObj.eq[num + 1]) {
+              soundObj.eq[num].connect(soundObj.eq[num + 1]);
+            }
+          });
+        }
+        else if (prev && prev.type === 'equalizer') {
+          // if prev node was the equalizer, connect its last node up to
+          // the current node in the list
+          soundObj.eq[soundObj.eq.length - 1].connect(curr);
+          curr.connect(next);
+        } else {
+          // no need to connect to/from equaliser, so just connect up the
+          // current node "curr" to "next" node
+          curr.connect(next);
+        }
       }
     });
   };
