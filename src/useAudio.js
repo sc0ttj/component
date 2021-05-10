@@ -47,10 +47,10 @@ const useAudio = function(sounds, c) {
 
   // download the given audio file, decode it, save it as a buffer into
   // cache[name], then run the given callback, which is fileLoaded()
-  const loadFile = (url, callback) => {
+  const loadFile = (url) => {
     // if we already cached it, use the cached one
     if (cache[name]) {
-      callback(cache[name]);
+      fileLoaded(cache[name]);
       return;
     }
     // else, create a AJAX request
@@ -62,9 +62,18 @@ const useAudio = function(sounds, c) {
       // decode the response data into a buffer object, and pass it to callback
       let d = req.response;
       audioCtx.decodeAudioData(d, function(buffer) {
-        if (typeof callback === 'function') callback(buffer);
+        // run onloaded the callback
+        fileLoaded(buffer);
       });
     };
+    // report the download progress
+    // req.onprogress = function (e) {
+      // let percent = 0;
+      // if (e.lengthComputable) {
+        // percent = (e.loaded / e.total) * 100;
+      // }
+      // return percent;
+    // };
     // send the request
     req.send();
   };
@@ -339,7 +348,11 @@ const useAudio = function(sounds, c) {
 
 
   // helper functions used in setNodeProps(), to check and set filter values
-  // TODO maybe use "setValueAtTime" then "linearRampToValueAtTime"
+  // TODO smoother settings changes: also use "linearRampToValueAtTime", or "exponentialRampToValueAtTime"
+  // TODO clamp values between the min/max of the AudioParam type:
+  //        - gain: min  0, max  1
+  //        - pan: min  -1, max  1
+  //        - ..
   const has = prop => typeof o[prop] === 'number';
   const setVal = (prop, v) => n[prop].setValueAtTime(v, ct);
   const setFreq = () => n.frequency.setValueAtTime(o.freq, ct);
@@ -608,7 +621,7 @@ const useAudio = function(sounds, c) {
       const ct = audioCtx.currentTime;
       if (input.state.isPlaying) {
         // now transition the values
-        gn.gain.linearRampToValueAtTime(gn.gain.value, ct);
+        gn.gain.setValueAtTime(gn.gain.value, ct);
         gn.gain.linearRampToValueAtTime(endValue, ct + durationInSeconds);
       }
   };
@@ -691,9 +704,9 @@ const useAudio = function(sounds, c) {
     // if the src of this sound is a string, we assume it's a URL, and AJAX in
     // the file, saving it to a buffer, to be re-used by bufferSourceNodes
     if (typeof src === 'string') {
-      // download audio file, save it as a buffer in the fileLoaded callback,
+      // download audio file, save it as a buffer in the fileLoaded() callback,
       // then add the sound to the library to be returned
-      loadFile(src, fileLoaded);
+      loadFile(src);
     }
     // if the 'src' is not a string, it's not a URL to download, it'll likely
     // be another, already existing, sound object
