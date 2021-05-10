@@ -606,14 +606,12 @@ const useAudio = function(sounds, c) {
 
   // helper func called by fadeIn() and fadeOut()
   const fade = function (endValue, durationInSeconds) {
-      const gainNode = getAudioNode(input, 'gain');
+      const gn = getAudioNode(input, 'gain');
+      const ct = audioCtx.currentTime;
       if (input.state.isPlaying) {
-        gainNode.gain.linearRampToValueAtTime(
-          gainNode.gain.value, audioCtx.currentTime
-        );
-        gainNode.gain.linearRampToValueAtTime(
-          endValue, audioCtx.currentTime + durationInSeconds
-        );
+        // now transition the values
+        gn.gain.linearRampToValueAtTime(gn.gain.value, ct);
+        gn.gain.linearRampToValueAtTime(endValue, ct + durationInSeconds);
       }
   };
 
