@@ -274,9 +274,9 @@ const useAudio = function(sounds, c) {
       case 'panning':
         n = audioCtx.createStereoPanner();
         break;
-      case 'panning3d':
-        n = audioCtx.createPanner();
-        break;
+      //case 'panning3d':
+      //  n = audioCtx.createPanner();
+      //  break;
       case 'delay':
         n = audioCtx.createDelay();
         break;
@@ -361,9 +361,9 @@ const useAudio = function(sounds, c) {
       case 'panning':
         setVal('pan', typeof o === 'number' ? o : 0);
         break;
-      case 'panning3d':
-        // TODO
-        break;
+      //case 'panning3d':
+      //  // TODO
+      //  break;
       case 'delay':
         setVal('delay', typeof o === 'number' ? o : 0);
         break;
