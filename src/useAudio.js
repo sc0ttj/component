@@ -339,7 +339,7 @@ const useAudio = function(sounds, c) {
 
 
   // helper functions used in setNodeProps(), to check and set filter values
-  // TODO maybe replace "setValueAtTime" with "linearRampToValueAtTime"
+  // TODO maybe use "setValueAtTime" then "linearRampToValueAtTime"
   const has = prop => typeof o[prop] === 'number';
   const setVal = (prop, v) => n[prop].setValueAtTime(v, ct);
   const setFreq = () => n.frequency.setValueAtTime(o.freq, ct);
@@ -483,12 +483,10 @@ const useAudio = function(sounds, c) {
     const s = { ...soundObj };
     const st = s.state;
     const r = st.randomization;
-    st.volume = st.volume + (Math.random() * r.volume);
-    st.playbackRate = st.playbackRate + (Math.random() * r.playbackRate);
-    st.startTime = st.startTime + 1 * (0.01 + Math.random() * r.startTime);
-    // TODO if soundObj has delay and reverb nodes, and state.randomization
-    //      includes "delay" and "reverb" props, then use setNodeProps() to
-    //      update those nodes, with randomised settings
+    if (r.volume) st.volume = st.volume + (Math.random() * r.volume);
+    if (r.playbackRate) st.playbackRate = st.playbackRate + (Math.random() * r.playbackRate);
+    if (r.startTime) st.startTime = st.startTime + 1 * (0.01 + Math.random() * r.startTime);
+    if (r.delay && getAudioNode(s, 'delay')) st.delay = st.delay * (0.01 + Math.random() * r.delay);
     return s;
   };
 
