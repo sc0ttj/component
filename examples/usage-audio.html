@@ -69,11 +69,11 @@
           decay: 1.0,
           reverse: false,
         },
-        // TODO allow more properties to be randomised, such as filter props
         randomization: {
           volume: 0.05,
           playbackRate: 0.05,
           startTime: 0.05,
+          delay: 0.05,
         },
         // this enables the analyser node, useful for visualizations
         analyser: {
@@ -93,8 +93,8 @@
       // lots of callbacks are available
       onPlay: props => console.log(props),   // props is the current state of the sound,
       onPause: props => console.log(props),  // and includes all settings for the filters
-      onResume: props => console.log(props), // that you have enabled, and if the analyser
-      onStop: props => console.log(props),   // is enabled, a "visualData" array, which is useful for visualisations.
+      onResume: props => console.log(props), // that you have enabled
+      onStop: props => console.log(props),
     },
     // you can use another sound object, or an array of them as sources:
     // this will channel the existing sounds into the panNode of the new sound
@@ -106,8 +106,6 @@
     },
   });
 
-  // TODO fire one final event when all sounds, from all components, have
-  // loaded successfully
   document.addEventListener('audioLoaded', function(sounds) {
     // can use the sounds in here
   });
@@ -193,7 +191,7 @@
     visualisation(props);
   };
 
-  // let's stop the animation when the sound stops
+  // let's stop the visualisation animation when the sound stops
   heroVoice.onStop = props => {
     cancelAnimationFrame(visualisation);
   };
