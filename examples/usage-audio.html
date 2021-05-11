@@ -21,7 +21,7 @@
 
   // define your sounds
   Soundtrack.useAudio({
-    song1: 'sounds/song1.mp3',  // TODO this can be from URLs, <audio> and <video> tags, streams
+    song1: 'sounds/song1.mp3',
     song2: 'sounds/song2.mp3',
     song3: 'sounds/song3.mp3',
   });
@@ -59,20 +59,28 @@
         panning3d: { x: 0, y: 10, z: 0 }, //TODO
         lowshelf:  { freq:  200, gain: 0.1 },
         highshelf: { freq: 1200, gain: 0.1 },
-        randomization: {
-          volume: 0.05,
-          playbackRate: 0.05,
-          startTime: 0.05,
-        },
         equalizer: [
-          { freq:  200, q: 0.25 },
-          { freq:  800, q: 0.25 },
-          { freq:  1200, q: 0.25 },
+          { freq:  200, q: 0.25 },    // lowshelf filter
+          { freq:  800, q: 0.25 },    // peaking filter(s) (can have many)
+          { freq:  1200, q: 0.25 },   // highshelf filter
         ],
         reverb: {
           duration: 0.5,
           decay: 1.0,
           reverse: false,
+        },
+        // TODO allow more properties to be randomised, such as filter props
+        randomization: {
+          volume: 0.05,
+          playbackRate: 0.05,
+          startTime: 0.05,
+        },
+        // this enables the analyser node, useful for visualizations
+        analyser: {
+          fftSize: 2048,
+          minDecibels: -100,
+          maxDecibels: -30,
+          smoothingTimeConstant: 0.8,
         },
         compression: {
           threshold: -50.0,
@@ -83,11 +91,10 @@
         },
       },
       // lots of callbacks are available
-      onPlay: props => console.log(props),
-      onPause: props => console.log(props),
-      onResume: props => console.log(props),
-      onStop: props => console.log(props),
-      onChange: props => console.log(props),
+      onPlay: props => console.log(props),   // props is the current state of the sound,
+      onPause: props => console.log(props),  // and includes all settings for the filters
+      onResume: props => console.log(props), // that you have enabled, and if the analyser
+      onStop: props => console.log(props),   // is enabled, a "visualData" array, which is useful for visualisations.
     },
     // you can use another sound object, or an array of them as sources:
     // this will channel the existing sounds into the panNode of the new sound
@@ -99,9 +106,11 @@
     },
   });
 
-  //document.addEventListener('soundsLoaded', function() {
-  //  // can use the sounds in here, but not before..?? ...hope not
-  //});
+  // TODO fire one final event when all sounds, from all components, have
+  // loaded successfully
+  document.addEventListener('audioLoaded', function(sounds) {
+    // can use the sounds in here
+  });
 
   console.log('==========================================');
   console.log('Soundtrack', Soundtrack.audio);
@@ -125,7 +134,7 @@
 
   // update a sounds properties using the settings() method, which is like a
   // setState for sound objects - pass in only the properties you want to change
-  ok.settings({ volume: 2 });
+  ok.settings({ volume: 0.25 });
 
   heroVoice.settings({
     highshelf: { gain: 0.2 },
@@ -159,7 +168,35 @@
   song1.connect(track1);
 
 
+  // to do visualisations, you should use the "visualiser" and "visualData"
+  // properties of your sound object (note: the analyser needs to be enabled
+  // in the sounds settings)
 
+  // define a function, running on a loop, that powers our visualisation, it
+  // should receive the props (current state) of a sound object
+  const visualisation = (props) => {
+    requestAnimationFrame(visualisation);
+    // get our analyser node ("visualiser") and the analyser data ("visualData")
+    const { visualiser, visualData } = props;
+    // get data suitable for generating waveforms
+    const waveformData = visualiser.getByteTimeDomainData(visualData);
+    // or get data suitable for bars/equalisers
+    const barData = visualiser.getByteFrequencyData(visualData);
+    // get the number of waves/bars to divide by
+    const bufferLength = visualiser.frequencyBinCount;
+    // ...now do your visualisations here...
+  };
+
+  // we want our visualisation to start when our sound plays, so lets
+  // use the onPlay callback to trigger it
+  heroVoice.onPlay = props => {
+    visualisation(props);
+  };
+
+  // let's stop the animation when the sound stops
+  heroVoice.onStop = props => {
+    cancelAnimationFrame(visualisation);
+  };
 
 
  /*

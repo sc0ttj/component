@@ -67,13 +67,14 @@ const useAudio = function(sounds, c) {
       });
     };
     // report the download progress
-    // req.onprogress = function (e) {
-      // let percent = 0;
-      // if (e.lengthComputable) {
-        // percent = (e.loaded / e.total) * 100;
-      // }
-      // return percent;
-    // };
+    req.onprogress = function (e) {
+      let percent = 0;
+      if (e.lengthComputable) {
+        percent = (e.loaded / e.total) * 100;
+      }
+      document.dispatchEvent(new CustomEvent("audioProgress", { percent, url }));
+      return percent;
+    };
     // send the request
     req.send();
   };
@@ -101,7 +102,6 @@ const useAudio = function(sounds, c) {
     // check if all files loaded
     if (totalFiles === loadedfiles) {
       document.dispatchEvent(new CustomEvent("audioLoaded", library));
-      console.log('audioLoaded', library);
     }
   };
 
@@ -252,7 +252,7 @@ const useAudio = function(sounds, c) {
     [
      'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
      'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
-     'allpass', 'compression'
+     'allpass', 'analyser', 'compression'
     ].forEach(type => {
       // attach the node in the list (type)
       if (filterNodes[type] && type !== 'equalizer') {
@@ -333,6 +333,9 @@ const useAudio = function(sounds, c) {
       case 'reverb':
         n = audioCtx.createConvolver();
         break;
+      case 'analyser':
+        n = audioCtx.createAnalyser();
+        break;
       case 'compression':
         n = audioCtx.createDynamicsCompressor();
         break;
@@ -411,6 +414,18 @@ const useAudio = function(sounds, c) {
             if (typeof opts.q === 'number') node.Q.setValueAtTime(opts.q, ct);
           });
         }
+        break;
+      case 'analyser':
+        if (has('fftSize')) analyser.fftSize = o.fftSize;
+        if (has('minDecibels')) analyser.minDecibels = o.minDecibels;
+        if (has('maxDecibels')) analyser.maxDecibels = o.maxDecibels;
+        if (has('smoothingTimeConstant')) analyser.smoothingTimeConstant = o.smoothingTimeConstant;
+        // now get the array of data that can be used for visualisations:
+        //   NOTE: "frequencyBinCount" generally equates to the number of data values
+        //         you will have to play with for the visualization.
+        //
+        library[name].state.visualiser = n; // the analyser node
+        library[name].state.visualData = new Uint8Array(analyser.frequencyBinCount); // the data the analyser node uses
         break;
       case 'compression':
         if (has('threshold')) setVal('threshold', o.threshold);
