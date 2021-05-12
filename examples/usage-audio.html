@@ -21,9 +21,9 @@
 
   // define your sounds
   Soundtrack.useAudio({
-    song1: 'sounds/song1.mp3',
-    song2: 'sounds/song2.mp3',
-    song3: 'sounds/song3.mp3',
+    song1: 'sounds/song1.mp3', // TODO
+    song2: 'sounds/song2.mp3', // - allow passing in <audio>/<video> Elements, to use their src as inputs
+    song3: 'sounds/song3.mp3', // - allow passing in multiple URLs (array of strings) for multiple filetypes & better browser support
   });
 
   // use your sounds like so
@@ -69,6 +69,7 @@
           decay: 1.0,
           reverse: false,
         },
+        // how much to randomise various properties each time a sound is played
         randomization: {
           volume: 0.05,
           playbackRate: 0.05,
@@ -168,31 +169,37 @@
 
   // to do visualisations, you should use the "visualiser" and "visualData"
   // properties of your sound object (note: the analyser needs to be enabled
-  // in the sounds settings)
+  // in the sounds settings for these to exist)
 
   // define a function, running on a loop, that powers our visualisation, it
   // should receive the props (current state) of a sound object
   const visualisation = (props) => {
     requestAnimationFrame(visualisation);
-    // get our analyser node ("visualiser") and the analyser data ("visualData")
-    const { visualiser, visualData } = props;
+    // get our analyser node ("visualiser") and some useful analyser data
+    const { visualiser, visualData, bufferLength } = props;
     // get data suitable for generating waveforms
-    const waveformData = visualiser.getByteTimeDomainData(visualData);
+    const waveData = visualiser.getByteTimeDomainData(visualData);
     // or get data suitable for bars/equalisers
     const barData = visualiser.getByteFrequencyData(visualData);
-    // get the number of waves/bars to divide by
-    const bufferLength = visualiser.frequencyBinCount;
-    // ...now do your visualisations here...
+    //...now do your visualisation(s)
+    for (var i = 0; i < bufferLength; i++) {
+      // do stuff here
+      return;
+    }
   };
 
-  // we want our visualisation to start when our sound plays, so lets
-  // use the onPlay callback to trigger it
+  // we want our visualisation to start when our sound plays
   heroVoice.onPlay = props => {
     visualisation(props);
   };
-
-  // let's stop the visualisation animation when the sound stops
+  heroVoice.onResume = props => {
+    visualisation(props);
+  };
+  // and let's stop the visualisation animation when the sound stops
   heroVoice.onStop = props => {
+    cancelAnimationFrame(visualisation);
+  };
+  heroVoice.onPause = props => {
     cancelAnimationFrame(visualisation);
   };
 

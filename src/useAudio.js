@@ -4,7 +4,13 @@
     - https://github.com/kittykatattack/sound.js
     - https://github.com/madebywild/audioFX
 
-  To add more features or extend useAudio, take a look at Tuna.js
+  To add more features or extend useAudio, take a look at
+    - https://github.com/chrisguttandin/standardized-audio-context (a "ponyfill" to improve cross-browser compatibility)
+    - https://github.com/mohayonao/pseudo-audio-param (automation of props over time)
+    - https://github.com/mohayonao/adsr-envelope
+    - https://github.com/rsimmons/fastidious-envelope-generator
+    - https://github.com/Theodeus/tuna
+
 */
 
 
@@ -416,16 +422,19 @@ const useAudio = function(sounds, c) {
         }
         break;
       case 'analyser':
-        if (has('fftSize')) analyser.fftSize = o.fftSize;
-        if (has('minDecibels')) analyser.minDecibels = o.minDecibels;
-        if (has('maxDecibels')) analyser.maxDecibels = o.maxDecibels;
-        if (has('smoothingTimeConstant')) analyser.smoothingTimeConstant = o.smoothingTimeConstant;
-        // now get the array of data that can be used for visualisations:
-        //   NOTE: "frequencyBinCount" generally equates to the number of data values
-        //         you will have to play with for the visualization.
-        //
-        library[name].state.visualiser = n; // the analyser node
-        library[name].state.visualData = new Uint8Array(analyser.frequencyBinCount); // the data the analyser node uses
+        if (has('fftSize')) n.fftSize = o.fftSize;
+        if (has('minDecibels')) n.minDecibels = o.minDecibels;
+        if (has('maxDecibels')) n.maxDecibels = o.maxDecibels;
+        if (has('smoothingTimeConstant')) n.smoothingTimeConstant = o.smoothingTimeConstant;
+        // now we add some useful props for visualisations to the sounds state:
+        // 1. add the analyser node to state
+        library[name].state.visualiser = n;
+        // 2. "frequencyBinCount" generally equates to the number of data
+        //    values you will have to play with for the visualization,
+        //    and is usually have of the fftSize value
+        library[name].state.bufferLength = n.frequencyBinCount;
+        // 3. the data the analyser node uses to state
+        library[name].state.visualData = new Uint8Array(n.frequencyBinCount);
         break;
       case 'compression':
         if (has('threshold')) setVal('threshold', o.threshold);
