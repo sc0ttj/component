@@ -431,7 +431,7 @@ const useAudio = function(sounds, c) {
         library[name].state.visualiser = n;
         // 2. "frequencyBinCount" generally equates to the number of data
         //    values you will have to play with for the visualization,
-        //    and is usually have of the fftSize value
+        //    and is usually half of the fftSize value
         library[name].state.bufferLength = n.frequencyBinCount;
         // 3. the data the analyser node uses to state
         library[name].state.visualData = new Uint8Array(n.frequencyBinCount);
