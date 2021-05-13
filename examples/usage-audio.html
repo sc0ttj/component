@@ -7,233 +7,241 @@
 </head>
 <body>
 
-  <div class="container"></div>
+  <h1>Click anywhere to load the sounds..</h1>
 
 <script>
-  // attach the useAudio add-on to Component
-  Component.useAudio = useAudio;
 
-  // we can now create and manage separate audio libraries, by attaching the
-  // audio to different components
+  document.body.addEventListener('click', () => {
 
-  // Example 1: simple example of loading multiple songs
-  const Soundtrack = new Component({});
+    // attach the useAudio add-on to Component
+    Component.useAudio = useAudio;
 
-  // define your sounds
-  Soundtrack.useAudio({
-    song1: 'sounds/song1.mp3', // TODO
-    song2: 'sounds/song2.mp3', // - allow passing in <audio>/<video> Elements, to use their src as inputs
-    song3: 'sounds/song3.mp3', // - allow passing in multiple URLs (array of strings) for multiple filetypes & better browser support
-  });
+    // we can now create and manage separate audio libraries, by attaching the
+    // audio to different components
 
-  // use your sounds like so
-  Soundtrack.audio.song1.play();
+    // Example 1: simple example of loading multiple songs
+    const Soundtrack = new Component({});
 
-  // or extract sounds into their own variables
-  const { song2, song3 } = Soundtrack.audio;
-  // and use them
-  song2.play();
+    // define your sounds
+    Soundtrack.useAudio({
+      song1: 'sounds/sirens.mp3', // TODO
+      //song2: 'sounds/song2.mp3', // - allow passing in <audio>/<video> Elements, to use their src as inputs
+      //song3: 'sounds/song3.mp3', // - allow passing in multiple URLs (array of strings) for multiple filetypes & better browser support
+    });
 
-  // -------------------------------------------
+    // -------------------------------------------
 
-  // Example 2: advanced example
-  const Effects = new Component({});
+    // Example 2: advanced example
+    const Effects = new Component({});
 
-  // define your sounds
-  Effects.useAudio({
-    // add some sound assets, as above
-    ok: 'sounds/ok.mp3',
-    back: 'sounds/back.mp3',
-    exit: 'sounds/exit.mp3',
-    // add sound assets with custom properties filters and callbacks:
-    heroVoice: {
-      src: 'sounds/hero/voice.mp3',
-      volume: 1.1,
-      loop: false,
-      playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
-      fadeIn: false,      // give a duration, in seconds, like 0.2
-      fadeOut: false,     // give a duration, in seconds, like 0.2
-      filters: {
-        delay: 0,         // give a duration, in seconds, like 0.2
-        panning: 0,       // -1 is left, 0 is center, 1 is right
-        panning3d: { x: 0, y: 10, z: 0 }, //TODO
-        lowshelf:  { freq:  200, gain: 0.1 },
-        highshelf: { freq: 1200, gain: 0.1 },
-        equalizer: [
-          { freq:  200, q: 0.25 },    // lowshelf filter
-          { freq:  800, q: 0.25 },    // peaking filter(s) (can have many)
-          { freq:  1200, q: 0.25 },   // highshelf filter
-        ],
+    // define your sounds
+    Effects.useAudio({
+      // add some sound assets, as above
+      //ok: 'sounds/ok.mp3',
+      //back: 'sounds/back.mp3',
+      //exit: 'sounds/exit.mp3',
+      // add sound assets with custom properties filters and callbacks:
+      heroVoice: {
+        src: 'sounds/speech.mp3',
+        volume: 1.0,
+        loop: false,
+        playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
+        detune: 0,          // 1200 is 1 octave up, -1200 is 1 octave down
+        fadeIn: false,      // give a duration, in seconds, like 0.2
+        fadeOut: false,     // give a duration, in seconds, like 0.2
+        filters: {
+          delay: 0,         // give a duration, in seconds, like 0.2
+          panning: 0,       // -1 is left, 0 is center, 1 is right
+          panning3d: { x: 0, y: 10, z: 0 }, //TODO
+//          lowshelf:  { freq:  200, gain: 0.1 },
+//          lowpass: { freq: 1200, gain: -1 },
+//          equalizer: [
+//            { freq:  200, q: 0.25 },    // lowshelf filter
+//            { freq:  800, q: 0.25 },    // peaking filter(s) (can have many)
+//            { freq:  1200, q: 0.25 },   // highshelf filter
+//          ],
+//          reverb: {
+//           duration: 0.5,
+//            decay: 0.5,
+//            reverse: false,
+//          },
+          // how much to randomise various properties each time a sound is played
+          randomization: {
+            volume: 0.5,
+            playbackRate: 0.5,
+            startOffset: 3,
+            delay: 2,
+          },
+          // this enables the analyser node, useful for visualizations
+          analyser: {
+            fftSize: 2048,
+            minDecibels: -100,
+            maxDecibels: -30,
+            smoothingTimeConstant: 0.8,
+          },
+          compression: {
+            threshold: -50.0,
+            knee: 40.0,
+            ratio: 12.0,
+            attack: 0.0,
+            release: 0.25,
+          },
+        },
+        // lots of callbacks are available
+        onPlay: props => console.log(props),   // props is the current state of the sound,
+        onPause: props => console.log(props),  // and includes all settings for the filters
+        onResume: props => console.log(props), // that you have enabled
+        onStop: props => console.log(props),
+      },
+      // you can use another sound object, or an array of them as sources:
+      // this will channel the existing sounds into the panNode of the new sound
+      // (instead of audioCtx.destination).. when you play track1, then song1 and
+      // song2 wil play together.. you can edit the settings of track1 to change
+      // its sound output, without affecting the settings of its sources
+      //track1: {
+      //  src: [ song1, song2 ],
+      //},
+    });
+
+    document.addEventListener('audioLoaded', function(e) {
+      // can use the sounds in here
+      console.log('==========================================');
+      console.log('Sounds loaded:');
+      console.log('Soundtrack', Soundtrack.audio);
+      console.log('Effects', Effects.audio);
+      console.log('==========================================');
+
+      // use your sounds like so
+      //Soundtrack.audio.song1.play();
+
+      // or extract sounds into their own variables
+      //const { song2, song3 } = Soundtrack.audio;
+      // and use them
+      //song2.play();
+
+
+      // Using your sounds
+      //Effects.audio.ok.play();
+
+      // or, grab an audio library as a variable
+      const effects = Effects.audio;
+      // or grab individual sounds as variables
+      //const { ok, back, exit } = effects;
+      // then use the methods on each sound..
+      //ok.play();
+      //ok.pause();
+      // etc..
+
+      // update a sounds properties using the settings() method, which is like a
+      // setState for sound objects - pass in only the properties you want to change
+      //ok.settings({ volume: 0.25 });
+
+      const { heroVoice } = Effects.audio;
+
+      //heroVoice.settings({
+      //  highshelf: { gain: 0.2 },
+      //  fadeIn: 2,
+      //});
+
+      // or name settings objects to easily create "presets"
+      const outside = { volume: 0.9 };
+      heroVoice.settings(outside);
+
+      // or combine them
+      heroVoice.settings({
+        ...outside,
+        fadeIn: 1,
+      });
+
+      // you can also update the properties of all sounds at once - call
+      // settings() on the library object itself, instead of on its sounds
+      effects.settings({
+        volume: 1.0,
         reverb: {
-          duration: 0.5,
-          decay: 1.0,
+          duration: 1.75,
+          decay: 0.2,
           reverse: false,
         },
-        // how much to randomise various properties each time a sound is played
-        randomization: {
-          volume: 0.05,
-          playbackRate: 0.05,
-          startTime: 0.05,
-          delay: 0.05,
-        },
-        // this enables the analyser node, useful for visualizations
-        analyser: {
-          fftSize: 2048,
-          minDecibels: -100,
-          maxDecibels: -30,
-          smoothingTimeConstant: 0.8,
-        },
-        compression: {
-          threshold: -50.0,
-          knee: 40.0,
-          ratio: 12.0,
-          attack: 0.0,
-          release: 0.25,
-        },
-      },
-      // lots of callbacks are available
-      onPlay: props => console.log(props),   // props is the current state of the sound,
-      onPause: props => console.log(props),  // and includes all settings for the filters
-      onResume: props => console.log(props), // that you have enabled
-      onStop: props => console.log(props),
-    },
-    // you can use another sound object, or an array of them as sources:
-    // this will channel the existing sounds into the panNode of the new sound
-    // (instead of audioCtx.destination).. when you play track1, then song1 and
-    // song2 wil play together.. you can edit the settings of track1 to change
-    // its sound output, without affecting the settings of its sources
-    track1: {
-      src: [ song1, song2 ],
-    },
-  });
-
-  document.addEventListener('audioLoaded', function(sounds) {
-    // can use the sounds in here
-  });
-
-  console.log('==========================================');
-  console.log('Soundtrack', Soundtrack.audio);
-  console.log('Effects', Effects.audio);
-  console.log('==========================================');
+      });
 
 
-  // ------------------------------------------------
+      heroVoice.play();
 
-  // Using your sounds
-  Effects.audio.ok.play();
-
-  // or, grab an audio library as a variable
-  const effects = Effects.audio;
-  // or grab individual sounds as variables
-  const { ok, back, exit } = effects;
-  // then use the methods on each sound..
-  ok.play();
-  ok.pause();
-  // etc..
-
-  // update a sounds properties using the settings() method, which is like a
-  // setState for sound objects - pass in only the properties you want to change
-  ok.settings({ volume: 0.25 });
-
-  heroVoice.settings({
-    highshelf: { gain: 0.2 },
-    fadeIn: 2,
-  });
-
-  // or name settings objects to easily create "presets"
-  const outside = { volume: 0.9 };
-  heroVoice.settings(outside);
-
-  // or combine them
-  heroVoice.settings({
-    ...outside,
-    fadeOut: 1,
-  });
-
-  // you can also update the properties of all sounds at once - call settings()
-  // on the library object itself, instead of on its sounds
-  effects.settings({
-    volume: 0.9,
-    reverb: {
-      duration: 0.75,
-      decay: 1.1,
-      reverse: true,
-    },
-  });
+      // or you can re-route sounds into other sounds.. this will connect song1 to
+      // the "pan" node of track1:
+      //song1.connect(track1);
 
 
-  // or you can re-route sounds into other sounds.. this will connect song1 to
-  // the "pan" node of track1:
-  song1.connect(track1);
+      // to do visualisations, you should use the "visualiser" and "visualData"
+      // properties of your sound object (note: the analyser needs to be enabled
+      // in the sounds settings for these to exist)
 
+      // define a function, running on a loop, that powers our visualisation, it
+      // should receive the props (current state) of a sound object
+      const visualisation = (props) => {
+        requestAnimationFrame(visualisation);
+        // get our analyser node ("visualiser") and some useful analyser data
+        const { visualiser, visualData, bufferLength } = props;
+        // get data suitable for generating waveforms
+        const waveData = visualiser.getByteTimeDomainData(visualData);
+        // or get data suitable for bars/equalisers
+        const barData = visualiser.getByteFrequencyData(visualData);
+        //...now do your visualisation(s)
+        for (var i = 0; i < bufferLength; i++) {
+          // do stuff here
+          return;
+        }
+      };
 
-  // to do visualisations, you should use the "visualiser" and "visualData"
-  // properties of your sound object (note: the analyser needs to be enabled
-  // in the sounds settings for these to exist)
+      // we want our visualisation to start when our sound plays
+      heroVoice.onPlay = props => {
+        visualisation(props);
+      };
+      heroVoice.onResume = props => {
+        visualisation(props);
+      };
+      // and let's stop the visualisation animation when the sound stops
+      heroVoice.onStop = props => {
+        cancelAnimationFrame(visualisation);
+      };
+      heroVoice.onPause = props => {
+        cancelAnimationFrame(visualisation);
+      };
 
-  // define a function, running on a loop, that powers our visualisation, it
-  // should receive the props (current state) of a sound object
-  const visualisation = (props) => {
-    requestAnimationFrame(visualisation);
-    // get our analyser node ("visualiser") and some useful analyser data
-    const { visualiser, visualData, bufferLength } = props;
-    // get data suitable for generating waveforms
-    const waveData = visualiser.getByteTimeDomainData(visualData);
-    // or get data suitable for bars/equalisers
-    const barData = visualiser.getByteFrequencyData(visualData);
-    //...now do your visualisation(s)
-    for (var i = 0; i < bufferLength; i++) {
-      // do stuff here
-      return;
-    }
-  };
+    });
 
-  // we want our visualisation to start when our sound plays
-  heroVoice.onPlay = props => {
-    visualisation(props);
-  };
-  heroVoice.onResume = props => {
-    visualisation(props);
-  };
-  // and let's stop the visualisation animation when the sound stops
-  heroVoice.onStop = props => {
-    cancelAnimationFrame(visualisation);
-  };
-  heroVoice.onPause = props => {
-    cancelAnimationFrame(visualisation);
-  };
+   /*
+    * Audio UI components:  useAudioUI add-on
+    *
+    *    const Foo = new Component({})
+    *
+    *    Foo.useAudio({ ... });
+    *
+    *    Foo.audio.sound1.controls('.some-container')
+    *
+    *    // the above would add a UI to the page with controls (inputs,
+    *    // sliders, etc) for all enabled settings.
+    */
 
+    /*
+     * Routing sounds into other sounds?
+     *
+     * Mixer example:
+     *
+     *    const Mixer = new Component({})
+     *
+     *    Mixer.useAudio({
+     *      track1: [ foo, bar ],    // output foo and bar to track1, instead of audioCtx.destination
+     *      track2: [ song1 ],       // output song1 to track2, instead of audioCtx.destination
+     *    })
+     *
+     *    const { track1 } = Mixer.audio
+     *
+     *    track1.settings({ ... })    // dont change foo or bar, only the gain/filter/etc nodes after
+     *
+     */
 
- /*
-  * Audio UI components:  useAudioUI add-on
-  *
-  *    const Foo = new Component({})
-  *
-  *    Foo.useAudio({ ... });
-  *
-  *    Foo.audio.sound1.controls('.some-container')
-  *
-  *    // the above would add a UI to the page with controls (inputs,
-  *    // sliders, etc) for all enabled settings.
-  */
-
-  /*
-   * Routing sounds into other sounds?
-   *
-   * Mixer example:
-   *
-   *    const Mixer = new Component({})
-   *
-   *    Mixer.useAudio({
-   *      track1: [ foo, bar ],    // output foo and bar to track1, instead of audioCtx.destination
-   *      track2: [ song1 ],       // output song1 to track2, instead of audioCtx.destination
-   *    })
-   *
-   *    const { track1 } = Mixer.audio
-   *
-   *    track1.settings({ ... })    // dont change foo or bar, only the gain/filter/etc nodes after
-   *
-   */
+   });
 
 </script>
 </body>
