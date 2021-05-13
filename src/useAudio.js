@@ -698,13 +698,14 @@ const useAudio = function(sounds, c) {
     if (reverse) {
       //Apply the reverse effect, if `reverse` is `true`.
       for (let i = 0; i < length; i++) {
+        n = length - i;
         let multi = Math.pow(1 - n / length, decay)
         left[n] = (Math.random() * 0.5) * multi;
         right[n] = (Math.random() * 0.5) * multi;
       }
     } else {
       for (let i = 0; i < length; i++) {
-        n = reverse ? length - i : i;
+        n = i;
         let multi = Math.pow(1 - n / length, decay)
         left[i] = (Math.random() * 0.5) * multi;
         right[i] = (Math.random() * 0.5) * multi;
