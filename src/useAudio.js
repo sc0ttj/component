@@ -168,8 +168,8 @@ const useAudio = function(sounds, c) {
       playFrom: playFrom,
       rapidFire: rapidFire,
       pause: pause,
-      fadeIn: fadeIn,
-      fadeOut: fadeOut,
+      //fadeIn: fadeIn,       // not needed?
+      //fadeOut: fadeOut,     // not needed?
       stop: stop,
       mute: mute,
       unmute: unmute,
@@ -224,7 +224,7 @@ const useAudio = function(sounds, c) {
         obj.state = { ...obj.state, ...props };
         // update settings of each audio node
         configureAudioNodesFor(obj);
-       if (typeof cb === 'function') cb(obj.state);
+        if (typeof cb === 'function') cb(obj.state);
         // setting have changed, call the relevant callback
         obj.onChange(obj.state);
         // return the whole sound object
@@ -249,7 +249,7 @@ const useAudio = function(sounds, c) {
       // get opts/values of the current prop (key) in sound objects state
       const opts = soundObj.state[key];
       // set the value based on the property (key) in the state
-      setNodeProps(soundObj, node, opts);
+      if (node) setNodeProps(soundObj, node, opts);
     });
   };
 
@@ -383,7 +383,7 @@ const useAudio = function(sounds, c) {
 
 
 
-   // TODO smoother settings changes: also use "linearRampToValueAtTime", or "exponentialRampToValueAtTime"
+  // TODO smoother settings changes: also use "linearRampToValueAtTime", or "exponentialRampToValueAtTime"
   // TODO clamp values between the min/max of the AudioParam type:
   //        - gain: min  0, max  1
   //        - pan: min  -1, max  1
@@ -481,19 +481,26 @@ const useAudio = function(sounds, c) {
   // play the sound
   const play = () => {
     // get the input node
-    const input = library[name].input;
+    const input = audioCtx.createBufferSource();
     // set the sound nodes buffer property to the (down)loaded sound
-    if (input && cache[name]) input.buffer = cloneBuffer(cache[name]);
+    input.buffer = cloneBuffer(cache[name]);
     // randomise sound if need be
-    const s = typeof library[name].state.randomization === 'object'
-      ? randomiseSound(library[name])
-      : library[name];
+    const s = library[name];
+    if (typeof s.state.randomization === 'object') {
+      const r = s.state.randomization;
+      if (r.volume) s.state.volume = s.state.volume + (Math.random() * r.volume);
+      if (r.playbackRate) s.state.playbackRate = s.state.playbackRate + (Math.random() * r.playbackRate);
+      if (r.startOffset) s.state.startOffset = s.state.startOffset + 1 * (0.01 + Math.random() * r.startOffset);
+      if (r.delay && getAudioNode(s, 'delay')) s.state.delay = s.state.delay * (0.01 + Math.random() * r.delay);
+    }
     // configure the input node
     input.loop = s.state.loop;
     input.playbackRate.value = s.state.playbackRate;
     input.detune.value += s.state.detune;
+    s.input = input;
+    s.audioNodes = createNodes(s);
     // now connect the audio nodes, in the proper order
-    connectNodes(library[name]);
+    connectNodes(s);
     // set all properties on the relevent audio nodes to match the sounds "state"
     configureAudioNodesFor(s);
     // normalize for better browser support
@@ -544,20 +551,6 @@ const useAudio = function(sounds, c) {
     });
   };
 
-
-  // returns a slightly randomised version of the given sound
-  const randomiseSound = soundObj => {
-    const s = { ...soundObj };
-    const st = s.state;
-    const r = st.randomization;
-    if (r.volume) st.volume = st.volume + (Math.random() * r.volume);
-    if (r.playbackRate) st.playbackRate = st.playbackRate + (Math.random() * r.playbackRate);
-    if (r.startOffset) st.startOffset = st.startOffset + 1 * (0.01 + Math.random() * r.startOffset);
-    if (r.delay && getAudioNode(s, 'delay')) st.delay = st.delay * (0.01 + Math.random() * r.delay);
-    return s;
-  };
-
-
   // public method on soundObjs - play a sound multiple times
   // param "count"    number of times to play the sound
   // param "delay"    number of milliseconds delay between in play
@@ -581,8 +574,8 @@ const useAudio = function(sounds, c) {
       //Pause the sound if it's playing, and calculate the
       //`startOffset` to save the current position.
       if (library[name].state.isPlaying) {
-        library[name].input.stop(0);
         library[name].state.startOffset += audioCtx.currentTime - library[name].state.startTime;
+        library[name].input.stop(0);
         library[name].state.isPlaying = false;
         // run the callback
         library[name].onPause(library[name].state);
