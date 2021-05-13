@@ -500,13 +500,14 @@ const useAudio = function(sounds, c) {
     if (!input.start) input.start = input.noteOn;
     // play the sound
     input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
+    library[name].state.isPlaying = true;
+    // enable fade in if needed
+    if (typeof library[name].state.fadeIn === 'number' && library[name].state.fadeIn > 0) {
+      fadeIn(library[name].state.fadeIn);
+    }
     // run the callbacks
     if (s.state.startOffset === 0) library[name].onPlay(s.state);
     if (s.state.startOffset > 0) library[name].onResume(s.state);
-    // enable fade in if needed
-    if (typeof library[name].fadeIn === 'number' && library[name].fadeIn > 0) {
-      fadeIn(library[name].fadeIn);
-    }
   };
 
 
@@ -654,28 +655,27 @@ const useAudio = function(sounds, c) {
 
   // public method on soundObjs
   const fadeIn = function(durationInSeconds) {
-      const gainNode = getAudioNode(input, 'gain');
-      gainNode.gain.value = 0;
-      if (durationInSeconds) input.state.fadeIn = durationInSeconds;
-      fade(input.state.volume, input.state.fadeIn);
+      const gainNode = getAudioNode(library[name], 'gain')[0];
+      gainNode.gain.value = 0.000001;
+      fade(library[name].state.volume, library[name].state.fadeIn);
   };
 
 
   // public method on soundObjs
   const fadeOut = function (durationInSeconds) {
-      if (durationInSeconds) input.state.fadeOut = durationInSeconds;
-      fade(0, input.state.fadeOut);
+      if (durationInSeconds) library[name].state.fadeOut = durationInSeconds;
+      fade(0, library[name].state.fadeOut);
   };
 
 
   // helper func called by fadeIn() and fadeOut()
   const fade = function (endValue, durationInSeconds) {
-      const gn = getAudioNode(input, 'gain');
+      const gn = getAudioNode(library[name], 'gain')[0];
       const ct = audioCtx.currentTime;
-      if (input.state.isPlaying) {
+      if (library[name].state.isPlaying) {
         // now transition the values
         gn.gain.setValueAtTime(gn.gain.value, ct);
-        gn.gain.linearRampToValueAtTime(endValue, ct + durationInSeconds);
+        gn.gain.exponentialRampToValueAtTime(endValue, ct + durationInSeconds);
       }
   };
 
