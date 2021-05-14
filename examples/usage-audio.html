@@ -43,16 +43,16 @@
       // add sound assets with custom properties filters and callbacks:
       heroVoice: {
         src: 'sounds/speech.mp3',
-        volume: 1.0,
+        volume: 0.8,
         loop: false,
         playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
         detune: 0,          // 1200 is 1 octave up, -1200 is 1 octave down
-        fadeIn: false,      // give a duration, in seconds, like 0.2
-        fadeOut: false,     // give a duration, in seconds, like 0.2
+        fadeIn: 0,          // give a duration, in seconds, like 0.2
+        fadeOut: 0,         // give a duration, in seconds, like 0.2
         filters: {
           delay: 0,         // give a duration, in seconds, like 0.2
           panning: 0,       // -1 is left, 0 is center, 1 is right
-          panning3d: { x: 0, y: 10, z: 0 }, //TODO
+//          panning3d: { x: 0, y: 10, z: 0 }, //TODO
 //          lowshelf:  { freq:  200, gain: 0.1 },
 //          lowpass: { freq: 1200, gain: -1 },
 //          equalizer: [
@@ -60,17 +60,17 @@
 //            { freq:  800, q: 0.25 },    // peaking filter(s) (can have many)
 //            { freq:  1200, q: 0.25 },   // highshelf filter
 //          ],
-//          reverb: {
-//           duration: 0.5,
-//            decay: 0.5,
-//            reverse: false,
-//          },
+          reverb: {
+            duration: 1,
+            decay: 1,
+            reverse: true,
+          },
           // how much to randomise various properties each time a sound is played
           randomization: {
-            volume: 0.5,
-            playbackRate: 0.5,
-            startOffset: 3,
-            delay: 2,
+            volume: 0.8,
+            playbackRate: 0.6,
+            startOffset: 0.0001,
+            delay: 0.01,
           },
           // this enables the analyser node, useful for visualizations
           analyser: {
@@ -144,28 +144,51 @@
       //});
 
       // or name settings objects to easily create "presets"
-      const outside = { volume: 0.9 };
-      heroVoice.settings(outside);
+      //const outside = { volume: 0.9 };
+      //heroVoice.settings(outside);
 
       // or combine them
+      //heroVoice.settings({
+      //  ...outside,
+      //  fadeIn: 1,
+      //});
+
       heroVoice.settings({
-        ...outside,
-        fadeIn: 1,
+        reverb: {
+          duration: 0.3,
+          decay: 0.3,
+          reverse: true,
+        },
       });
+
+      heroVoice.play();
+
+      // after 4 seconds, pause for 2 seconds, then resume
+      setTimeout(function() {
+
+       setTimeout(function() {
+         console.log('pause');
+         heroVoice.pause();
+       }, 5000);
+
+      setTimeout(function() {
+         console.log('resume');
+         heroVoice.play();
+       }, 7000);
+
+     }, 4000);
+
+
 
       // you can also update the properties of all sounds at once - call
       // settings() on the library object itself, instead of on its sounds
       effects.settings({
-        volume: 1.0,
-        reverb: {
-          duration: 1.75,
-          decay: 0.2,
-          reverse: false,
-        },
+        volume: 0.85,
       });
 
 
-      heroVoice.play();
+      console.log('heroVoice', heroVoice);
+
 
       // or you can re-route sounds into other sounds.. this will connect song1 to
       // the "pan" node of track1:
@@ -179,6 +202,7 @@
       // define a function, running on a loop, that powers our visualisation, it
       // should receive the props (current state) of a sound object
       const visualisation = (props) => {
+        return;
         requestAnimationFrame(visualisation);
         // get our analyser node ("visualiser") and some useful analyser data
         const { visualiser, visualData, bufferLength } = props;
