@@ -172,10 +172,10 @@ const useAudio = function(sounds, c) {
       // the main methods
       play: play,
       playFrom: playFrom,
-      rapidFire: rapidFire,
       pause: pause,
-      //fadeIn: fadeIn,       // not needed?
-      //fadeOut: fadeOut,     // not needed?
+      fadeIn: fadeIn,
+      fadeOut: fadeOut,
+      rapidFire: rapidFire,
       stop: stop,
       mute: mute,
       unmute: unmute,
@@ -216,11 +216,11 @@ const useAudio = function(sounds, c) {
         autoplay: item[1].autoplay || false,      // boolean
         loop: item[1].loop || false,              // boolean
         playbackRate: item[1].playbackRate || 1,  // 1 is normal speed, 2 is double speed
-        detune: item[1].detune || 0,              // 1200 is up 1 octave, -1200 is down 1 octave
+        //detune: item[1].detune || 0,              // 1200 is up 1 octave, -1200 is down 1 octave
         startTime: item[1].startTime || 0,        // start time of the sound, when played
         startOffset: item[1].startOffset || 0,    // used to help track pause/resume/play times
-        fadeIn: item[1].fadeIn || 0,              // duration in seconds
-        fadeOut: item[1].fadeOut || 0,            // duration in seconds
+        //fadeIn: item[1].fadeIn || 0,              // duration in seconds
+        //fadeOut: item[1].fadeOut || 0,            // duration in seconds
       },
       // this is the mySound.settings() method... it allows updating the props
       // of individual sounds with mySound.settings({ ... }) - pass in only
@@ -523,7 +523,7 @@ const useAudio = function(sounds, c) {
     // configure the input node
     input.loop = s.state.loop;
     input.playbackRate.value = s.state.playbackRate;
-    input.detune.value += s.state.detune;
+    //input.detune.value += s.state.detune;
     s.input = input;
     s.audioNodes = createNodes(s);
     // now connect the audio nodes, in the proper order
@@ -660,7 +660,7 @@ const useAudio = function(sounds, c) {
     const n = library[name].audioNodes;
     const lastNode = n[n.length - 2];
     lastNode.disconnect(audioCtx.destination);
-    lastNode.connect(getAudioNode(otherSound, 'pan'));
+    lastNode.connect(getAudioNode(otherSound, 'panning'));
     // setting have changed, call the relevant callback
     library[name].onChange(library[name].state);
   };
@@ -676,7 +676,8 @@ const useAudio = function(sounds, c) {
   // public method on soundObjs
   const fadeIn = function(durationInSeconds) {
       const gainNode = getAudioNode(library[name], 'gain');
-      gainNode.gain.value = 0.000001;
+      gainNode.gain.value = 0.0001;
+      if (!library[name].state.isPlaying) library[name].play();
       fade(library[name].state.volume, library[name].state.fadeIn);
   };
 
@@ -684,7 +685,7 @@ const useAudio = function(sounds, c) {
   // public method on soundObjs
   const fadeOut = function (durationInSeconds) {
       if (durationInSeconds) library[name].state.fadeOut = durationInSeconds;
-      fade(0, library[name].state.fadeOut);
+      fade(0.0001, library[name].state.fadeOut);
   };
 
 

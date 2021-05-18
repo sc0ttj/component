@@ -7,11 +7,19 @@
 </head>
 <body>
 
-  <h1>Click anywhere to load the sounds..</h1>
+  <h1>Click here to load the sounds..</h1>
+
+  <p class="log"></p>
 
 <script>
 
+  function log(msg) {
+    document.querySelector('.log').innerText += `* ${msg}\n`;
+  }
+
   document.body.addEventListener('click', () => {
+
+    log('loading sounds..');
 
     // attach the useAudio add-on to Component
     Component.useAudio = useAudio;
@@ -24,7 +32,7 @@
 
     // define your sounds
     Soundtrack.useAudio({
-      song1: 'sounds/sirens.mp3', // TODO
+      song1: 'sounds/sirens.mp3',  // TODO
       //song2: 'sounds/song2.mp3', // - allow passing in <audio>/<video> Elements, to use their src as inputs
       //song3: 'sounds/song3.mp3', // - allow passing in multiple URLs (array of strings) for multiple filetypes & better browser support
     });
@@ -43,15 +51,14 @@
       // add sound assets with custom properties filters and callbacks:
       heroVoice: {
         src: 'sounds/speech.mp3',
-        volume: 0.8,
+        volume: 0.0001,
         loop: false,
         playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
         detune: 0,          // 1200 is 1 octave up, -1200 is 1 octave down
         fadeIn: 0,          // give a duration, in seconds, like 0.2
-        fadeOut: 0,         // give a duration, in seconds, like 0.2
         filters: {
           delay: 0,         // give a duration, in seconds, like 0.2
-          panning: 0,       // -1 is left, 0 is center, 1 is right
+          panning: -1,      // -1 is left, 0 is center, 1 is right
 //          panning3d: { x: 0, y: 10, z: 0 }, //TODO
 //          lowshelf:  { freq:  200, gain: 0.1 },
 //          lowpass: { freq: 1200, gain: -1 },
@@ -60,18 +67,18 @@
 //            { freq:  800, q: 0.25 },    // peaking filter(s) (can have many)
 //            { freq:  1200, q: 0.25 },   // highshelf filter
 //          ],
-          reverb: {
-            duration: 1,
-            decay: 1,
-            reverse: true,
-          },
+//          reverb: {
+//            duration: 1,
+//            decay: 1,
+//            reverse: true,
+//          },
           // how much to randomise various properties each time a sound is played
-          randomization: {
-            volume: 0.8,
-            playbackRate: 0.6,
-            startOffset: 0.0001,
-            delay: 0.01,
-          },
+//          randomization: {
+//            volume: 0.8,
+//            playbackRate: 0.6,
+//            startOffset: 0.0001,
+//            delay: 0.01,
+//          },
           // this enables the analyser node, useful for visualizations
           analyser: {
             fftSize: 2048,
@@ -98,12 +105,14 @@
       // (instead of audioCtx.destination).. when you play track1, then song1 and
       // song2 wil play together.. you can edit the settings of track1 to change
       // its sound output, without affecting the settings of its sources
-      //track1: {
+      //..?track1: {
       //  src: [ song1, song2 ],
       //},
     });
 
     document.addEventListener('audioLoaded', function(e) {
+      log('sounds loaded');
+
       // can use the sounds in here
       console.log('==========================================');
       console.log('Sounds loaded:');
@@ -136,12 +145,11 @@
       // setState for sound objects - pass in only the properties you want to change
       //ok.settings({ volume: 0.25 });
 
-      const { heroVoice } = Effects.audio;
+      const { heroVoice } = effects;
 
-      //heroVoice.settings({
-      //  highshelf: { gain: 0.2 },
-      //  fadeIn: 2,
-      //});
+      heroVoice.settings({
+        highshelf: { volume: 0.2 },
+      });
 
       // or name settings objects to easily create "presets"
       //const outside = { volume: 0.9 };
@@ -153,41 +161,83 @@
       //  fadeIn: 1,
       //});
 
-      heroVoice.settings({
-        reverb: {
-          duration: 0.3,
-          decay: 0.3,
-          reverse: true,
-        },
-      });
+      //heroVoice.settings({
+      //  reverb: {
+      //    duration: 0.3,
+      //    decay: 0.3,
+      //    reverse: true,
+      //  },
+      //});
 
-      heroVoice.play();
+       log('playing sound..');
 
-      // after 4 seconds, pause for 2 seconds, then resume
-      setTimeout(function() {
+       heroVoice.play();
 
-       setTimeout(function() {
-         console.log('pause');
-         heroVoice.pause();
-       }, 5000);
+       setTimeout(() => {
+         console.log('................updating settings..........' );
+         log('increasing volume');
+         heroVoice.settings({
+           volume: 0.7,
+         });
+         console.log('heroVoice', heroVoice);
+       }, 500);
 
-      setTimeout(function() {
-         console.log('resume');
-         heroVoice.play();
-       }, 7000);
+       setTimeout(() => {
+         console.log('................updating settings..........' );
+         log('adding reverb');
+         log('panning to center');
+         heroVoice.settings({
+           reverb: {
+             duration: 0.8,
+             decay: 0.9,
+             reverse: false,
+           },
+           panning: 0,
+         });
+         console.log('heroVoice', heroVoice);
+       }, 3000);
 
-     }, 4000);
+       setTimeout(() => {
+         console.log('................updating settings..........' );
+         log('randomizing playback rate');
+         heroVoice.settings({
+          randomization: {
+            playbackRate: 0.6,
+          },
+         });
+         console.log('heroVoice', heroVoice);
+       }, 6500);
+
+       setTimeout(() => {
+         log('fading out (3 seconds)');
+         heroVoice.fadeOut(3);
+       }, 10000);
+
+//      // after 4 seconds, pause for 2 seconds, then resume
+//      setTimeout(function() {
+//
+//        setTimeout(function() {
+//          console.log('pause');
+//          heroVoice.pause();
+//        }, 5000);
+//
+//        setTimeout(function() {
+//          console.log('resume');
+//          heroVoice.play();
+//        }, 7000);
+//
+//     }, 4000);
 
 
 
       // you can also update the properties of all sounds at once - call
       // settings() on the library object itself, instead of on its sounds
-      effects.settings({
-        volume: 0.85,
-      });
+      //effects.settings({
+      //  volume: 0.85,
+      //});
 
 
-      console.log('heroVoice', heroVoice);
+      //console.log('heroVoice', heroVoice);
 
 
       // or you can re-route sounds into other sounds.. this will connect song1 to
