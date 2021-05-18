@@ -28,6 +28,9 @@ const useAudio = function(sounds, c) {
 
   // a "no operation" function, used as a default setting for some callbacks
   const noop = function noop(){ return; };
+  // minimin vol (exponentialRampToValue method of web audio API gain nodes
+  // doesn't like zero as a input, for some reason)
+  const minGain = 0.00001;
 
   // create the global "audio context", or hook into an existing one
   window.audioCtx = window.audioCtx ? window.audioCtx : new AudioContext();
@@ -226,7 +229,6 @@ const useAudio = function(sounds, c) {
       // of individual sounds with mySound.settings({ ... }) - pass in only
       // the options you want to change.
       settings: function(props, cb) {
-        obj.stop();
         // update the state
         // rebuild the nodes
         obj.audioNodes = createNodes(obj);
@@ -235,7 +237,7 @@ const useAudio = function(sounds, c) {
         connectNodes(obj);
         // update settings of each audio node
         configureAudioNodesFor(obj);
-        obj.playFrom(audioCtx.currentTime);
+        if (obj.state.isPlaying) obj.playFrom(audioCtx.currentTime);
         if (typeof cb === 'function') cb(obj.state);
         // setting have changed, call the relevant callback
         obj.onChange(obj.state);
@@ -426,9 +428,9 @@ const useAudio = function(sounds, c) {
       case 'gain':
         let v = o;
         // dont let "v" go below zero
-        v = v < 0 ? 0 : v;
+        v = v <= 0 ? minGain : v;
         // set to zero if muted
-        if (s.state.mute === true) v = 0;
+        if (s.state.mute === true) v = minGain;
         // update the node and state
         s.state.volume = v;
         n.gain.value = v;
@@ -612,9 +614,7 @@ const useAudio = function(sounds, c) {
 
   // public method on soundObjs
   const playFrom = (time) => {
-      if (library[name].state.isPlaying) {
-        library[name].input.stop(0);
-      }
+      library[name].input.stop(0);
       library[name].state.startOffset = time;
       library[name].play();
   };
@@ -676,7 +676,7 @@ const useAudio = function(sounds, c) {
   // public method on soundObjs
   const fadeIn = function(durationInSeconds) {
       const gainNode = getAudioNode(library[name], 'gain');
-      gainNode.gain.value = 0.0001;
+      gainNode.gain.value = minGain;
       if (!library[name].state.isPlaying) library[name].play();
       fade(library[name].state.volume, library[name].state.fadeIn);
   };
@@ -685,7 +685,7 @@ const useAudio = function(sounds, c) {
   // public method on soundObjs
   const fadeOut = function (durationInSeconds) {
       if (durationInSeconds) library[name].state.fadeOut = durationInSeconds;
-      fade(0.0001, library[name].state.fadeOut);
+      fade(minGain, library[name].state.fadeOut);
   };
 
 
