@@ -45,7 +45,13 @@ const useAudio = function(sounds, c) {
   let name = null;
   let src = null;
   let filters = false;
-
+  // the list of supported filters, listed in the order they are connected..
+  // note that not all of these need to be enabled
+  const filterList = [
+   'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
+   'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
+   'allpass', 'analyser', 'compression'
+  ];
   // store audio buffer objects in here, ready to be put into bufferSourceNodes,
   // which are high performance "fire and forget" audio nodes with a start()
   // method called by play() method
@@ -220,10 +226,16 @@ const useAudio = function(sounds, c) {
       // of individual sounds with mySound.settings({ ... }) - pass in only
       // the options you want to change.
       settings: function(props, cb) {
+        obj.stop();
         // update the state
+        // rebuild the nodes
+        obj.audioNodes = createNodes(obj);
         obj.state = { ...obj.state, ...props };
+        // now connect the audio nodes, in the proper order
+        connectNodes(obj);
         // update settings of each audio node
         configureAudioNodesFor(obj);
+        obj.playFrom(audioCtx.currentTime);
         if (typeof cb === 'function') cb(obj.state);
         // setting have changed, call the relevant callback
         obj.onChange(obj.state);
@@ -245,17 +257,24 @@ const useAudio = function(sounds, c) {
     Object.keys(soundObj.state).forEach(key => {
       const nodeType = key === 'volume' ? 'gain' : key;
       // get the audio node of type 'nodeType'
-      const node = getAudioNode(soundObj, nodeType);
+      let node = getAudioNode(soundObj, nodeType);
       // get opts/values of the current prop (key) in sound objects state
       const opts = soundObj.state[key];
       // set the value based on the property (key) in the state
-      if (node) setNodeProps(soundObj, node, opts);
+      if (node && node.type && !isDisabled(opts)) {
+        setNodeProps(soundObj, node, opts);
+      }
     });
   };
 
 
   // helper func - check if an audio node is disabled in the options
-  const isDisabled = n => n === undefined || n === null || n === false;
+  const isDisabled = n => {
+    if (n === undefined || n === null) return true;
+    if (typeof n === 'float' || typeof n === 'number' || typeof n === 'object' || Array.isArray(n)) {
+      return false;
+    }
+  }
 
   // create all audio nodes defined in sound settings, and return them in an array
   const createNodes = (soundObj) => {
@@ -267,7 +286,11 @@ const useAudio = function(sounds, c) {
     const filterNodes = {};
     // always create a gain node, as they're not listed with the other filters
     // in the config pass to us by user
-    const allFilters = { gain: soundObj.state.volume, ...filters };
+    const allFilters = {
+      gain: soundObj.state.volume,
+      ...filters,
+      ...soundObj.state,
+    };
     // create a filter node for each one defined
     Object.keys(allFilters).forEach(type => {
       // get the options for this filter
@@ -277,18 +300,15 @@ const useAudio = function(sounds, c) {
       // create filter and add to a list of all enabled filters
       filterNodes[type] = createFilterNode(soundObj, type, opts);
       // add filter settings to state
-      soundObj.state[type] = opts;
+      const prop = type === 'gain' ? 'volume' : type;
+      soundObj.state[prop] = opts;
       if (filterNodes[type]) {
         // set audio nodes props to match values in the sounds state
         setNodeProps(soundObj, filterNodes[type], opts);
       }
     });
     // now sort all filterNodes into the "proper" order
-    [
-     'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
-     'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
-     'allpass', 'analyser', 'compression'
-    ].forEach(type => {
+    filterList.forEach(type => {
       // attach the node in the list (type)
       if (filterNodes[type] && type !== 'equalizer') {
         graph.push(filterNodes[type]);
@@ -391,6 +411,9 @@ const useAudio = function(sounds, c) {
   // set the props of the given audio node (n) to match the values in the
   // current sounds state options (o) for the given sound object (s)
   const setNodeProps = (s, n, o) => {
+    const type = n.type;
+    const ct = audioCtx.currentTime;
+
     // helper functions, to check and set filter values
     const has = prop => typeof o === 'number' || typeof o[prop] === 'number';
     const setVal = (prop, v) => n[prop].setValueAtTime(v, ct);
@@ -398,17 +421,21 @@ const useAudio = function(sounds, c) {
     const setGain = () => n.gain.setValueAtTime(o.gain, ct);
     const setQ = () => n.Q.setValueAtTime(o.q, ct)
 
-    const type = n.type;
-    const ct = audioCtx.currentTime;
     switch (type) {
       case 'volume':
       case 'gain':
-        let v = typeof o === 'number' ? o : 1;
-        if (s.state.mute) v = 0;
-        setVal('gain', v);
+        let v = o;
+        // dont let "v" go below zero
+        v = v < 0 ? 0 : v;
+        // set to zero if muted
+        if (s.state.mute === true) v = 0;
+        // update the node and state
+        s.state.volume = v;
+        n.gain.value = v;
         break;
       case 'panning':
         setVal('pan', typeof o === 'number' ? o : 0);
+        s.state.panning = o;
         break;
       //case 'panning3d':
       //  // TODO
@@ -468,7 +495,7 @@ const useAudio = function(sounds, c) {
         if (has('knee')) setVal('knee', o.knee);
         if (has('ratio')) setVal('ratio', o.ratio);
         if (has('attack')) setVal('attack', o.attack);
-        if (has('release')) setVal('release', o.release).
+        if (has('release')) setVal('release', o.release);
         break;
       default:
         break;
@@ -643,12 +670,12 @@ const useAudio = function(sounds, c) {
   // property to audio nodes, even if they don't normally have them)
   const getAudioNode = (soundObj, type) => {
     if (!soundObj.audioNodes) return;
-    return soundObj.audioNodes.filter(n => n.type === type);
+    return soundObj.audioNodes.filter(n => n.type === type)[0];
   };
 
   // public method on soundObjs
   const fadeIn = function(durationInSeconds) {
-      const gainNode = getAudioNode(library[name], 'gain')[0];
+      const gainNode = getAudioNode(library[name], 'gain');
       gainNode.gain.value = 0.000001;
       fade(library[name].state.volume, library[name].state.fadeIn);
   };
@@ -663,7 +690,7 @@ const useAudio = function(sounds, c) {
 
   // helper func called by fadeIn() and fadeOut()
   const fade = function (endValue, durationInSeconds) {
-      const gn = getAudioNode(library[name], 'gain')[0];
+      const gn = getAudioNode(library[name], 'gain');
       const ct = audioCtx.currentTime;
       if (library[name].state.isPlaying) {
         // now transition the values
