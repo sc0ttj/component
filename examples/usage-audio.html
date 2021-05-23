@@ -51,7 +51,7 @@
       // add sound assets with custom properties filters and callbacks:
       heroVoice: {
         src: 'sounds/speech.mp3',
-        volume: 0.08,
+        volume: 0.001,
         loop: false,
         playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
         fadeIn: 0,          // give a duration, in seconds, like 0.2
@@ -167,11 +167,9 @@
        setTimeout(() => {
          console.log('................increasing volume..........' );
          log('increasing volume');
-         heroVoice.settings({
-           volume: 0.5,
-         });
+         heroVoice.settings({ volume: 0.7 });
          console.log('heroVoice', heroVoice);
-       }, 1000);
+       }, 100);
 
        setTimeout(() => {
          console.log('................updating panning..........' );

@@ -683,18 +683,17 @@ const useAudio = function(sounds, c) {
   };
 
   // public method on soundObjs
-  const fadeIn = function(durationInSeconds) {
+  const fadeIn = function(durationInSeconds, endVol) {
       const gainNode = getAudioNode(library[name], 'gain');
-      gainNode.gain.value = minGain;
+      gainNode.gain.value = library[name].state.volume;
       if (!library[name].state.isPlaying) library[name].play();
-      fade(library[name].state.volume, library[name].state.fadeIn);
+      fade(endVol ? endVol : 1, durationInSeconds);
   };
 
 
   // public method on soundObjs
   const fadeOut = function (durationInSeconds) {
-      if (durationInSeconds) library[name].state.fadeOut = durationInSeconds;
-      fade(minGain, library[name].state.fadeOut);
+      fade(minGain, durationInSeconds);
   };
 
 
@@ -706,6 +705,7 @@ const useAudio = function(sounds, c) {
         // now transition the values
         gn.gain.setValueAtTime(gn.gain.value, ct);
         gn.gain.exponentialRampToValueAtTime(endValue, ct + durationInSeconds);
+        library[name].state.volume = endValue;
       }
   };
 
