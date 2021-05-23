@@ -19,8 +19,8 @@
     document.querySelector('.log').innerText += `* ${msg}\n`;
   }
 
-  document.body.addEventListener('click', () => {
-
+  document.body.addEventListener('click', function clicker() {
+    document.body.removeEventListener('click', clicker);
     log('loading sounds..');
 
     // attach the useAudio add-on to Component
@@ -115,7 +115,8 @@
       //},
     });
 
-    document.addEventListener('audioLoaded', function(e) {
+    document.addEventListener('audioLoaded', function audioLoaded(e) {
+      document.removeEventListener('audioLoaded', audioLoaded);
       log('sounds loaded');
 
       // can use the sounds in here
@@ -155,6 +156,7 @@
       song1.settings(quiet);
 
       log('playing sound..');
+      document.querySelector('h1').innerText = 'Playing sounds and adding effects..';
 
       //song1.play();
 
@@ -186,15 +188,15 @@
       }, 2000);
 
       // after 4 seconds, pause for 2 seconds, then resume
-      setTimeout(function() {
-        console.log('pause');
-        heroVoice.pause();
+      //setTimeout(function() {
+      //  console.log('pause');
+      //  heroVoice.pause();
 
-        setTimeout(function() {
-          console.log('resume');
-          heroVoice.play();
-        }, 3000);
-     }, 3000);
+      //  setTimeout(function() {
+      //    console.log('resume');
+      //    heroVoice.play();
+      //  }, 3000);
+      //}, 3000);
 
      setTimeout(() => {
        console.log('................updating equaliser..........' );
