@@ -170,19 +170,19 @@ const useAudio = function(sounds, c) {
 
     const obj = {
       // set some properties
-      name: name,
-      src: src, // should be a string (URL to audio file), another sound object, or an array of sound objects
+      name,
+      src, // should be a string (URL to audio file), another sound object, or an array of sound objects
       // the main methods
-      play: play,
-      playFrom: playFrom,
-      pause: pause,
-      fadeIn: fadeIn,
-      fadeOut: fadeOut,
-      rapidFire: rapidFire,
-      stop: stop,
-      mute: mute,
-      unmute: unmute,
-      connectTo: connectTo,
+      play,
+      playFrom,
+      pause,
+      fadeIn,
+      fadeOut,
+      rapidFire,
+      stop,
+      mute,
+      unmute,
+      connectTo,
       // callbacks
       onPlay: item[1].onPlay || noop,
       onPause: item[1].onPause || noop,
@@ -190,12 +190,7 @@ const useAudio = function(sounds, c) {
       onStop: item[1].onStop || noop,
       onChange: item[1].onChange || noop,  // fired when a prop in state changes or sound is -reconnected
       // set input node:
-      // - if "src" is a string, assume it's a URL to a file we'll download and
-      //   convert to a buffer, and make the input a buffer source node.
-      // - if "src" is another soundObject, or an array of soundObjects, then
-      //   we'll connect them to the pan node of this sound, so this sound
-      //   wont need its own input node.
-      input: typeof src === 'string' ? audioCtx.createBufferSource() : null,
+      input: audioCtx.createBufferSource(),
       // set output node:
       // - output to the default output of the Audio Context all our sounds use
       output: audioCtx.destination,
@@ -546,6 +541,12 @@ const useAudio = function(sounds, c) {
     // play the sound
     input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
     library[name].state.isPlaying = true;
+    // play any other sounds which have been "connected" to this one
+    if (Array.isArray(library[name].attachedSounds)) {
+      library[name].attachedSounds.forEach(snd => {
+        if (!snd.state.isPlaying) snd.playFrom(audioCtx.currentTime);
+      });
+    }
     // enable fade in if needed
     if (typeof library[name].state.fadeIn === 'number' && library[name].state.fadeIn > 0) {
       fadeIn(library[name].state.fadeIn);
@@ -617,13 +618,21 @@ const useAudio = function(sounds, c) {
         library[name].state.isPlaying = false;
         // run the callback
         library[name].onPause(library[name].state);
+        // pause any other sounds which have been "connected" to this one
+        if (Array.isArray(library[name].attachedSounds)) {
+          library[name].attachedSounds.forEach(snd => {
+            if (snd.state.isPlaying) snd.pause();
+          });
+        }
       }
   };
 
 
   // public method on soundObjs
   const playFrom = (time) => {
-      library[name].input.stop(0);
+      try {
+        library[name].input.stop(0);
+      } catch (e) {};
       library[name].state.startOffset = time;
       library[name].play();
   };
@@ -639,6 +648,12 @@ const useAudio = function(sounds, c) {
       library[name].state.startOffset = 0;
       // run the callback
       library[name].onStop(library[name].state);
+      // stop any other sounds which have been "connected" to this one
+      if (Array.isArray(library[name].attachedSounds)) {
+        library[name].attachedSounds.forEach(snd => {
+          if (snd.state.isPlaying) snd.stop();
+        });
+      }
     }
   };
 
@@ -650,6 +665,12 @@ const useAudio = function(sounds, c) {
       volume: 0,
       muted: true,
     });
+    // mute any other sounds which have been "connected" to this one
+    if (Array.isArray(library[name].attachedSounds)) {
+      library[name].attachedSounds.forEach(snd => {
+        if (snd.state.isPlaying) snd.mute();
+      });
+    }
   }
 
   // public method on soundObjs
@@ -659,17 +680,22 @@ const useAudio = function(sounds, c) {
       prevVol: undefined,
       muted: false,
     });
+    // unmute any other sounds which have been "connected" to this one
+    if (Array.isArray(library[name].attachedSounds)) {
+      library[name].attachedSounds.forEach(snd => {
+        if (snd.state.isPlaying) snd.unmute();
+      });
+    }
   }
 
 
   // public method on soundObjs
   // method added to sound object to let users re-connect sounds, by doing
-  // soundObj.connect(otherSoundObj);
+  // soundObj.connectTo(otherSoundObj);
   const connectTo = (otherSound) => {
-    const n = library[name].audioNodes;
-    const lastNode = n[n.length - 2];
-    lastNode.disconnect(audioCtx.destination);
-    lastNode.connect(getAudioNode(otherSound, 'panning'));
+    // update the sound props to output to the other sound
+    otherSound.attachedSounds = otherSound.attachedSounds || [];
+    otherSound.attachedSounds.push(library[name]);
     // setting have changed, call the relevant callback
     library[name].onChange(library[name].state);
   };
@@ -684,8 +710,6 @@ const useAudio = function(sounds, c) {
 
   // public method on soundObjs
   const fadeIn = function(durationInSeconds, endVol) {
-      const gainNode = getAudioNode(library[name], 'gain');
-      gainNode.gain.value = library[name].state.volume;
       if (!library[name].state.isPlaying) library[name].play();
       fade(endVol ? endVol : 1, durationInSeconds);
   };
@@ -701,10 +725,11 @@ const useAudio = function(sounds, c) {
   const fade = function (endValue, durationInSeconds) {
       const gn = getAudioNode(library[name], 'gain');
       const ct = audioCtx.currentTime;
+      // set the value to transition *from*
+      gn.gain.value = library[name].state.volume;
       if (library[name].state.isPlaying) {
-        // now transition the values
-        gn.gain.setValueAtTime(gn.gain.value, ct);
-        gn.gain.exponentialRampToValueAtTime(endValue, ct + durationInSeconds);
+        // now the values to transition *to*
+        gn.gain.linearRampToValueAtTime(endValue, +ct + durationInSeconds);
         library[name].state.volume = endValue;
       }
   };
@@ -746,32 +771,6 @@ const useAudio = function(sounds, c) {
   }
 
 
-
-  // internal helper func, connect other nodes to library[name].. checks
-  // library[name].src for the soundObjects to connect
-  const connectSourcesTo = (soundObj) => {
-    // get the gain node to connect to
-    const n = getAudioNode(soundObj, 'pan');
-    // if src has multiple items to connect
-    if (Array.isArray(src)) {
-      // the "src" variable contains one or more "other" sound objects that will
-      // feed their outputs into the pan node of soundObj, which is
-      soundObj.src.forEach(item => {
-        item.output.disconnect(
-          item.output.audioNodes[item.output.audioNodes.length - 2]
-        );
-        item.output.connect(n);
-      });
-    } else if (src.output) {
-      soundObj.src.output.disconnect(
-        soundObj.src.output.audioNodes[soundObj.src.output.audioNodes.length - 2]
-      );
-      soundObj.src.output.connect(n);
-    }
-  };
-
-
-
   //
   // MAIN LOOP - parse each sound given in 'sounds' param
   //
@@ -786,31 +785,9 @@ const useAudio = function(sounds, c) {
     // create an item in cache that will hold a  buffer, in which we will store
     // the audio data returned from an AJAX request
     cache[name] = null;
-    // if the src of this sound is a string, we assume it's a URL, and AJAX in
-    // the file, saving it to a buffer, to be re-used by bufferSourceNodes
-    if (typeof src === 'string') {
-      // download audio file, save it as a buffer in the fileLoaded() callback,
-      // then add the sound to the library to be returned
-      loadFile(src, item);
-    }
-    // if the 'src' is not a string, it's not a URL to download, it'll likely
-    // be another, already existing, sound object
-    else {
-      // so add the current sound to the library of sounds to be returned (namely,
-      // add library[name] and populate it with all the sounds props and audio
-      // nodes already created, ready to be connected up)
-      library[name] = addToLibrary(item);
-      // and if the input (src) is another sound object, connect it up to the
-      // gain node of this one (the gain node was create by createNodes(), which
-      // is called in addToLibrary(), above)
-      if (Array.isArray(src) || src.output) {
-        connectSourcesTo(library[name]);
-        // add to count of files now loaded and check if all done
-        checkAllFilesLoaded();
-        // autoplay if needed
-        if (library[name].autoplay === true) library[name].play();
-      }
-    }
+    // download audio file, save it as a buffer in the fileLoaded() callback,
+    // then add the sound to the library to be returned
+    loadFile(src, item);
   });
 
   // attach all our sounds to the given component, if any

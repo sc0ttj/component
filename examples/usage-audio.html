@@ -8,7 +8,9 @@
 <body>
 
   <h1>Click here to load the sounds..</h1>
+  <p>(Also look in the DevTools "Console" for more info)</p>
 
+  <br>
   <p class="log"></p>
 
 <script>
@@ -127,10 +129,8 @@
       //Soundtrack.audio.song1.play();
 
       // or extract sounds into their own variables
-      //const { song2, song3 } = Soundtrack.audio;
+      const { song1 } = Soundtrack.audio;
       // and use them
-      //song2.play();
-
 
       // Using your sounds
       //Effects.audio.ok.play();
@@ -148,23 +148,28 @@
       // setState for sound objects - pass in only the properties you want to change
       //ok.settings({ volume: 0.25 });
 
-      const { heroVoice } = effects;
+       const { heroVoice } = effects;
 
-      // or name settings objects to easily create "presets"
-      //const outside = { volume: 0.7 };
-      //heroVoice.settings(outside);
-
-      // or combine them
-      //heroVoice.settings({
-      //  ...outside,
-      //  fadeIn: 1,
-      //});
+       // name settings objects to easily create "presets"
+       const quiet = { volume: 0.1 };
+       song1.settings(quiet);
 
        log('playing sound..');
+
+       //song1.play();
+
+       // you can re-route sounds into other sounds.. this will connect song1 to
+       // the "pan" node of heroVoice:
+       song1.connectTo(heroVoice);
+
+       console.log('song1', song1);
 
        heroVoice.play();
 
        setTimeout(() => {
+         console.log('................fade out sirens..........' );
+         log('fading out sirens over 5 seconds');
+         song1.fadeOut(5);
          console.log('................increasing volume..........' );
          log('increasing volume');
          heroVoice.settings({ volume: 0.7 });
@@ -191,6 +196,7 @@
            ],
          });
          console.log('heroVoice', heroVoice);
+
        }, 5500);
 
        setTimeout(() => {
@@ -244,14 +250,6 @@
       //effects.settings({
       //  volume: 0.85,
       //});
-
-
-      //console.log('heroVoice', heroVoice);
-
-
-      // or you can re-route sounds into other sounds.. this will connect song1 to
-      // the "pan" node of track1:
-      //song1.connect(track1);
 
 
       // to do visualisations, you should use the "visualiser" and "visualData"
