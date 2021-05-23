@@ -148,100 +148,97 @@
       // setState for sound objects - pass in only the properties you want to change
       //ok.settings({ volume: 0.25 });
 
-       const { heroVoice } = effects;
+      const { heroVoice } = effects;
 
-       // name settings objects to easily create "presets"
-       const quiet = { volume: 0.1 };
-       song1.settings(quiet);
+      // name settings objects to easily create "presets"
+      const quiet = { volume: 0.1 };
+      song1.settings(quiet);
 
-       log('playing sound..');
+      log('playing sound..');
 
-       //song1.play();
+      //song1.play();
 
-       // you can re-route sounds into other sounds.. this will connect song1 to
-       // the "pan" node of heroVoice:
-       song1.connectTo(heroVoice);
+      // you can re-route sounds into other sounds.. this will connect song1 to
+      // the "pan" node of heroVoice:
+      song1.connectTo(heroVoice);
 
-       console.log('song1', song1);
+      console.log('song1', song1);
 
-       heroVoice.play();
+      heroVoice.play();
 
-       setTimeout(() => {
-         console.log('................fade out sirens..........' );
-         log('fading out sirens over 5 seconds');
-         song1.fadeOut(5);
-         console.log('................increasing volume..........' );
-         log('increasing volume');
-         heroVoice.settings({ volume: 0.7 });
-         console.log('heroVoice', heroVoice);
-       }, 100);
+      setTimeout(() => {
+        console.log('................fade out sirens..........' );
+        log('fading out sirens over 5 seconds');
+        song1.fadeOut(5);
+        console.log('................increasing volume..........' );
+        log('increasing volume');
+        heroVoice.settings({ volume: 0.7 });
+        console.log('heroVoice', heroVoice);
+      }, 500);
 
-       setTimeout(() => {
-         console.log('................updating panning..........' );
-         log('panning to center');
-         heroVoice.settings({
-           panning: 0,
-         });
-         console.log('heroVoice', heroVoice);
-       }, 2500);
+      setTimeout(() => {
+        console.log('................updating panning..........' );
+        log('panning to center');
+        heroVoice.settings({
+          panning: 0,
+        });
+        console.log('heroVoice', heroVoice);
+      }, 2000);
 
-       setTimeout(() => {
-         console.log('................updating equaliser..........' );
-         log('add equaliser');
-         heroVoice.settings({
-           equalizer: [
-             { freq:  400, q: 0.1, gain: 0.002 },   // lowspass filter
-             { freq:  1200, q: 1, gain: 0.6 },      // peaking filter(s) (can have many)
-             { freq:  1500, q: 1.25, gain: 0.001 }, // highpass filter
-           ],
-         });
-         console.log('heroVoice', heroVoice);
+      // after 4 seconds, pause for 2 seconds, then resume
+      setTimeout(function() {
+        console.log('pause');
+        heroVoice.pause();
 
-       }, 5500);
+        setTimeout(function() {
+          console.log('resume');
+          heroVoice.play();
+        }, 3000);
+     }, 3000);
 
-       setTimeout(() => {
-         console.log('................updating reverb..........' );
-         log('adding reverb');
-         heroVoice.settings({
-           reverb: {
-             duration: 0.8,
-             decay: 0.9,
-             reverse: false,
-           },
-         });
-         console.log('heroVoice', heroVoice);
-       }, 9000);
+     setTimeout(() => {
+       console.log('................updating equaliser..........' );
+       log('add equaliser');
+       heroVoice.settings({
+         equalizer: [
+           { freq:  400, q: 0.1, gain: 0.002 },   // lowspass filter
+           { freq:  1200, q: 1, gain: 0.6 },      // peaking filter(s) (can have many)
+           { freq:  1500, q: 1.25, gain: 0.001 }, // highpass filter
+         ],
+       });
+       console.log('heroVoice', heroVoice);
 
-       setTimeout(() => {
-         console.log('................updating randomization settings..........' );
-         log('randomizing playback rate');
-         heroVoice.settings({
-          randomization: {
-            playbackRate: 0.6,
+     }, 8000);
+
+      setTimeout(() => {
+        console.log('................updating reverb..........' );
+        log('adding reverb');
+        heroVoice.settings({
+          reverb: {
+            duration: 0.8,
+            decay: 0.9,
+            reverse: false,
           },
-         });
-         console.log('heroVoice', heroVoice);
-       }, 13000);
+        });
+        console.log('heroVoice', heroVoice);
+      }, 12000);
 
-       setTimeout(() => {
-         log('fade out (over 5 seconds)');
-         heroVoice.fadeOut(5);
-       }, 18000);
+      setTimeout(() => {
+        console.log('................updating randomization settings..........' );
+        log('randomizing playback rate');
+        heroVoice.settings({
+         randomization: {
+           playbackRate: 0.6,
+         },
+        });
+        console.log('heroVoice', heroVoice);
+      }, 16000);
 
-//      // after 4 seconds, pause for 2 seconds, then resume
-//      setTimeout(function() {
-//
-//        setTimeout(function() {
-//          console.log('pause');
-//          heroVoice.pause();
-//        }, 5000);
-//
-//        setTimeout(function() {
-//          console.log('resume');
-//          heroVoice.play();
-//        }, 7000);
-//
-//     }, 4000);
+      setTimeout(() => {
+        log('fade out (over 5 seconds)');
+        heroVoice.fadeOut(5);
+      }, 20000);
+
 
 
 

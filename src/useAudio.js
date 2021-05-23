@@ -613,7 +613,7 @@ const useAudio = function(sounds, c) {
       //Pause the sound if it's playing, and calculate the
       //`startOffset` to save the current position.
       if (library[name].state.isPlaying) {
-        library[name].state.startOffset += audioCtx.currentTime - library[name].state.startTime;
+        library[name].state.startOffset = audioCtx.currentTime - library[name].state.startTime;
         library[name].input.stop(0);
         library[name].state.isPlaying = false;
         // run the callback
