@@ -635,6 +635,12 @@ const useAudio = function(sounds, c) {
       } catch (e) {};
       library[name].state.startOffset = time;
       library[name].play();
+      // play any other sounds which have been "connected" to this one
+      if (Array.isArray(library[name].attachedSounds)) {
+        library[name].attachedSounds.forEach(snd => {
+          if (snd.state.isPlaying) snd.playFrom(time);
+        });
+      }
   };
 
 
