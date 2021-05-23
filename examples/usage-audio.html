@@ -51,21 +51,24 @@
       // add sound assets with custom properties filters and callbacks:
       heroVoice: {
         src: 'sounds/speech.mp3',
-        volume: 0.0001,
+        volume: 0.08,
         loop: false,
         playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
-        detune: 0,          // 1200 is 1 octave up, -1200 is 1 octave down
         fadeIn: 0,          // give a duration, in seconds, like 0.2
         filters: {
           delay: 0,         // give a duration, in seconds, like 0.2
           panning: -1,      // -1 is left, 0 is center, 1 is right
-//          panning3d: { x: 0, y: 10, z: 0 }, //TODO
-//          lowshelf:  { freq:  200, gain: 0.1 },
-//          lowpass: { freq: 1200, gain: -1 },
+//          lowshelf:  { freq:  400, gain: 0.2 },
+//          highshelf: { freq:  1200, gain: 0.2 },
+//          lowpass:   { freq: 400, gain: 0.1 },
+//          bandpass:  { freq:  800, gain: 0.2, q: 0.5 },
+//          highpass:  { freq: 1200, gain: -1 },
+//          notch:     { freq:  800, gain: 0.2, q: 0.5 },
+//          peaking:   { freq:  800, gain: 0.2, q: 0.5 },
 //          equalizer: [
-//            { freq:  200, q: 0.25 },    // lowshelf filter
+//            { freq:  200, q: 1 },       // lowpass filter
 //            { freq:  800, q: 0.25 },    // peaking filter(s) (can have many)
-//            { freq:  1200, q: 0.25 },   // highshelf filter
+//            { freq:  1200, q: 0.25 },   // highpass filter
 //          ],
 //          reverb: {
 //            duration: 1,
@@ -79,7 +82,7 @@
 //            startOffset: 0.0001,
 //            delay: 0.01,
 //          },
-          // this enables the analyser node, useful for visualizations
+          // this enables the analyser node, useful for visualizations (see below)
           analyser: {
             fftSize: 2048,
             minDecibels: -100,
@@ -147,12 +150,8 @@
 
       const { heroVoice } = effects;
 
-      heroVoice.settings({
-        highshelf: { volume: 0.2 },
-      });
-
       // or name settings objects to easily create "presets"
-      //const outside = { volume: 0.9 };
+      //const outside = { volume: 0.7 };
       //heroVoice.settings(outside);
 
       // or combine them
@@ -161,44 +160,56 @@
       //  fadeIn: 1,
       //});
 
-      //heroVoice.settings({
-      //  reverb: {
-      //    duration: 0.3,
-      //    decay: 0.3,
-      //    reverse: true,
-      //  },
-      //});
-
        log('playing sound..');
 
        heroVoice.play();
 
        setTimeout(() => {
-         console.log('................updating settings..........' );
+         console.log('................increasing volume..........' );
          log('increasing volume');
          heroVoice.settings({
-           volume: 0.7,
+           volume: 0.5,
          });
          console.log('heroVoice', heroVoice);
-       }, 500);
+       }, 1000);
 
        setTimeout(() => {
-         console.log('................updating settings..........' );
-         log('adding reverb');
+         console.log('................updating panning..........' );
          log('panning to center');
+         heroVoice.settings({
+           panning: 0,
+         });
+         console.log('heroVoice', heroVoice);
+       }, 2500);
+
+       setTimeout(() => {
+         console.log('................updating equaliser..........' );
+         log('add equaliser');
+         heroVoice.settings({
+           equalizer: [
+             { freq:  400, q: 0.1, gain: 0.002 },   // lowspass filter
+             { freq:  1200, q: 1, gain: 0.6 },      // peaking filter(s) (can have many)
+             { freq:  1500, q: 1.25, gain: 0.001 }, // highpass filter
+           ],
+         });
+         console.log('heroVoice', heroVoice);
+       }, 5500);
+
+       setTimeout(() => {
+         console.log('................updating reverb..........' );
+         log('adding reverb');
          heroVoice.settings({
            reverb: {
              duration: 0.8,
              decay: 0.9,
              reverse: false,
            },
-           panning: 0,
          });
          console.log('heroVoice', heroVoice);
-       }, 3000);
+       }, 9000);
 
        setTimeout(() => {
-         console.log('................updating settings..........' );
+         console.log('................updating randomization settings..........' );
          log('randomizing playback rate');
          heroVoice.settings({
           randomization: {
@@ -206,12 +217,12 @@
           },
          });
          console.log('heroVoice', heroVoice);
-       }, 6500);
+       }, 11000);
 
        setTimeout(() => {
-         log('fading out (3 seconds)');
-         heroVoice.fadeOut(3);
-       }, 10000);
+         log('fade out (over 5 seconds)');
+         heroVoice.fadeOut(5);
+       }, 18000);
 
 //      // after 4 seconds, pause for 2 seconds, then resume
 //      setTimeout(function() {
@@ -252,7 +263,7 @@
       // define a function, running on a loop, that powers our visualisation, it
       // should receive the props (current state) of a sound object
       const visualisation = (props) => {
-        return;
+        return; // remove this line to enable it
         requestAnimationFrame(visualisation);
         // get our analyser node ("visualiser") and some useful analyser data
         const { visualiser, visualData, bufferLength } = props;

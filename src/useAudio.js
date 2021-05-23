@@ -368,22 +368,22 @@ const useAudio = function(sounds, c) {
         s.eq = [];
         // each obj in o is a filter settings obj, so create an audio node
         // for each one, with the correct type
-        let i = 1;
-        o.forEach((eq) => {
+        //if (o && o.length && o.length > 0) {
+        o.forEach((eq, i) => {
           const eqNode = audioCtx.createBiquadFilter();
-          if (i === 1) {
-            eqNode.type = 'lowshelf';
+          if (i === 0) {
+            eqNode.type = 'lowpass';
           }
-          else if (i === o.length) {
-            eqNode.type = 'highshelf';
+          else if (i === (o.length - 1)) {
+            eqNode.type = 'highpass';
           }
           else {
             eqNode.type = 'peaking';
           }
           // add each audio node to the "equalizer" array
           s.eq.push(eqNode);
-          i++;
         });
+        //}
         break;
       case 'reverb':
         n = audioCtx.createConvolver();
@@ -471,9 +471,18 @@ const useAudio = function(sounds, c) {
           // get each filter in equalizer, and apply the settings in 'opts'
           o.forEach((opts, i) => {
             const node = s.eq[i];
-            if (typeof opts.freq === 'number') node.frequency.setValueAtTime(opts.freq, ct);
-            if (typeof opts.gain === 'number') node.gain.setValueAtTime(opts.gain, ct);
-            if (typeof opts.q === 'number') node.Q.setValueAtTime(opts.q, ct);
+            if (typeof opts.freq === 'number') {
+              node.frequency.value = opts.freq;
+//              node.frequency.setValueAtTime(opts.freq, ct);
+            }
+            if (typeof opts.gain === 'number') {
+              node.gain.value = opts.gain;
+//              node.gain.setValueAtTime(opts.gain, ct);
+            }
+            if (typeof opts.q === 'number') {
+              node.Q.value = opts.q;
+//              node.Q.setValueAtTime(opts.q, ct);
+            }
           });
         }
         break;
@@ -531,7 +540,7 @@ const useAudio = function(sounds, c) {
     // now connect the audio nodes, in the proper order
     connectNodes(s);
     // set all properties on the relevent audio nodes to match the sounds "state"
-    configureAudioNodesFor(s);
+    //configureAudioNodesFor(s); // not needed...?
     // normalize for better browser support
     if (!input.start) input.start = input.noteOn;
     // play the sound
