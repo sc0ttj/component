@@ -100,7 +100,7 @@ export default [
       name: "useAudio",
       format: "umd"
     },
-    plugins: [resolve({ modulesOnly: true }), commonjs(), sourcemaps()]
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
     input: "src/render.js",
