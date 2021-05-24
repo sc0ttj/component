@@ -33,7 +33,8 @@ const useAudio = function(sounds, c) {
   const minGain = 0.00001;
 
   // create the global "audio context", or hook into an existing one
-  window.audioCtx = window.audioCtx ? window.audioCtx : new AudioContext();
+  const ctx = window.AudioContext || window.webkitAudioContext;
+  window.audioCtx = window.audioCtx ? window.audioCtx : new ctx();
 
   // normalize browser syntax
   if (!audioCtx.createGain) audioCtx.createGain = audioCtx.createGainNode;
@@ -331,7 +332,11 @@ const useAudio = function(sounds, c) {
         n = audioCtx.createGain();
         break;
       case 'panning':
-        n = audioCtx.createStereoPanner();
+        if (!audioCtx.createStereoPanner) {
+          n = audioCtx.createPanner();
+        } else {
+          n = audioCtx.createStereoPanner();
+        }
         break;
       //case 'panning3d':
       //  n = audioCtx.createPanner();
@@ -431,7 +436,19 @@ const useAudio = function(sounds, c) {
         n.gain.value = v;
         break;
       case 'panning':
-        setVal('pan', typeof o === 'number' ? o : 0);
+        if (!audioCtx.createStereoPanner) {
+          //Panner objects accept x, y and z coordinates for 3D
+          //sound. However, because we're only doing 2D left/right
+          //panning we're only interested in the x coordinate,
+          //the first one. However, for a natural effect, the z
+          //value also has to be set proportionately.
+          const y = 0;
+          const z = 1 - Math.abs(o);
+          n.setPosition(o, y, z);
+          n.panValue = o;
+        } else {
+          setVal('pan', typeof o === 'number' ? o : 0);
+        }
         s.state.panning = o;
         break;
       //case 'panning3d':
