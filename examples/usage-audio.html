@@ -53,7 +53,7 @@
       // add sound assets with custom properties filters and callbacks:
       heroVoice: {
         src: 'sounds/speech.mp3',
-        volume: 0.001,
+        volume: 0.20,
         loop: false,
         playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
         fadeIn: 0,          // give a duration, in seconds, like 0.2
@@ -68,9 +68,9 @@
 //          notch:     { freq:  800, gain: 0.2, q: 0.5 },
 //          peaking:   { freq:  800, gain: 0.2, q: 0.5 },
 //          equalizer: [
-//            { freq:  200, q: 1 },       // lowpass filter
-//            { freq:  800, q: 0.25 },    // peaking filter(s) (can have many)
-//            { freq:  1200, q: 0.25 },   // highpass filter
+//            { freq:  200,  q: 0.25, gain: 0.9 }, // lowpass filter
+//            { freq:  800,  q: 0.25, gain: 0.9 }, // peaking filter(s) (can have many)
+//            { freq:  1200, q: 0.25, gain: 0.9 }, // highpass filter
 //          ],
 //          reverb: {
 //            duration: 1,
@@ -152,7 +152,7 @@
       const { heroVoice } = effects;
 
       // name settings objects to easily create "presets"
-      const quiet = { volume: 0.1 };
+      const quiet = { volume: 0.08 };
       song1.settings(quiet);
 
       log('playing sound..');
@@ -166,26 +166,28 @@
 
       console.log('song1', song1);
 
+      console.log('>> first play');
       heroVoice.play();
-
-      setTimeout(() => {
-        console.log('................fade out sirens..........' );
-        log('fading out sirens over 5 seconds');
-        song1.fadeOut(5);
-        console.log('................increasing volume..........' );
-        log('increasing volume');
-        heroVoice.settings({ volume: 0.7 });
-        console.log('heroVoice', heroVoice);
-      }, 500);
 
       setTimeout(() => {
         console.log('................updating panning..........' );
         log('panning to center');
-        heroVoice.settings({
-          panning: 0,
-        });
+        heroVoice.settings({ panning: 0 });
         console.log('heroVoice', heroVoice);
-      }, 2000);
+      }, 1500);
+
+      setTimeout(() => {
+        console.log('................increasing volume..........' );
+        log('increasing volume');
+        heroVoice.settings({ volume: 0.7 });
+      }, 4000);
+
+      setTimeout(() => {
+        console.log('................fade out sirens..........' );
+        log('start fade out of sirens, over 5 seconds');
+        song1.fadeOut(5);
+      }, 7000);
+
 
       // after 4 seconds, pause for 2 seconds, then resume
       //setTimeout(function() {
@@ -204,18 +206,19 @@
        heroVoice.settings({
          equalizer: [
            { freq:  400, q: 0.1, gain: 0.002 },   // lowspass filter
-           { freq:  1200, q: 1, gain: 0.6 },      // peaking filter(s) (can have many)
+           { freq:  1200, q: 1.0, gain: 0.6 },    // peaking filter(s) (can have many)
            { freq:  1500, q: 1.25, gain: 0.001 }, // highpass filter
          ],
        });
        console.log('heroVoice', heroVoice);
 
-     }, 8000);
+     }, 10000);
 
       setTimeout(() => {
         console.log('................updating reverb..........' );
         log('adding reverb');
         heroVoice.settings({
+          volume: 1,
           reverb: {
             duration: 0.8,
             decay: 0.9,
@@ -223,7 +226,7 @@
           },
         });
         console.log('heroVoice', heroVoice);
-      }, 12000);
+      }, 13000);
 
       setTimeout(() => {
         console.log('................updating randomization settings..........' );
@@ -237,8 +240,8 @@
       }, 16000);
 
       setTimeout(() => {
-        log('fade out (over 5 seconds)');
-        heroVoice.fadeOut(5);
+        log('fade out (over 10 seconds)');
+        heroVoice.fadeOut(10);
       }, 20000);
 
 

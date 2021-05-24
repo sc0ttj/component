@@ -742,15 +742,16 @@ const useAudio = function(sounds, c) {
   const fade = function (endValue, durationInSeconds) {
       const gn = getAudioNode(library[name], 'gain');
       const ct = audioCtx.currentTime;
+      const s = library[name].state;
       // set the value to transition *from*
-      gn.gain.value = library[name].state.volume;
-      if (library[name].state.isPlaying) {
+      gn.gain.value = s.volume;
+      if (s.isPlaying) {
+        gn.gain.setValueAtTime(s.volume, ct);
         // now the values to transition *to*
-        gn.gain.linearRampToValueAtTime(endValue, +ct + durationInSeconds);
-        library[name].state.volume = endValue;
+        gn.gain.exponentialRampToValueAtTime(endValue, ct + durationInSeconds);
+        s.volume = endValue;
       }
   };
-
 
 
   // simulate a model of sound reverberation in an acoustic space which
