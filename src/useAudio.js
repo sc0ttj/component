@@ -26,6 +26,7 @@ const useAudio = function(sounds, c) {
   // if not in browser, exit
   if (!document || !window || typeof sounds !== 'object') return;
 
+  const isArr = Array.isArray;
   // a "no operation" function, used as a default setting for some callbacks
   const noop = function noop(){ return; };
   // minimin vol (exponentialRampToValue method of web audio API gain nodes
@@ -225,14 +226,14 @@ const useAudio = function(sounds, c) {
       // of individual sounds with mySound.settings({ ... }) - pass in only
       // the options you want to change.
       settings: function(props, cb) {
-        // update the state
         // rebuild the nodes
-        obj.audioNodes = createNodes(obj);
+        //obj.audioNodes = createNodes(obj);
+        // update the state
         obj.state = { ...obj.state, ...props };
         // now connect the audio nodes, in the proper order
-        connectNodes(obj);
+        //connectNodes(obj);
         // update settings of each audio node
-        configureAudioNodesFor(obj);
+        //configureAudioNodesFor(obj);
         if (obj.state.isPlaying) obj.playFrom(audioCtx.currentTime);
         if (typeof cb === 'function') cb(obj.state);
         // setting have changed, call the relevant callback
@@ -268,10 +269,8 @@ const useAudio = function(sounds, c) {
 
   // helper func - check if an audio node is disabled in the options
   const isDisabled = n => {
-    if (n === undefined || n === null) return true;
-    if (typeof n === 'float' || typeof n === 'number' || typeof n === 'object' || Array.isArray(n)) {
-      return false;
-    }
+    if (n === undefined || n === null || n === false) return true;
+    return false;
   }
 
   // create all audio nodes defined in sound settings, and return them in an array
@@ -313,7 +312,7 @@ const useAudio = function(sounds, c) {
       }
       // add all the equalizer nodes, which are not in filterNodes,
       // but in the soundObj.eq array
-      else if (type === 'equalizer' && Array.isArray(soundObj.eq)) {
+      else if (type === 'equalizer' && isArr(soundObj.eq)) {
         soundObj.eq.forEach(node => graph.push(node));
       }
     });
@@ -479,7 +478,7 @@ const useAudio = function(sounds, c) {
       case 'equalizer':
         // Note - the equalizer is an array of nodes, so don't set props on 'n',
         // instead loop over the array and set props for each
-        if (Array.isArray(s.eq)) {
+        if (isArr(s.eq)) {
           // get each filter in equalizer, and apply the settings in 'opts'
           o.forEach((opts, i) => {
             const node = s.eq[i];
@@ -559,7 +558,7 @@ const useAudio = function(sounds, c) {
     input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
     library[name].state.isPlaying = true;
     // play any other sounds which have been "connected" to this one
-    if (Array.isArray(library[name].attachedSounds)) {
+    if (isArr(library[name].attachedSounds)) {
       library[name].attachedSounds.forEach(snd => {
         if (!snd.state.isPlaying) snd.playFrom(audioCtx.currentTime);
       });
@@ -636,7 +635,7 @@ const useAudio = function(sounds, c) {
         // run the callback
         library[name].onPause(library[name].state);
         // pause any other sounds which have been "connected" to this one
-        if (Array.isArray(library[name].attachedSounds)) {
+        if (isArr(library[name].attachedSounds)) {
           library[name].attachedSounds.forEach(snd => {
             if (snd.state.isPlaying) snd.pause();
           });
@@ -666,7 +665,7 @@ const useAudio = function(sounds, c) {
       // run the callback
       library[name].onStop(library[name].state);
       // stop any other sounds which have been "connected" to this one
-      if (Array.isArray(library[name].attachedSounds)) {
+      if (isArr(library[name].attachedSounds)) {
         library[name].attachedSounds.forEach(snd => {
           if (snd.state.isPlaying) snd.stop();
         });
@@ -683,7 +682,7 @@ const useAudio = function(sounds, c) {
       muted: true,
     });
     // mute any other sounds which have been "connected" to this one
-    if (Array.isArray(library[name].attachedSounds)) {
+    if (isArr(library[name].attachedSounds)) {
       library[name].attachedSounds.forEach(snd => {
         if (snd.state.isPlaying) snd.mute();
       });
@@ -698,7 +697,7 @@ const useAudio = function(sounds, c) {
       muted: false,
     });
     // unmute any other sounds which have been "connected" to this one
-    if (Array.isArray(library[name].attachedSounds)) {
+    if (isArr(library[name].attachedSounds)) {
       library[name].attachedSounds.forEach(snd => {
         if (snd.state.isPlaying) snd.unmute();
       });
