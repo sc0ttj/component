@@ -852,7 +852,7 @@ Provides an audio add-on, powered by the Web Audio API, for highly performant, t
 
 Here's a standalone usage example:
 
-```js
+```html
 <script src="https://unpkg.com/@scottjarvis/component/dist/useAudio.min.js"></script>
 <script>
   const audio = useAudio({
