@@ -880,7 +880,7 @@ The `useAudio({ ... })` method generates sound objects with the following method
 - `mySound.settings({ ... })` - adjust all the sounds properties, even during playback
 
 
-If added to Component as an add-on, each component you create will have a `myComponent.useAudio({ ... })` method attached to it when it's created and is then responsible for its own sounds only.
+If used as a Component add-on, each component gets a `myComponent.useAudio({ ... })` method attached to it when it's created, and is then responsible for its own sounds only.
 
 To enable `useAudio` with Component:
 
