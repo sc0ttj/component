@@ -942,25 +942,27 @@ Foo.useAudio({
   heroVoice: {
     src: 'sounds/speech.mp3',
     volume: 0.20,       // min 0, max 1
-    loop: false,
+    loop: false,        // true or false
     playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
     fadeIn: 0,          // give a duration, in seconds, like 0.2
     filters: {
       delay: 0,         // give a duration, in seconds, like 0.2
       panning: -1,      // -1 is left, 0 is center, 1 is right
-      // add any combination of "biquad" filters
+      // add any combination of "biquad" filters 
+      // (see https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode)
       lowshelf:  { freq:  400, gain: 0.2 },
       highshelf: { freq: 1200, gain: 0.2 },
-      lowpass:   { freq:  400, gain: 0.1 },
-      bandpass:  { freq:  800, gain: 0.2, q: 0.5 },
-      highpass:  { freq: 1200, gain: -1 },
-      notch:     { freq:  800, gain: 0.2, q: 0.5 },
+      lowpass:   { freq:  400, q: 0.1 },
+      highpass:  { freq: 1200, q: 0.1 },
+      allpass:   { freq: 1200, q: 0.1 },
+      bandpass:  { freq:  800, q: 0.5 },
       peaking:   { freq:  800, gain: 0.2, q: 0.5 },
+      notch:     { freq:  800, q: 0.5 },
       // or add an array of filters into a customisable "equalizer"
       equalizer: [
-        { freq:  200,  q: 0.25, gain: 0.9 }, // lowpass filter
+        { freq:  200,  q: 0.25, },           // lowpass filter
         { freq:  800,  q: 0.25, gain: 0.9 }, // peaking filter(s) (can have many)
-        { freq:  1200, q: 0.25, gain: 0.9 }, // highpass filter
+        { freq:  1200, q: 0.25,  },          // highpass filter
       ],
       // add a "reverb" or "echo" effect
       reverb: {
@@ -1000,7 +1002,7 @@ Foo.useAudio({
 });
 ```
 
-You can change any/all properties of the sound, like so:
+You can change any/all properties of the sounds state, like so:
 
 ```js
 mySound.settings({
