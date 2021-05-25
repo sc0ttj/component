@@ -848,7 +848,7 @@ Also see [examples/usage-spring-animation.html](examples/usage-spring-animation.
 
 Provides an audio add-on, powered by the Web Audio API, for highly performant, timing-sensitive sounds. Useful for audio applications and visualizations. Works in browser only (not in NodeJS).
 
-The `useAudio` add-on works standalone (without Component), or you can attach it to Component as an add-on.
+The `useAudio` add-on works standalone, or you can attach it to Component as an add-on.
 
 Simple standalone usage example:
 
