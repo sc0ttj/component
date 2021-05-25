@@ -938,8 +938,10 @@ Sounds can have many properties, which you can define when you create them, or a
 Here's an example of a sound with all properties defined:
 
 ```js
-// define a sound, with all its options/filters defined
 Foo.useAudio({
+  // define a simple sound
+  mySound: 'bar.mp3',
+  // define a sound, with all its options/filters defined
   heroVoice: {
     src: 'sounds/speech.mp3',
     volume: 0.20,       // min 0, max 1
@@ -1006,6 +1008,14 @@ You can change any/all properties of the sounds state, like so:
 
 ```js
 mySound.settings({
+  reverb: { decay: 2 },
+});
+```
+
+You can also update _all_ sounds attached to a component at once, using the following:
+
+```js
+Foo.audio.settings({
   reverb: { decay: 2 },
 });
 ```
