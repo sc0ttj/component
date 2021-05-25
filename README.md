@@ -871,14 +871,15 @@ Here's a standalone usage example:
 The `useAudio({ ... })` method generates sound objects with the following methods (and more):
 
 - `mySound.play()`
+- `mySound.pause()`
 - `mySound.playFrom(time)`
 - `mySound.rapidFire(num, duration)`
-- `mySound.pause()`
-- `mySound.stop()`
+- `mySound.fadeIn(duration)`
+- `mySound.fadeOut(duration)`
+- `mySound.stop(atTime)`
 - `mySound.mute()`
 - `mySound.unmute()`
 - `mySound.settings({ ... })` - adjust all the sounds properties, even during playback
-
 
 If used as a Component add-on, each component gets a `myComponent.useAudio({ ... })` method attached to it when it's created, and is then responsible for its own sounds only.
 
@@ -944,7 +945,6 @@ Foo.useAudio({
     volume: 0.20,       // min 0, max 1
     loop: false,        // true or false
     playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
-    fadeIn: 0,          // give a duration, in seconds, like 0.2
     filters: {
       delay: 0,         // give a duration, in seconds, like 0.2
       panning: -1,      // -1 is left, 0 is center, 1 is right
