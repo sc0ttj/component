@@ -53,6 +53,7 @@ A "state" is a snapshot of your application data at a specific time.
   - `emitter`: an event emitter - share updates between components
   - `tweenState`: animate nicely from one state to the next (tweened)
   - `springTo`: animate nicely from one state to the next (using spring physics)
+  - `useAudio`: add dynamic audio to your components (uses Web Audio API)
   - `storage`: enables persistent states (between page refreshes, etc)
   - `syncTabs`: Synchronize state updates & page renders between browser tabs
   - `devtools`: enables easier component debugging in the browser
@@ -842,6 +843,166 @@ The `props` object returned to the callbacks contains:
 - `velocity` - the velocity of the spring at current frame
 
 Also see [examples/usage-spring-animation.html](examples/usage-spring-animation.html)
+
+## Using the `useAudio` module
+
+Provides an audio add-on, powered by the Web Audio API, for highly performant, timing-sensitive sounds. Useful for audio applications and visualizations. Works in browser only (not in NodeJS).
+
+The `useAudio` add-on works standalone (without Component), or you can attach it to Component as an add-on.
+
+Simple standalone usage example:
+
+```js
+<script src="https://unpkg.com/@scottjarvis/component/dist/useAudio.min.js"></script>
+<script>
+  const audio = useAudio({
+    sound1: 'foo.mp3',
+    mySound: 'bar.mp3',
+  });
+
+  const { mySound, sound1 } = audio;
+
+  mySound.play();
+</script>
+```
+
+The `useAudio({ ... })` method generates sound objects with the following methods (and more):
+
+- `mySound.play()`
+- `mySound.playFrom(time)`
+- `mySound.rapidFire(num, duration)`
+- `mySound.pause()`
+- `mySound.stop()`
+- `mySound.mute()`
+- `mySound.unmute()`
+- `mySound.settings({ ... })` - adjust all the sounds properties, even during playback
+
+
+If added to Component as an add-on, each component you create will have a `myComponent.useAudio({ ... })` method attached to it when it's created and is then responsible for its own sounds only.
+
+To enable `useAudio` with Component:
+
+### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/useAudio.min.js"></script>
+<script>
+  Component.useAudio = useAudio
+
+  // use it here
+</script>
+```
+
+### In ES6:
+
+```js
+import { Component, useAudio } from '@scottjarvis/component';
+
+Component.useAudio = useAudio
+
+// use it here
+
+```
+
+Example showing `useAudio` with `Component`:
+
+```js
+const Foo = new Component({});
+
+Foo.useAudio({
+  sound1: 'sounds/foo.mp3',
+  mySound: 'sounds/bar.mp3',
+});
+
+const { mySound, sound1 } = Foo.audio;
+
+Foo.view = props => htmel`
+  <div>
+    <button onclick="${mySound.play}">Click me</button>
+  </div>`;
+
+Foo.render('.container');
+
+```
+
+Sounds can have many properties, which you can define when you create them, or adjust later, using `mySound.settings({ ... })`. 
+
+Here's an example of a sound with all properties defined:
+
+```js
+// define a sound, with all its options/filters defined
+Foo.useAudio({
+  heroVoice: {
+    src: 'sounds/speech.mp3',
+    volume: 0.20,       // min 0, max 1
+    loop: false,
+    playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
+    fadeIn: 0,          // give a duration, in seconds, like 0.2
+    filters: {
+      delay: 0,         // give a duration, in seconds, like 0.2
+      panning: -1,      // -1 is left, 0 is center, 1 is right
+      // add any combination of "biquad" filters
+      lowshelf:  { freq:  400, gain: 0.2 },
+      highshelf: { freq: 1200, gain: 0.2 },
+      lowpass:   { freq:  400, gain: 0.1 },
+      bandpass:  { freq:  800, gain: 0.2, q: 0.5 },
+      highpass:  { freq: 1200, gain: -1 },
+      notch:     { freq:  800, gain: 0.2, q: 0.5 },
+      peaking:   { freq:  800, gain: 0.2, q: 0.5 },
+      // or add an array of filters into a customisable "equalizer"
+      equalizer: [
+        { freq:  200,  q: 0.25, gain: 0.9 }, // lowpass filter
+        { freq:  800,  q: 0.25, gain: 0.9 }, // peaking filter(s) (can have many)
+        { freq:  1200, q: 0.25, gain: 0.9 }, // highpass filter
+      ],
+      // add a "reverb" or "echo" effect
+      reverb: {
+        duration: 1,
+        decay: 1,
+        reverse: true,
+      },
+      // how much to randomise various properties each time a sound is played
+      randomization: {
+        volume: 0.8,
+        playbackRate: 0.6,
+        startOffset: 0.0001,
+        delay: 0.01,
+      },
+      // this enables the analyser node, useful for audio visualizations
+      analyser: {
+        fftSize: 2048,
+        minDecibels: -100,
+        maxDecibels: -30,
+        smoothingTimeConstant: 0.8,
+      },
+      // can be used to prevent clipping and distortions
+      compression: {
+        threshold: -50.0,
+        knee: 40.0,
+        ratio: 12.0,
+        attack: 0.0,
+        release: 0.25,
+      },
+    },
+    // callbacks 
+    onPlay: props => console.log(props),   // props is the current state of the sound,
+    onPause: props => console.log(props),  // and includes all settings for the filters
+    onResume: props => console.log(props), // that you have enabled
+    onStop: props => console.log(props),
+  },
+});
+```
+
+You can change any/all properties of the sound, like so:
+
+```js
+mySound.settings({
+  reverb: { decay: 2 },
+});
+```
+
+See [examples/usage-audio.html](examples/usage-audio.html) for examples and more information.
 
 ## Using `html` and `htmel` modules
 
