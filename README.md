@@ -846,11 +846,11 @@ Also see [examples/usage-spring-animation.html](examples/usage-spring-animation.
 
 ## Using the `useAudio` module
 
-Provides an audio add-on, powered by the Web Audio API, for highly performant, timing-sensitive sounds. Useful for audio applications and visualizations. Works in browser only (not in NodeJS).
+Provides an audio add-on, powered by the Web Audio API, for highly performant, timing-sensitive sounds. Useful for games, audio applications and visualizations. Works in browser only (not in NodeJS).
 
-The `useAudio` add-on works standalone, or you can attach it to Component as an add-on.
+`useAudio` can work standalone, or you can attach it to Component as an add-on.
 
-Simple standalone usage example:
+Here's a standalone usage example:
 
 ```js
 <script src="https://unpkg.com/@scottjarvis/component/dist/useAudio.min.js"></script>
@@ -860,9 +860,11 @@ Simple standalone usage example:
     mySound: 'bar.mp3',
   });
 
-  const { mySound, sound1 } = audio;
-
-  mySound.play();
+  document.addEventListener('audioLoaded', function audioLoaded(e) {
+    // you can now use the sounds
+    const { mySound, sound1 } = audio;
+    mySound.play();
+  });
 </script>
 ```
 
@@ -905,24 +907,28 @@ Component.useAudio = useAudio
 
 ```
 
-Example showing `useAudio` with `Component`:
+Here's an example of `useAudio` as a `Component` add-on:
 
 ```js
 const Foo = new Component({});
 
 Foo.useAudio({
-  sound1: 'sounds/foo.mp3',
-  mySound: 'sounds/bar.mp3',
+  sound1: 'foo.mp3',
+  mySound: 'bar.mp3',
 });
 
-const { mySound, sound1 } = Foo.audio;
+document.addEventListener('audioLoaded', function audioLoaded(e) {
+  // you can now use the sounds
 
-Foo.view = props => htmel`
-  <div>
-    <button onclick="${mySound.play}">Click me</button>
-  </div>`;
+  const { mySound, sound1 } = Foo.audio;
 
-Foo.render('.container');
+  Foo.view = props => htmel`
+    <div>
+      <button onclick="${mySound.play}">Click me</button>
+    </div>`;
+
+  Foo.render('.container');
+});
 
 ```
 
