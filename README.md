@@ -848,42 +848,9 @@ Also see [examples/usage-spring-animation.html](examples/usage-spring-animation.
 
 Provides an audio add-on, powered by the Web Audio API, for highly performant, timing-sensitive sounds. Useful for games, audio applications and visualizations. Works in browser only (not in NodeJS).
 
-`useAudio` can work standalone, or you can attach it to Component as an add-on.
+`useAudio` can work with Component, or it can be used "standalone".
 
-Here's a standalone usage example:
-
-```html
-<script src="https://unpkg.com/@scottjarvis/component/dist/useAudio.min.js"></script>
-<script>
-  const audio = useAudio({
-    sound1: 'foo.mp3',
-    mySound: 'bar.mp3',
-  });
-
-  document.addEventListener('audioLoaded', function audioLoaded(e) {
-    // you can now use the sounds
-    const { mySound, sound1 } = audio;
-    mySound.play();
-  });
-</script>
-```
-
-The `useAudio({ ... })` method generates sound objects with the following methods (and more):
-
-- `mySound.play()`
-- `mySound.pause()`
-- `mySound.playFrom(time)`
-- `mySound.rapidFire(num, duration)`
-- `mySound.fadeIn(duration)`
-- `mySound.fadeOut(duration)`
-- `mySound.stop(atTime)`
-- `mySound.mute()`
-- `mySound.unmute()`
-- `mySound.settings({ ... })` - adjust all the sounds properties, even during playback
-
-If used as a Component add-on, each component gets a `myComponent.useAudio({ ... })` method attached to it when it's created, and is then responsible for its own sounds only.
-
-To enable `useAudio` with Component:
+To use `useAudio` with Component:
 
 ### In browsers:
 
@@ -908,7 +875,9 @@ Component.useAudio = useAudio
 
 ```
 
-Here's an example of `useAudio` as a `Component` add-on:
+### Example usage of `useAudio` with `Component`:
+
+If used as a Component add-on, each component gets a `myComponent.useAudio({ ... })` method attached to it when it's created, and is then responsible for its own sounds only.
 
 ```js
 const Foo = new Component({});
@@ -920,7 +889,6 @@ Foo.useAudio({
 
 document.addEventListener('audioLoaded', function audioLoaded(e) {
   // you can now use the sounds
-
   const { mySound, sound1 } = Foo.audio;
 
   Foo.view = props => htmel`
@@ -933,15 +901,48 @@ document.addEventListener('audioLoaded', function audioLoaded(e) {
 
 ```
 
+### Example usage of `useAudio` standalone:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component/dist/useAudio.min.js"></script>
+<script>
+  const audio = useAudio({
+    sound1: 'foo.mp3',
+    mySound: 'bar.mp3',
+  });
+
+  document.addEventListener('audioLoaded', function audioLoaded(e) {
+    // you can now use the sounds
+    const { mySound, sound1 } = audio;
+    mySound.play();
+  });
+</script>
+```
+
+### Using your sounds 
+
+The `useAudio({ ... })` method generates sound objects with the following methods (and more):
+
+- `mySound.play()` - play a sound
+- `mySound.pause()` - pause a playing sound
+- `mySound.playFrom(time)` - play from the given time (in seconds)
+- `mySound.rapidFire(num, delay)` - play `num` times, with `delay` seconds between 
+- `mySound.fadeIn(duration)` - fade in over `duration` (in seconds)
+- `mySound.fadeOut(duration)` - fade out over `duration` (in seconds)
+- `mySound.stop(atTime)` - stop at given time (leave empty for immediate stop)
+- `mySound.mute()` - set a sounds volume to zero
+- `mySound.unmute()` - restore a sounds volume to its previous value
+- `mySound.settings({ ... })` - adjust all the sounds properties, even during playback
+
+
+### Defining advanced sound objects
+
 Sounds can have many properties, which you can define when you create them, or adjust later, using `mySound.settings({ ... })`. 
 
-Here's an example of a sound with all properties defined:
+Lets define a sound all possible properties enabled:
 
 ```js
 Foo.useAudio({
-  // define a simple sound
-  mySound: 'bar.mp3',
-  // define a sound, with all its options/filters defined
   heroVoice: {
     src: 'sounds/speech.mp3',
     volume: 0.20,       // min 0, max 1
@@ -1004,6 +1005,8 @@ Foo.useAudio({
 });
 ```
 
+### Updating your sounds settings
+
 You can change any/all properties of the sounds state, like so:
 
 ```js
@@ -1015,6 +1018,7 @@ mySound.settings({
 You can also update _all_ sounds attached to a component at once, using the following:
 
 ```js
+// Foo is our component from above, edit all its sounds at once
 Foo.audio.settings({
   reverb: { decay: 2 },
 });
