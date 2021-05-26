@@ -5,7 +5,7 @@
 <script src="../dist/component.min.js"></script>
 <script src="../dist/useAudio.min.js"></script>
 <style>
-  canvas { display: block; margin: 8px; border: 1px solid #999; }
+  canvas { height: 100px; min-width: 300px; display: block; margin: 8px; border: 1px solid #999; }
 </style>
 </head>
 <body>
@@ -273,7 +273,7 @@
         soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(analyser);
         analyser.getByteTimeDomainData(waveDataArray);
         // ...now do the drawing ..
-        wavesCtx.fillStyle = "rgb(220, 255, 200)";
+        wavesCtx.fillStyle = "rgb(220, 220, 220)";
         wavesCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
         wavesCtx.lineWidth = 1.5;
         wavesCtx.strokeStyle = "rgb(0, 100, 0)";
