@@ -53,9 +53,9 @@ const useAudio = function(sounds, c) {
   // the list of supported filters, listed in the order they are connected..
   // note that not all of these need to be enabled
   const filterList = [
-   'gain', 'panning', 'panning3d', 'reverb', 'equalizer', 'lowpass',
+   'gain', 'panning', 'reverb', 'equalizer', 'lowpass',
    'lowshelf', 'peaking', 'notch', 'highpass', 'highshelf', 'bandpass',
-   'allpass', 'analyser', 'compression'
+   'allpass', 'compression', 'analyser'
   ];
   // store audio buffer objects in here, ready to be put into bufferSourceNodes,
   // which are high performance "fire and forget" audio nodes with a start()

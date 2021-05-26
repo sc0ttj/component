@@ -5,7 +5,7 @@
 <script src="../dist/component.min.js"></script>
 <script src="../dist/useAudio.min.js"></script>
 <style>
-  canvas { margin: 8px; border: 1px solid #999; }
+  canvas { display: block; margin: 8px; border: 1px solid #999; }
 </style>
 </head>
 <body>
@@ -13,9 +13,10 @@
   <h1>Click here to load the sounds..</h1>
   <p>(Also look in the DevTools "Console" for more info)</p>
 
-  <br>
+  <p>Speech:</p>
   <canvas id="waveform"></canvas>
-  <br>
+  <p>Sirens:</p>
+  <canvas id="bars"></canvas>
   <p class="log"></p>
 
 <script>
@@ -94,13 +95,13 @@
 //            startOffset: 0.0001,
 //            delay: 0.01,
 //          },
-          // this enables the analyser node, useful for visualizations (see below)
-          analyser: {
-            fftSize: 2048 * 2,          // waveforms need 2048, bars 256 (or similar)
-            minDecibels: -31,           // must be lower than -30
-            maxDecibels: 2,             // must be more than minDecibels
-            smoothingTimeConstant: 0.5, // must be between 0 and 1
-          },
+          // this enables the analyser node, useful for visualizations (see below, and https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode)
+//          analyser: {
+//            fftSize: 2048,              // waveforms need 2048, bars 256 (or similar)
+//            minDecibels: -31,           // must be lower than -30
+//            maxDecibels: 2,             // must be more than minDecibels
+//            smoothingTimeConstant: 0.5, // must be between 0 and 1
+//          },
           // the compressor can prevent clipping and make the sound "smoother"
           compression: {
             threshold: -50.0,
@@ -255,38 +256,32 @@
       // should receive the sound object to visualise
 
 
-      // OPTIONAL - use "analyserNode" if the sound we're visualizing doesn't
-      // have an analyser node in its own audio nodes graph
-      let analyserNode = audioCtx.createAnalyser();
-      analyserNode.fftSize = 256;
+      // create the analyser node
+      const waveAnalyser = audioCtx.createAnalyser();
+      waveAnalyser.fftSize = 4096;
+      const waveBufferLength = waveAnalyser.frequencyBinCount;
+      const waveDataArray = new Uint8Array(waveBufferLength);
 
-      // here the visualisation func, runs in a loop while the sound plays
-      const waveform = (soundObj) => {
-        // setup the analyser node
-        let analyser = soundObj.state.visualiser || analyserNode;
+      // get the canvas to draw to
+      const waveCanvas  = document.getElementById("waveform");
+      const wavesCtx  = waveCanvas.getContext("2d");
+
+      // the visualisation func, runs in a loop while the sound plays
+      function waveform(soundObj, analyser) {
         if (!analyser) return;
-        // loop this function at 60fps
-        requestAnimationFrame(() => waveform(soundObj));
-        const bufferLength = analyser.frequencyBinCount;
-        // connect our sounds last node (not inc output node) to the analyser
+        requestAnimationFrame(() => waveform(soundObj, analyser));
         soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(analyser);
-        // get all the data points
-        let dataArray = new Uint8Array(bufferLength);
-        analyser.getByteTimeDomainData(dataArray);
-        // get the canvas to draw to
-        const waveCanvas  = document.getElementById("waveform");
-        const wavesCtx  = waveCanvas.getContext("2d");
+        analyser.getByteTimeDomainData(waveDataArray);
         // ...now do the drawing ..
-        // from https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode
         wavesCtx.fillStyle = "rgb(220, 255, 200)";
         wavesCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
         wavesCtx.lineWidth = 1.5;
         wavesCtx.strokeStyle = "rgb(0, 100, 0)";
         wavesCtx.beginPath();
-        const sliceWidth = waveCanvas.width * 1.0 / bufferLength;
+        const sliceWidth = waveCanvas.width * 1.0 / waveBufferLength;
         let x = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
+        for (let i = 0; i < waveBufferLength; i++) {
+          const v = waveDataArray[i] / 128.0;
           const y = v * waveCanvas.height / 2;
           if (i < 1) {
             wavesCtx.moveTo(x, y);
@@ -297,14 +292,48 @@
         }
         wavesCtx.lineTo(waveCanvas.width, waveCanvas.height / 2);
         wavesCtx.stroke();
-        // end the loop if sound is not playing
-        if (!soundObj.state.isPlaying) cancelAnimationFrame(waveform);
+      }
+
+      // ..lets do another one
+
+      // create the analyser node
+      const barAnalyser = audioCtx.createAnalyser();
+      barAnalyser.fftSize = 256;
+      const barBufferLength = barAnalyser.frequencyBinCount;
+      const barDataArray = new Uint8Array(barBufferLength);
+
+      // get the canvas to draw to
+      const barsCanvas  = document.getElementById("bars");
+      const barsCtx  = barsCanvas.getContext("2d");
+
+      // setup this animation
+      const { height, width } = barsCanvas;
+      barsCtx.clearRect(0, 0, width, height);
+
+      const barGraph = (soundObj, analyser) => {
+        if (!analyser) return;
+        requestAnimationFrame(() => barGraph(soundObj, analyser));
+        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(analyser);
+        analyser.getByteFrequencyData(barDataArray);
+        // ...now do the drawing ..
+        barsCtx.fillStyle = 'rgb(220, 220, 220)';
+        barsCtx.fillRect(0, 0, width, height);
+        let barWidth = (width / barBufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
+        for(let i = 0; i < barBufferLength; i++) {
+          barHeight = barDataArray[i];
+          barsCtx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+          barsCtx.fillRect(x, height-barHeight/2, barWidth, barHeight/2);
+          x += barWidth + 1;
+        }
       };
 
 
 
       // now we have defined our visualisation(s), lets run them!
-      waveform(heroVoice);
+      waveform(heroVoice, waveAnalyser);
+      barGraph(song1, barAnalyser);
 
 
     });
