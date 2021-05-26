@@ -505,12 +505,6 @@ const useAudio = function(sounds, c) {
         // now we add some useful props for visualisations to the sounds state:
         // 1. add the analyser node to state
         s.state.visualiser = n;
-        // 2. "frequencyBinCount" generally equates to the number of data
-        //    values you will have to play with for the visualization,
-        //    and is usually half of the fftSize value
-        s.state.bufferLength = n.frequencyBinCount;
-        // 3. the data the analyser node uses to state
-        s.state.visualData = new Uint8Array(n.frequencyBinCount);
         break;
       case 'compression':
         if (has('threshold')) setVal('threshold', o.threshold);

@@ -4,12 +4,17 @@
 <meta charset="UTF-8">
 <script src="../dist/component.min.js"></script>
 <script src="../dist/useAudio.min.js"></script>
+<style>
+  canvas { margin: 8px; border: 1px solid #999; }
+</style>
 </head>
 <body>
 
   <h1>Click here to load the sounds..</h1>
   <p>(Also look in the DevTools "Console" for more info)</p>
 
+  <br>
+  <canvas id="waveform"></canvas>
   <br>
   <p class="log"></p>
 
@@ -91,11 +96,12 @@
 //          },
           // this enables the analyser node, useful for visualizations (see below)
           analyser: {
-            fftSize: 2048,
-            minDecibels: -100,
-            maxDecibels: -30,
-            smoothingTimeConstant: 0.8,
+            fftSize: 2048 * 2,          // waveforms need 2048, bars 256 (or similar)
+            minDecibels: -31,           // must be lower than -30
+            maxDecibels: 2,             // must be more than minDecibels
+            smoothingTimeConstant: 0.5, // must be between 0 and 1
           },
+          // the compressor can prevent clipping and make the sound "smoother"
           compression: {
             threshold: -50.0,
             knee: 40.0,
@@ -142,6 +148,7 @@
       // update a sounds properties using the settings() method, which is like a
       // setState for sound objects - pass in only the properties you want to change
       song1.settings(quiet);
+      console.log('song1 (sirens)', song1);
 
       // you can also update the properties of all sounds at once - call
       // settings() on the library object itself, instead of on its sounds
@@ -236,47 +243,68 @@
       }, 20000);
 
       setTimeout(() => {
+        console.log('................fading out speech..........' );
         log('fade out (over 10 seconds)');
         heroVoice.fadeOut(10);
       }, 24000);
 
 
-      // to do visualisations, you should use the "visualiser" and "visualData"
-      // properties of your sound object (note: the analyser needs to be enabled
-      // in the sounds settings for these to exist)
-
+      // audio visualisations
+      //
       // define a function, running on a loop, that powers our visualisation, it
-      // should receive the props (current state) of a sound object
-      const visualisation = (props) => {
-        return; // remove this line to enable it
-        requestAnimationFrame(visualisation);
-        // get our analyser node ("visualiser") and some useful analyser data
-        const { visualiser, visualData, bufferLength } = props;
-        // get data suitable for generating waveforms
-        const waveData = visualiser.getByteTimeDomainData(visualData);
-        // or get data suitable for bars/equalisers
-        const barData = visualiser.getByteFrequencyData(visualData);
-        //...now do your visualisation(s)
-        for (var i = 0; i < bufferLength; i++) {
-          // do stuff here
-          return;
+      // should receive the sound object to visualise
+
+
+      // OPTIONAL - use "analyserNode" if the sound we're visualizing doesn't
+      // have an analyser node in its own audio nodes graph
+      let analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 256;
+
+      // here the visualisation func, runs in a loop while the sound plays
+      const waveform = (soundObj) => {
+        // setup the analyser node
+        let analyser = soundObj.state.visualiser || analyserNode;
+        if (!analyser) return;
+        // loop this function at 60fps
+        requestAnimationFrame(() => waveform(soundObj));
+        const bufferLength = analyser.frequencyBinCount;
+        // connect our sounds last node (not inc output node) to the analyser
+        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(analyser);
+        // get all the data points
+        let dataArray = new Uint8Array(bufferLength);
+        analyser.getByteTimeDomainData(dataArray);
+        // get the canvas to draw to
+        const waveCanvas  = document.getElementById("waveform");
+        const wavesCtx  = waveCanvas.getContext("2d");
+        // ...now do the drawing ..
+        // from https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode
+        wavesCtx.fillStyle = "rgb(220, 255, 200)";
+        wavesCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+        wavesCtx.lineWidth = 1.5;
+        wavesCtx.strokeStyle = "rgb(0, 100, 0)";
+        wavesCtx.beginPath();
+        const sliceWidth = waveCanvas.width * 1.0 / bufferLength;
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = v * waveCanvas.height / 2;
+          if (i < 1) {
+            wavesCtx.moveTo(x, y);
+          } else {
+            wavesCtx.lineTo(x, y);
+          }
+          x += sliceWidth;
         }
+        wavesCtx.lineTo(waveCanvas.width, waveCanvas.height / 2);
+        wavesCtx.stroke();
+        // end the loop if sound is not playing
+        if (!soundObj.state.isPlaying) cancelAnimationFrame(waveform);
       };
 
-      // we want our visualisation to start when our sound plays
-      heroVoice.onPlay = props => {
-        visualisation(props);
-      };
-      heroVoice.onResume = props => {
-        visualisation(props);
-      };
-      // and let's stop the visualisation animation when the sound stops
-      heroVoice.onStop = props => {
-        cancelAnimationFrame(visualisation);
-      };
-      heroVoice.onPause = props => {
-        cancelAnimationFrame(visualisation);
-      };
+
+
+      // now we have defined our visualisation(s), lets run them!
+      waveform(heroVoice);
 
 
     });
