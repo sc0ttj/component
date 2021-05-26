@@ -939,7 +939,7 @@ The `useAudio({ ... })` method generates sound objects with the following method
 
 Sounds can have many properties, which you can define when you create them, or adjust later, using `mySound.settings({ ... })`. 
 
-Lets define a sound all possible properties enabled:
+Lets define a sound with all possible properties enabled:
 
 ```js
 Foo.useAudio({
