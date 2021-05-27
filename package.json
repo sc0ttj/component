@@ -47,7 +47,7 @@
 		"dist/html.min.js",
 		"dist/htmel.min.js",
 		"dist/storage.min.js",
-		"dist/useAudio.min.js"
+		"dist/useAudio.min.js",
 		"dist/devtools.min.js"
 	],
 	"dependencies": {},
