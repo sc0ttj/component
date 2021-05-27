@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="../dist/component.min.js"></script>
+<script src="../dist/useAudio.min.js"></script>
+<style>
+  canvas { height: 100px; min-width: 300px; display: block; margin: 8px; border: 1px solid #999; }
+</style>
+</head>
+<body>
+
+  <!--
+
+    NOTE: You must run this file via a webserver, because it uses AJAX
+          to download the sound files.
+  -->
+
+  <h1>Click here to load the sounds..</h1>
+  <p>(Also look in the DevTools "Console" for more info)</p>
+
+  <p>Speech:</p>
+  <canvas id="waveform"></canvas>
+  <p>Sirens:</p>
+  <canvas id="bars"></canvas>
+  <p class="log"></p>
+
+<script>
+
+   // define a custom logging function
+  function log(msg) {
+    document.querySelector('.log').innerText += `* ${msg}\n`;
+  }
+
+
+  // according to the Web Audio spec, users must interact with the page before
+  // a sound can be played, so lets just add a "click to load sounds" event
+  document.body.addEventListener('click', function clicker() {
+
+    // remove the click event once page has been clicked, on order to only
+    // load the sounds once
+    document.body.removeEventListener('click', clicker);
+
+    log('loading sounds..');
+
+    // attach the useAudio add-on to Component
+    Component.useAudio = useAudio;
+
+    // we can now create and manage separate audio libraries, by attaching the
+    // audio to different components
+
+    // Example 1: simple example of loading multiple songs
+    const Soundtrack = new Component({});
+
+    // define your sounds
+    Soundtrack.useAudio({
+      song1: 'sounds/sirens.mp3', // the path to the file
+    });
+
+    // -------------------------------------------
+
+    // Example 2: advanced example
+    const Effects = new Component({});
+
+    // define your sounds
+    Effects.useAudio({
+      // lets add sound assets with custom properties filters and callbacks:
+      heroVoice: {
+        src: 'sounds/speech.mp3', // the path to the file
+        volume: 0.3,
+        loop: false,
+        playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
+        filters: {
+          delay: 0,         // give a duration, in seconds, like 0.2
+          panning: -1,      // -1 is left, 0 is center, 1 is right
+          // add any combination of "biquad" filters
+          // (see https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode)
+//          lowshelf:  { freq:  400, gain: 0.2 },
+//          highshelf: { freq: 1200, gain: 0.2 },
+//          lowpass:   { freq:  400, q: 0.1 },
+//          highpass:  { freq: 1200, q: 0.1 },
+//          allpass:   { freq: 1200, q: 0.1 },
+//          bandpass:  { freq:  800, q: 0.5 },
+//          peaking:   { freq:  800, gain: 0.2, q: 0.5 },
+//          notch:     { freq:  800, q: 0.5 },
+//          // or add an array of filters into a customisable "equalizer"
+//          equalizer: [
+//            { freq:  200,  q: 0.25, gain: 0.9 }, // lowpass filter
+//            { freq:  800,  q: 0.25, gain: 0.9 }, // peaking filter(s) (can have many)
+//            { freq:  1200, q: 0.25, gain: 0.9 }, // highpass filter
+//          ],
+//          reverb: {
+//            duration: 1, // min is 0.0001
+//            decay: 1,    // min is 0.0001
+//            reverse: false,
+//          },
+//          // how much to randomise various properties each time a sound is played
+//          randomization: {
+//            volume: 0.8,
+//            playbackRate: 0.6,
+//            startOffset: 0.0001,
+//            delay: 0.01,
+//          },
+          // this enables the analyser node, useful for visualizations (see below, and https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode)
+//          analyser: {
+//            fftSize: 2048,              // waveforms need 2048, bars 256 (or similar)
+//            minDecibels: -31,           // must be lower than -30
+//            maxDecibels: 2,             // must be more than minDecibels
+//            smoothingTimeConstant: 0.5, // must be between 0 and 1
+//          },
+          // the compressor can prevent clipping and make the sound "smoother"
+          compression: {
+            threshold: -20, // min -100, max 0
+            knee: 40.0,     // min 0, max 40
+            ratio: 20.0,    // min 1, max 20
+            attack: 0.0,    // min 0, max 1
+            release: 0.0,   // min 0, max 1
+          },
+        },
+        // lots of callbacks are available
+        onPlay: props => console.log('onPlay()', props),     // props is the current state of the sound,
+        onPause: props => console.log('onPause()', props),   // and includes all settings for the filters
+        onResume: props => console.log('onResume()', props), // that you have enabled
+        onStop: props => console.log('onStop()', props),
+      },
+    });
+
+
+    // the "audioLoaded" event fires when *all* sounds, from all components,
+    // have finished loading
+    document.addEventListener('audioLoaded', function audioLoaded(e) {
+
+      // only load this event once - remove it once loaded
+      document.removeEventListener('audioLoaded', audioLoaded);
+
+      log('sounds loaded');
+
+      // now we can use these sounds:
+      console.log('==========================================');
+      console.log('Sounds loaded:');
+      console.log('Soundtrack', Soundtrack.audio);
+      console.log('Effects', Effects.audio);
+      console.log('==========================================');
+
+      // you can extract the whole audio library as a variable
+      const effects = Effects.audio;
+
+      // or extract sounds into their own variables
+      const { song1 } = Soundtrack.audio;
+      const { heroVoice } = effects;
+
+      // name settings objects to easily create "presets"
+      const quiet = { volume: 0.025 };
+
+      // update a sounds properties using the settings() method, which is like a
+      // setState for sound objects - pass in only the properties you want to change
+      song1.settings(quiet);
+      console.log('song1 (sirens)', song1);
+
+      // you can also update the properties of all sounds at once - call
+      // settings() on the library object itself, instead of on its sounds
+      //effects.settings({
+      //  volume: 0.7,
+      //});
+
+      // you can re-route sounds into other sounds.. this will connect song1 to
+      // the "pan" node of heroVoice:
+      song1.connectTo(heroVoice);
+
+
+      // update title on page, so user can see sound is now playing
+      document.querySelector('h1').innerText = 'Playing sounds and adding effects..';
+
+      log('playing sound..');
+      heroVoice.play();
+      console.log('heroVoice', heroVoice);
+
+      //
+      // lets update the sound as it's playing...
+      //
+
+      setTimeout(() => {
+        console.log('................updating panning..........' );
+        log('panning to center');
+        heroVoice.settings({ panning: 0 });
+      }, 1500);
+
+      setTimeout(() => {
+        console.log('................increasing volume..........' );
+        log('increasing volume');
+        heroVoice.settings({ volume: 0.6 });
+      }, 4000);
+
+      setTimeout(() => {
+        console.log('................fade out sirens..........' );
+        log('start fade out of sirens, over 5 seconds');
+        song1.fadeOut(5);
+      }, 7000);
+
+
+      //setTimeout(function() {
+      //  console.log('pause');
+      //  heroVoice.pause();
+
+      //  setTimeout(function() {
+      //    console.log('resume');
+      //    heroVoice.play();
+      //  }, 9000);
+      //}, 8000);
+
+     setTimeout(() => {
+       console.log('................updating equaliser..........' );
+       log('add equaliser');
+       heroVoice.settings({
+         equalizer: [
+           { freq:  600, q: 1.0, gain: 0.4 },   // lowspass filter
+           { freq:  1000, q: 1.5, gain: 0.7 },   // peaking filter(s) (can have many)
+           { freq:  1500, q: 1.0, gain: 0.0001 }, // highpass filter
+         ],
+       });
+     }, 10000);
+
+      setTimeout(() => {
+        console.log('................adding reverb..........' );
+        log('adding reverb');
+        heroVoice.settings({
+          reverb: {
+           duration: 0.8,
+           decay: 0.9,
+           reverse: false,
+          },
+        });
+      }, 13000);
+
+      setTimeout(() => {
+        console.log('................removing reverb..........' );
+        log('removing reverb');
+        heroVoice.settings({ reverb: null });
+      }, 17000);
+
+      setTimeout(() => {
+        console.log('................updating randomization settings..........' );
+        log('randomizing playback rate');
+        heroVoice.settings({
+         randomization: {
+           playbackRate: 0.6,
+         },
+        });
+      }, 20000);
+
+      setTimeout(() => {
+        console.log('................fading out speech..........' );
+        log('fade out (over 10 seconds)');
+        heroVoice.fadeOut(10);
+        console.log('heroVoice', heroVoice);
+      }, 24000);
+
+
+      // Audio visualisations
+      //
+      // Define a function, running on a loop, that powers our visualisation:
+      //
+      // It should receive the sound object to visualise, and connect its last
+      // audio node (not inc output node) to an Analyser node, then draw
+      // the audio data to the page (draws to <canvas>)
+
+
+      // create the analyser node
+      const waveAnalyser = audioCtx.createAnalyser();
+      waveAnalyser.fftSize = 4096;
+      const waveBufferLength = waveAnalyser.frequencyBinCount;
+      const waveDataArray = new Uint8Array(waveBufferLength);
+
+      // get the canvas to draw to
+      const waveCanvas  = document.getElementById("waveform");
+      const wavesCtx  = waveCanvas.getContext("2d");
+
+      // the visualisation func, runs in a loop while the sound plays
+      function waveform(soundObj) {
+        if (!waveAnalyser) return;
+        requestAnimationFrame(() => waveform(soundObj));
+        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(waveAnalyser);
+        waveAnalyser.getByteTimeDomainData(waveDataArray);
+        // ...now do the drawing ..
+        wavesCtx.fillStyle = "rgb(220, 220, 220)";
+        wavesCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+        wavesCtx.lineWidth = 1.5;
+        wavesCtx.strokeStyle = "rgb(0, 100, 0)";
+        wavesCtx.beginPath();
+        const sliceWidth = waveCanvas.width * 1.0 / waveBufferLength;
+        let x = 0;
+        for (let i = 0; i < waveBufferLength; i++) {
+          const v = waveDataArray[i] / 128.0;
+          const y = v * waveCanvas.height / 2;
+          if (i < 1) {
+            wavesCtx.moveTo(x, y);
+          } else {
+            wavesCtx.lineTo(x, y);
+          }
+          x += sliceWidth;
+        }
+        wavesCtx.lineTo(waveCanvas.width, waveCanvas.height / 2);
+        wavesCtx.stroke();
+      }
+
+      // ..lets do another one
+
+      // create the analyser node
+      const barAnalyser = audioCtx.createAnalyser();
+      barAnalyser.fftSize = 512;
+      const barBufferLength = barAnalyser.frequencyBinCount;
+      const barDataArray = new Uint8Array(barBufferLength);
+
+      // get the canvas to draw to
+      const barsCanvas  = document.getElementById("bars");
+      const barsCtx  = barsCanvas.getContext("2d");
+
+      // setup this animation
+      const { height, width } = barsCanvas;
+      barsCtx.clearRect(0, 0, width, height);
+
+      const barGraph = (soundObj) => {
+        if (!barAnalyser) return;
+        requestAnimationFrame(() => barGraph(soundObj));
+        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(barAnalyser);
+        barAnalyser.getByteFrequencyData(barDataArray);
+        // ...now do the drawing ..
+        barsCtx.fillStyle = 'rgb(220, 220, 220)';
+        barsCtx.fillRect(0, 0, width, height);
+        let barWidth = (width / barBufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
+        for(let i = 0; i < barBufferLength; i++) {
+          barHeight = barDataArray[i];
+          barsCtx.fillStyle = 'rgb(' + (barHeight+100) + ',50,50)';
+          barsCtx.fillRect(x, height-barHeight/2, barWidth, barHeight/2);
+          x += barWidth + 1;
+        }
+      };
+
+      // now we have defined our visualisation(s), lets run them!
+      waveform(heroVoice);
+      barGraph(song1);
+
+    });
+
+
+   });
+
+</script>
+</body>
+
+</html>

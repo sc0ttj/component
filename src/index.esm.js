@@ -20,7 +20,8 @@ import html from './html.js'
 import htmel from './htmel.js'
 import storage from './storage.js'
 import syncTabs from './syncTabs.js'
+import useAudio from './useAudio.js'
 // react-like hooks
 import { hooks } from "./hooks.js"
 
-export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs, hooks }
+export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs, useAudio, hooks }

@@ -130,6 +130,7 @@ function Component(state, schema) {
   const tweenState = C.tweenState
   const springTo = C.springTo
   const strg = C.storage
+  const useAudio = C.useAudio
   const devtools = C.devtools
   const cache = C.memo ? C.memo : function(f){return f;}
   // used by storage add-on.. maybe try to remove at some point
@@ -331,6 +332,21 @@ function Component(state, schema) {
     typeof springTo !== "undefined"
       ? springTo(c, props, cfg)
       : c(props)
+    return c
+  }
+
+  /**
+   * Audio for components
+   *
+   * @param {object} audio library - the audio files and their settings
+   *
+   */
+  c.useAudio = (props) => {
+    if (typeof useAudio !== "undefined") {
+      useAudio(props, c)
+    } else {
+      c(props)
+    }
     return c
   }
 
