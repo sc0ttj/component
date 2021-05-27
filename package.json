@@ -1,6 +1,6 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.3.1",
+	"version": "1.3.2",
 	"description": "A tiny reactive component library with state management, DOM diffing, tweening, server-side rendering and much more.",
 	"author": "sc0ttj",
 	"license": "MIT",
@@ -33,6 +33,7 @@
 		"tween",
 		"pubsub",
 		"emit",
+		"audio",
 		"middleware",
 		"devtools"
 	],
@@ -46,6 +47,7 @@
 		"dist/html.min.js",
 		"dist/htmel.min.js",
 		"dist/storage.min.js",
+		"dist/useAudio.min.js"
 		"dist/devtools.min.js"
 	],
 	"dependencies": {},
