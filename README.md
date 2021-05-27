@@ -891,8 +891,8 @@ document.addEventListener('audioLoaded', function audioLoaded(e) {
   // you can now use the sounds
   const { mySound, sound1 } = Foo.audio;
 
-  Foo.view = props => htmel`
-    <div>
+  Foo.view = props => htmel
+    `<div>
       <button onclick="${mySound.play}">Click me</button>
     </div>`;
 
@@ -921,7 +921,7 @@ document.addEventListener('audioLoaded', function audioLoaded(e) {
 
 ### Using your sounds 
 
-The `useAudio({ ... })` method generates sound objects with the following methods (and more):
+The `useAudio({ ... })` method generates sound objects with the following methods:
 
 - `mySound.play()` - play a sound
 - `mySound.pause()` - pause a playing sound
@@ -932,6 +932,7 @@ The `useAudio({ ... })` method generates sound objects with the following method
 - `mySound.stop(atTime)` - stop at given time (leave empty for immediate stop)
 - `mySound.mute()` - set a sounds volume to zero
 - `mySound.unmute()` - restore a sounds volume to its previous value
+- `mySound.connectTo(otherSound)` - connect sounds together to play them (etc) at the same time
 - `mySound.settings({ ... })` - adjust all the sounds properties, even during playback
 
 
