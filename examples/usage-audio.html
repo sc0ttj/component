@@ -67,7 +67,7 @@
       // lets add sound assets with custom properties filters and callbacks:
       heroVoice: {
         src: 'sounds/speech.mp3', // the path to the file
-        volume: 0.20,
+        volume: 0.3,
         loop: false,
         playbackRate: 1,    // 1 is normal speed, 2 is double speed, etc
         filters: {
@@ -90,9 +90,9 @@
 //            { freq:  1200, q: 0.25, gain: 0.9 }, // highpass filter
 //          ],
 //          reverb: {
-//            duration: 1,
-//            decay: 1,
-//            reverse: true,
+//            duration: 1, // min is 0.0001
+//            decay: 1,    // min is 0.0001
+//            reverse: false,
 //          },
 //          // how much to randomise various properties each time a sound is played
 //          randomization: {
@@ -110,11 +110,11 @@
 //          },
           // the compressor can prevent clipping and make the sound "smoother"
           compression: {
-            threshold: -50.0,
-            knee: 40.0,
-            ratio: 12.0,
-            attack: 0.0,
-            release: 0.25,
+            threshold: -20, // min -100, max 0
+            knee: 40.0,     // min 0, max 40
+            ratio: 20.0,    // min 1, max 20
+            attack: 0.0,    // min 0, max 1
+            release: 0.0,   // min 0, max 1
           },
         },
         // lots of callbacks are available
@@ -150,7 +150,7 @@
       const { heroVoice } = effects;
 
       // name settings objects to easily create "presets"
-      const quiet = { volume: 0.08 };
+      const quiet = { volume: 0.025 };
 
       // update a sounds properties using the settings() method, which is like a
       // setState for sound objects - pass in only the properties you want to change
@@ -159,9 +159,9 @@
 
       // you can also update the properties of all sounds at once - call
       // settings() on the library object itself, instead of on its sounds
-      effects.settings({
-        volume: 0.25,
-      });
+      //effects.settings({
+      //  volume: 0.7,
+      //});
 
       // you can re-route sounds into other sounds.. this will connect song1 to
       // the "pan" node of heroVoice:
@@ -188,7 +188,7 @@
       setTimeout(() => {
         console.log('................increasing volume..........' );
         log('increasing volume');
-        heroVoice.settings({ volume: 0.7 });
+        heroVoice.settings({ volume: 0.6 });
       }, 4000);
 
       setTimeout(() => {
@@ -213,22 +213,21 @@
        log('add equaliser');
        heroVoice.settings({
          equalizer: [
-           { freq:  400, q: 0.1, gain: 0.002 },   // lowspass filter
-           { freq:  1200, q: 1.0, gain: 0.6 },    // peaking filter(s) (can have many)
-           { freq:  1500, q: 1.25, gain: 0.001 }, // highpass filter
+           { freq:  600, q: 1.0, gain: 0.4 },   // lowspass filter
+           { freq:  1000, q: 1.5, gain: 0.7 },   // peaking filter(s) (can have many)
+           { freq:  1500, q: 1.0, gain: 0.0001 }, // highpass filter
          ],
        });
-     }, 11000);
+     }, 10000);
 
       setTimeout(() => {
         console.log('................adding reverb..........' );
         log('adding reverb');
         heroVoice.settings({
-          volume: 1,
           reverb: {
-            duration: 0.8,
-            decay: 0.9,
-            reverse: false,
+           duration: 0.8,
+           decay: 0.9,
+           reverse: false,
           },
         });
       }, 13000);
@@ -236,7 +235,7 @@
       setTimeout(() => {
         console.log('................removing reverb..........' );
         log('removing reverb');
-        heroVoice.settings({ reverb: false });
+        heroVoice.settings({ reverb: null });
       }, 17000);
 
       setTimeout(() => {
@@ -253,6 +252,7 @@
         console.log('................fading out speech..........' );
         log('fade out (over 10 seconds)');
         heroVoice.fadeOut(10);
+        console.log('heroVoice', heroVoice);
       }, 24000);
 
 

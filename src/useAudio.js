@@ -226,15 +226,20 @@ const useAudio = function(sounds, c) {
       // of individual sounds with mySound.settings({ ... }) - pass in only
       // the options you want to change.
       settings: function(props, cb) {
-        // rebuild the nodes
-        //obj.audioNodes = createNodes(obj);
-        // update the state
+        // check if prop relates to an existing audio node or not
+        Object.keys(props).forEach(key => {
+          const rebuildNodes = filterList.indexOf(key) !== -1 && isDisabled(obj.state[key]) !== isDisabled(props[key]);
+          if (rebuildNodes) {
+            obj.state = { ...obj.state, ...props };
+            obj.audioNodes = createNodes(obj);
+            connectNodes(obj);
+            if (obj.state.isPlaying) obj.playFrom(audioCtx.currentTime);
+          }
+        });
         obj.state = { ...obj.state, ...props };
-        // now connect the audio nodes, in the proper order
-        //connectNodes(obj);
+        randomiseSound(obj);
         // update settings of each audio node
-        //configureAudioNodesFor(obj);
-        if (obj.state.isPlaying) obj.playFrom(audioCtx.currentTime);
+        setupNodesFor(obj);
         if (typeof cb === 'function') cb(obj.state);
         // setting have changed, call the relevant callback
         obj.onChange(obj.state);
@@ -248,30 +253,41 @@ const useAudio = function(sounds, c) {
   }
 
 
+  const randomiseSound = (soundObj) => {
+    const s = soundObj.state;
+    // randomise sound if need be
+    if (typeof s.randomization === 'object') {
+      const r = s.randomization;
+      if (r.volume) s.volume = s.volume + (Math.random() * r.volume);
+      if (r.playbackRate) s.playbackRate = s.playbackRate + (Math.random() * r.playbackRate);
+      if (r.startOffset) s.startOffset = s.startOffset + 1 * (0.01 + Math.random() * r.startOffset);
+      if (r.delay && getAudioNode(soundObj, 'delay')) s.delay = s.delay * (0.01 + Math.random() * r.delay);
+    }
+  }
 
   // for each audio node in soundObj, apply settings from state - this function
   // is called by the setting() method and play(), etc.
-  const configureAudioNodesFor = (soundObj) => {
+  const setupNodesFor = (soundObj) => {
+    const s = soundObj.state;
+    // configure the input node
+    soundObj.input.loop = s.loop;
+    soundObj.input.playbackRate.value = s.playbackRate;
     // for each sound property in soundObject.state
-    Object.keys(soundObj.state).forEach(key => {
+    Object.keys(s).forEach(key => {
       const nodeType = key === 'volume' ? 'gain' : key;
       // get the audio node of type 'nodeType'
       let node = getAudioNode(soundObj, nodeType);
       // get opts/values of the current prop (key) in sound objects state
-      const opts = soundObj.state[key];
       // set the value based on the property (key) in the state
-      if (node && node.type && !isDisabled(opts)) {
-        setNodeProps(soundObj, node, opts);
+      if (node && !isDisabled(s[key])) {
+        setNodeProps(soundObj, node, s[key]);
       }
     });
   };
 
 
   // helper func - check if an audio node is disabled in the options
-  const isDisabled = n => {
-    if (n === undefined || n === null || n === false) return true;
-    return false;
-  }
+  const isDisabled = n => n === undefined || n === null || n === false;
 
   // create all audio nodes defined in sound settings, and return them in an array
   const createNodes = (soundObj) => {
@@ -425,13 +441,13 @@ const useAudio = function(sounds, c) {
     switch (type) {
       case 'volume':
       case 'gain':
-        let v = o;
         // dont let "v" go below zero
-        v = v <= 0 ? minGain : v;
+        let v = o <= 0 ? minGain : o;
         // set to zero if muted
         if (s.state.mute === true) v = minGain;
         // update the node and state
         s.state.volume = v;
+        n.gain.setValueAtTime(v, ct);
         n.gain.value = v;
         break;
       case 'panning':
@@ -469,11 +485,8 @@ const useAudio = function(sounds, c) {
       	if (has('q')) setQ();
         break;
       case 'reverb':
-        n.buffer = impulseResponse(
-          o.duration ? o.duration : 2,
-          o.decay ? o.decay : 2,
-          o.reverse ? o.reverse : false
-        );
+        if (o) n.buffer = impulseResponse(o.duration, o.decay, o.reverse);
+        if (!o) n.buffer = null;
         break;
       case 'equalizer':
         // Note - the equalizer is an array of nodes, so don't set props on 'n',
@@ -523,47 +536,43 @@ const useAudio = function(sounds, c) {
   // public method on soundObjs
   // play the sound
   const play = () => {
+    const s = library[name];
+    const state = s.state;
     // get the input node
     const input = audioCtx.createBufferSource();
     // set the sound nodes buffer property to the (down)loaded sound
     input.buffer = cloneBuffer(cache[name]);
     // randomise sound if need be
-    const s = library[name];
-    if (typeof s.state.randomization === 'object') {
-      const r = s.state.randomization;
-      if (r.volume) s.state.volume = s.state.volume + (Math.random() * r.volume);
-      if (r.playbackRate) s.state.playbackRate = s.state.playbackRate + (Math.random() * r.playbackRate);
-      if (r.startOffset) s.state.startOffset = s.state.startOffset + 1 * (0.01 + Math.random() * r.startOffset);
-      if (r.delay && getAudioNode(s, 'delay')) s.state.delay = s.state.delay * (0.01 + Math.random() * r.delay);
-    }
+    randomiseSound(s);
     // configure the input node
-    input.loop = s.state.loop;
-    input.playbackRate.value = s.state.playbackRate;
-    //input.detune.value += s.state.detune;
+    input.loop = state.loop;
+    input.playbackRate.value = state.playbackRate;
+    //input.detune.value += state.detune;
     s.input = input;
+    // create the nodes
     s.audioNodes = createNodes(s);
     // now connect the audio nodes, in the proper order
     connectNodes(s);
     // set all properties on the relevent audio nodes to match the sounds "state"
-    //configureAudioNodesFor(s); // not needed...?
+    setupNodesFor(s); // not needed...?
     // normalize for better browser support
     if (!input.start) input.start = input.noteOn;
     // play the sound
-    input.start(s.state.startTime, s.state.startOffset % input.buffer.duration);
-    library[name].state.isPlaying = true;
+    input.start(state.startTime, state.startOffset % input.buffer.duration);
+    state.isPlaying = true;
     // play any other sounds which have been "connected" to this one
-    if (isArr(library[name].attachedSounds)) {
-      library[name].attachedSounds.forEach(snd => {
+    if (isArr(s.attachedSounds)) {
+      s.attachedSounds.forEach(snd => {
         if (!snd.state.isPlaying) snd.playFrom(audioCtx.currentTime);
       });
     }
     // enable fade in if needed
-    if (typeof library[name].state.fadeIn === 'number' && library[name].state.fadeIn > 0) {
-      fadeIn(library[name].state.fadeIn);
+    if (typeof state.fadeIn === 'number' && state.fadeIn > 0) {
+      fadeIn(state.fadeIn);
     }
     // run the callbacks
-    if (s.state.startOffset === 0) library[name].onPlay(s.state);
-    if (s.state.startOffset > 0) library[name].onResume(s.state);
+    if (state.startOffset === 0) s.onPlay(state);
+    if (state.startOffset > 0) s.onResume(state);
   };
 
 
