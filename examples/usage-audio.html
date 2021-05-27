@@ -10,6 +10,12 @@
 </head>
 <body>
 
+  <!--
+
+    NOTE: You must run this file via a webserver, because it uses AJAX
+          to download the sound files.
+  -->
+
   <h1>Click here to load the sounds..</h1>
   <p>(Also look in the DevTools "Console" for more info)</p>
 
@@ -250,10 +256,13 @@
       }, 24000);
 
 
-      // audio visualisations
+      // Audio visualisations
       //
-      // define a function, running on a loop, that powers our visualisation, it
-      // should receive the sound object to visualise
+      // Define a function, running on a loop, that powers our visualisation:
+      //
+      // It should receive the sound object to visualise, and connect its last
+      // audio node (not inc output node) to an Analyser node, then draw
+      // the audio data to the page (draws to <canvas>)
 
 
       // create the analyser node
@@ -267,11 +276,11 @@
       const wavesCtx  = waveCanvas.getContext("2d");
 
       // the visualisation func, runs in a loop while the sound plays
-      function waveform(soundObj, analyser) {
-        if (!analyser) return;
-        requestAnimationFrame(() => waveform(soundObj, analyser));
-        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(analyser);
-        analyser.getByteTimeDomainData(waveDataArray);
+      function waveform(soundObj) {
+        if (!waveAnalyser) return;
+        requestAnimationFrame(() => waveform(soundObj));
+        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(waveAnalyser);
+        waveAnalyser.getByteTimeDomainData(waveDataArray);
         // ...now do the drawing ..
         wavesCtx.fillStyle = "rgb(220, 220, 220)";
         wavesCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
@@ -298,7 +307,7 @@
 
       // create the analyser node
       const barAnalyser = audioCtx.createAnalyser();
-      barAnalyser.fftSize = 256;
+      barAnalyser.fftSize = 512;
       const barBufferLength = barAnalyser.frequencyBinCount;
       const barDataArray = new Uint8Array(barBufferLength);
 
@@ -310,11 +319,11 @@
       const { height, width } = barsCanvas;
       barsCtx.clearRect(0, 0, width, height);
 
-      const barGraph = (soundObj, analyser) => {
-        if (!analyser) return;
-        requestAnimationFrame(() => barGraph(soundObj, analyser));
-        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(analyser);
-        analyser.getByteFrequencyData(barDataArray);
+      const barGraph = (soundObj) => {
+        if (!barAnalyser) return;
+        requestAnimationFrame(() => barGraph(soundObj));
+        soundObj.audioNodes[soundObj.audioNodes.length - 2].connect(barAnalyser);
+        barAnalyser.getByteFrequencyData(barDataArray);
         // ...now do the drawing ..
         barsCtx.fillStyle = 'rgb(220, 220, 220)';
         barsCtx.fillRect(0, 0, width, height);
@@ -329,12 +338,9 @@
         }
       };
 
-
-
       // now we have defined our visualisation(s), lets run them!
-      waveform(heroVoice, waveAnalyser);
-      barGraph(song1, barAnalyser);
-
+      waveform(heroVoice);
+      barGraph(song1);
 
     });
 
