@@ -1432,6 +1432,11 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Changelog
 
+**1.3.2**
+- new optional add-on: `useAudio`
+  - easily add dynamic audio capabilities to your components
+  - uses Web Audio API, only works in browser
+
 **1.3.1**
 - build a "tree-shakable" ES Module too:
   - added new file `src/index.esm.js`
