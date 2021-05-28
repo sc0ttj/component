@@ -446,9 +446,9 @@ const useAudio = function(sounds, c) {
         // set to zero if muted
         if (s.state.mute === true) v = minGain;
         // update the node and state
-        s.state.volume = v;
+        //s.state.volume = v;
         n.gain.setValueAtTime(v, ct);
-        n.gain.value = v;
+        //n.gain.value = v;
         break;
       case 'panning':
         if (!audioCtx.createStereoPanner) {
@@ -464,7 +464,7 @@ const useAudio = function(sounds, c) {
         } else {
           setVal('pan', typeof o === 'number' ? o : 0);
         }
-        s.state.panning = o;
+        //s.state.panning = o;
         break;
       //case 'panning3d':
       //  // TODO
@@ -485,8 +485,16 @@ const useAudio = function(sounds, c) {
       	if (has('q')) setQ();
         break;
       case 'reverb':
-        if (o) n.buffer = impulseResponse(o.duration, o.decay, o.reverse);
-        if (!o) n.buffer = null;
+        if (o) {
+          // to allow only some props to be passed in let's merge `o` with defaults and state
+          const opts = { duration: 1, decay: 1, reverse: false, ...s.state.reverb, ...o };
+          // set the reverb
+          n.buffer = impulseResponse(opts.duration, opts.decay, opts.reverse);
+          // update state, so it contains all reverb settings
+          s.state.reverb = opts;
+        } else {
+          n.buffer = null;
+        }
         break;
       case 'equalizer':
         // Note - the equalizer is an array of nodes, so don't set props on 'n',
