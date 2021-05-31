@@ -1002,17 +1002,25 @@ Foo.useAudio({
     onPause: props => console.log(props),  // and includes all settings for the filters
     onResume: props => console.log(props), // that you have enabled
     onStop: props => console.log(props),
+    onChange: props => console.log(props),
   },
 });
 ```
 
+You can change any of these settings later, even during playback.
+
+For best results, it's recommended to define up front (when creating your sounds) any properties that you intend to change during playback.
+
+However, this is not required, as `useAudio` will rebuild a sounds AudioNodes graph (connections) during playback, if required - you can see this in action in [examples/usage-audio.html](examples/usage-audio.html) where reverb is added and then removed, while the sound plays.
+
 ### Updating your sounds settings
 
-You can change any/all properties of the sounds state, like so:
+You can change any/all properties of the sounds state, even during playback, with the `.setting()` method:
 
 ```js
 mySound.settings({
   reverb: { decay: 2 },
+  volume: 1,
 });
 ```
 
@@ -1023,6 +1031,22 @@ You can also update _all_ sounds attached to a component at once, using the foll
 Foo.audio.settings({
   reverb: { decay: 2 },
 });
+```
+
+Calling `.setting()`, both on a single sound or on a library of sounds, will trigger the `onChange()` callback. 
+
+The settings method can also take a callback as a second parameter, which is run after the settings have been changed:
+
+```js
+mySound.settings(
+  // pass in the properties to change
+  { reverb: { decay: 2 }, volume: 1 },
+  // pass in the callback to run
+  function(props) {
+    console.log('State updated, and now contains: ', props);
+  }
+);
+
 ```
 
 See [examples/usage-audio.html](examples/usage-audio.html) for examples and more information.
