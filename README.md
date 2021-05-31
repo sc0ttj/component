@@ -1015,7 +1015,7 @@ However, this is not required, as `useAudio` will rebuild a sounds AudioNodes gr
 
 ### Updating your sounds settings
 
-You can change any/all properties of the sounds state, even during playback, with the `.setting()` method:
+You can change any/all properties of the sounds state, even during playback, with the `.settings()` method:
 
 ```js
 mySound.settings({
@@ -1033,7 +1033,7 @@ Foo.audio.settings({
 });
 ```
 
-Calling `.setting()`, both on a single sound or on a library of sounds, will trigger the `onChange()` callback. 
+Calling `.settings()`, both on a single sound or on a library of sounds, will trigger the `onChange()` callback. 
 
 The settings method can also take a callback as a second parameter, which is run after the settings have been changed:
 
