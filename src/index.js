@@ -27,7 +27,8 @@ var htmel = require("./htmel.min.js")
 var storage = require("./storage.min.js")
 var syncTabs = require("./syncTabs.min.js")
 var useAudio = require("./useAudio.min.js")
+var onScroll = require("./onScroll.min.js")
 // react-like hooks
 var { hooks } = require("./hooks.min.js")
 
-export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs, useAudio, hooks }
+export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs, useAudio, onScroll, hooks }
