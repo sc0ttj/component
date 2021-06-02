@@ -1,8 +1,3 @@
-const scrollTicker = () => {
-  requestAnimationFrame(scrollTicker);
-
-}
-
 const onScroll = (fn, c) => {
   if (!document) return;
 

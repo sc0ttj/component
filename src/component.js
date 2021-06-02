@@ -359,7 +359,7 @@ function Component(state, schema) {
    */
   c.onScroll = fn => {
     if (onScroll) {
-      raf(() => onScroll(fn, c));
+      onScroll(fn, c);
     }
     return c
   }
