@@ -4,18 +4,23 @@
 <meta charset="UTF-8">
 <script src="../dist/component.min.js"></script>
 <script src="../dist/onScroll.min.js"></script>
+<style>
+.section {margin: 16px; height: 200px; background-color: blue;}
+.overlay {position: fixed; top: 16px; left: 16px; padding:4px; color: white; background-color: green;}
+.guideline {height: 1px;border-top: 1px dashed red;position: fixed;top: 33%;width: 100%;}
+</style>
 </head>
 <body>
 
-<div style="margin: 16px; height: 200px; background-color: blue"></div>
-<div style="margin: 16px; height: 200px; background-color: blue"></div>
-<div style="margin: 16px; height: 200px; background-color: blue"></div>
+<div class="section"></div>
+<div class="section"></div>
+<div class="section"></div>
 <div class="container"></div>
-<div style="margin: 16px; height: 200px; background-color: blue"></div>
-<div style="margin: 16px; height: 200px; background-color: blue"></div>
-<div style="margin: 16px; height: 200px; background-color: blue"></div>
+<div class="section"></div>
+<div class="section"></div>
+<div class="section"></div>
 
-<div class="guideline" style="height: 1px;border-top: 1px dashed red;position: fixed;top: 33%;width: 100%;"></div>
+<div class="guideline"></div>
 
 
 <script>
@@ -23,28 +28,16 @@
   // attach the useAudio add-on to Component
   Component.onScroll = onScroll;
 
-  // place an invisible marker line, fixed to the given screen height, past which
-  // all components will scroll - defaults to 40%.. The higher the %, the earlier
-  // the given onScroll method(s) will be triggered.
-
-  //Component.onScroll.markerLine = '50%';
-
   const Foo = new Component({ progressBarWidth: 0 });
 
-  // Each component can have a different marker line
-
-  //Foo.onScroll.markerLine = '60%';
-
   Foo.view = props => `
-  <div style="padding: 16px; height:1800px; width: 80%; margin: 48px auto; background-color: #e7e7e7;">
+  <div style="padding: 16px; height:1800px; width: 80%; margin: 16px auto; background-color: #e7e7e7;">
     <p>Scroll me, and look in the Dev Tools console...</p>
-    <div style="position: fixed; top: 16px; left: 16px; padding:4px; color: white; border: 1px solid black; height: 20px;background-color: green;width: calc(${props.progressBarWidth * 100}% -16px);">
+    <div class="overlay">
       progress: ${Math.floor(props.progressBarWidth * 100)}%
     </div>
   </div>
   `;
-
-  Foo.render('.container');
 
   Foo.onScroll.offset = 33; // 50 means 50%, which is halfway down the screen
 
@@ -54,6 +47,8 @@
     console.log('scrollProps', scrollProps);
     Foo.setState({ progressBarWidth: scrollProps.progress });
   });
+
+  Foo.render('.container');
 
 
 
