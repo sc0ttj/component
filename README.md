@@ -877,9 +877,6 @@ Component.onScroll = onScroll
 Here's how to actually use it to drive an animation:
 
 ```js
-// attach the useAudio add-on to Component
-Component.onScroll = onScroll;
-
 const Foo = new Component({ percent: 0 });
 
 Foo.view = props => `
