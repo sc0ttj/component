@@ -16,14 +16,21 @@ const onScroll = (fn, c) => {
       if (bounds.top >= guideline) progress = 0;
       if (bounds.bottom <= guideline) progress = 1;
       c.onScroll.frame = !outside ? (c.onScroll.frame || 0) + 1 : 0;
+      //
+      let direction = null;
+      if (c.onScroll.frame !== 0) {
+        direction = c.onScroll.prevPos < progress ? 'down' : 'up'
+      }
       // setup the props to return
       const scrollProps = {
         frame: c.onScroll.frame,
         totalFrames: +totalFrames.toFixed(0),
         progress: +progress.toFixed(2),
+        direction: direction,
       };
       // run the given function, pass in current scroll props
       fn(scrollProps)
+      c.onScroll.prevPos = progress;
     });
   };
 
