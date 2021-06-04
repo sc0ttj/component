@@ -53,6 +53,7 @@ A "state" is a snapshot of your application data at a specific time.
   - `emitter`: an event emitter - share updates between components
   - `tweenState`: animate nicely from one state to the next (tweened)
   - `springTo`: animate nicely from one state to the next (using spring physics)
+  - `onScroll`:  enables easy scroll-based animations (using debounced scroll event)
   - `useAudio`: add dynamic audio to your components (uses Web Audio API)
   - `storage`: enables persistent states (between page refreshes, etc)
   - `syncTabs`: Synchronize state updates & page renders between browser tabs
@@ -844,6 +845,74 @@ The `props` object returned to the callbacks contains:
 
 Also see [examples/usage-spring-animation.html](examples/usage-spring-animation.html)
 
+## Using the `onScroll` module
+
+With the optional `onScroll` add-on, it's easy to do scroll-based animations. Works in browsers only (not NodeJS).
+
+You can define a function to run on scroll, on a per-component basis, and set (an invisible) marker line (offset from top) through which a components view must pass to trigger/drive the animations.
+
+### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/onScroll.min.js"></script>
+<script>
+  Component.onScroll = onScroll
+
+  // use it here
+</script>
+```
+
+### In ES6:
+
+```js
+import { Component, onScroll } from '@scottjarvis/component';
+
+Component.onScroll = onScroll
+
+// use it here
+
+```
+
+Here's how to actually use it to drive an animation:
+
+```js
+// attach the useAudio add-on to Component
+Component.onScroll = onScroll;
+
+const Foo = new Component({ percent: 0 });
+
+Foo.view = props => `
+  <p id="scroll-progress-monitor">
+    progress: ${props.percent}%
+  </p>
+`;
+
+// set the marker line through which elements must pass to trigger the animation:
+// - 50  means 50%, which is halfway down the screen, 
+// - 33  means 33% down from top,
+// - 100 means at bottom of screen
+Foo.onScroll.offset = 33; 
+
+// now we can add the scroll event to the component
+Foo.onScroll(scrollProps => {
+  Foo.setState({ 
+    percent: Math.floor(scrollProps.progress * 100) 
+  });
+});
+
+// now render it to the page
+Foo.render('.container');
+```
+
+The `scrollProps` param received by your given function contains the following properties:
+
+- `progress`: progress of the component past the marker line, starts at `0.0`, ends at `1.0`
+- `frame`: the frame count (resets once progress reach `0.0` or `1.0`)
+- `totalFrames`: total frame count (from requestAnimationFrame)
+
+Also see [examples/usage-onScroll.html](examples/usage-onScroll.html)
+
 ## Using the `useAudio` module
 
 Provides an audio add-on, powered by the Web Audio API, for highly performant, timing-sensitive sounds. Useful for games, audio applications and visualizations. Works in browser only (not in NodeJS).
@@ -1457,9 +1526,13 @@ Rebuild to `dist/` using the command `npm run build`
 ## Changelog
 
 **1.3.2**
-- new optional add-on: `useAudio`
-  - easily add dynamic audio capabilities to your components
-  - uses Web Audio API, only works in browser
+- new optional add-ons: 
+  - `useAudio`
+    - easily add dynamic audio capabilities to your components
+    - uses Web Audio API, only works in browser
+  - `onScroll`
+    - easily power/drive animations based on scroll values
+    - uses scroll event, only works in browser
 
 **1.3.1**
 - build a "tree-shakable" ES Module too:
