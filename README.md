@@ -910,6 +910,7 @@ The `scrollProps` param received by your given function contains the following p
 - `progress`: progress of the component past the marker line, starts at `0.0`, ends at `1.0`
 - `frame`: the frame count (resets once progress reach `0.0` or `1.0`)
 - `totalFrames`: total frame count (from requestAnimationFrame)
+- `direction`: the direction of the scroll (either `up` or `down`)
 
 Also see [examples/usage-onScroll.html](examples/usage-onScroll.html)
 
