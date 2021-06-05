@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="../dist/component.min.js"></script>
+<script src="../dist/onScroll.min.js"></script>
+<style>
+.section {color: white; padding: 16px; margin: 16px; height: 200px; background-color: blue;}
+.overlay {position: fixed; top: 16px; right: 16px; padding:4px; color: white; background-color: green;}
+.guideline {height: 1px;border-top: 2px dashed red;position: fixed;top: 33%;width: 100%;}
+</style>
+</head>
+<body>
+
+<div class="section"> blah, scroll past me, blah</div>
+<div class="section"> blah, scroll past me, blah</div>
+<div class="section"> blah, scroll past me, blah</div>
+<div class="container"></div>
+<div class="section"> blah, scroll past me, blah</div>
+<div class="section"> blah, scroll past me, blah</div>
+<div class="section"> blah, scroll past me, blah</div>
+
+<div class="guideline"></div>
+
+
+<script>
+
+  // attach the useAudio add-on to Component
+  Component.onScroll = onScroll;
+
+  const Foo = new Component({ progressBarWidth: 0 });
+
+  Foo.view = props => `
+  <div style="padding: 16px; height:1800px; width: 80%; margin: 16px auto; background-color: #e7e7e7;">
+    <p>Scroll me, and look in the Dev Tools console...</p>
+    <div class="overlay">
+      progress: ${Math.floor(props.progressBarWidth * 100)}%
+    </div>
+  </div>
+  `;
+
+  Foo.onScroll.offset = 33; // 50 means 50%, which is halfway down the screen
+
+  // now we can add the scroll event to the component
+  Foo.onScroll(scrollProps => {
+    // do stuff here, like update a progress bar
+    console.log('scrollProps', scrollProps);
+    Foo.setState({ progressBarWidth: scrollProps.progress });
+  });
+
+  Foo.render('.container');
+
+
+
+</script>
+</body>
+
+</html>

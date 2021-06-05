@@ -30,9 +30,11 @@
 		"dom-diff",
 		"server-side-rendering",
 		"templating",
-		"tween",
 		"pubsub",
 		"emit",
+		"tween",
+		"springs",
+		"scrolly",
 		"audio",
 		"middleware",
 		"devtools"

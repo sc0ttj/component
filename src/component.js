@@ -131,6 +131,7 @@ function Component(state, schema) {
   const springTo = C.springTo
   const strg = C.storage
   const useAudio = C.useAudio
+  const onScroll = C.onScroll
   const devtools = C.devtools
   const cache = C.memo ? C.memo : function(f){return f;}
   // used by storage add-on.. maybe try to remove at some point
@@ -346,6 +347,19 @@ function Component(state, schema) {
       useAudio(props, c)
     } else {
       c(props)
+    }
+    return c
+  }
+
+  /**
+   * Scroll-based animations for components
+   *
+   * @param {object}
+   *
+   */
+  c.onScroll = fn => {
+    if (onScroll) {
+      onScroll(fn, c);
     }
     return c
   }

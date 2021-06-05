@@ -103,6 +103,16 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
+    input: "src/onScroll.js",
+    output: {
+      file: "dist/onScroll.min.js",
+      sourcemap: true,
+      name: "onScroll",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
     input: "src/render.js",
     output: {
       file: "dist/render.min.js",
