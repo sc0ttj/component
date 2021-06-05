@@ -37,7 +37,6 @@ const onScroll = (fn, c) => {
   if (!c.onScroll.ready) {
     window.addEventListener('scroll', cb);
     c.onScroll.ready = true;
-    console.log('added SCROLL event');
   }
 }
 
