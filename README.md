@@ -1691,12 +1691,7 @@ Rebuild to `dist/` using the command `npm run build`
     - styles
     - views
   
-- Scroll-based re-rendering/animation:
-  - create a `Component.useScroll(scrollProps => { ... })` add-on module:
-    - see [sc0ttj/scrollstory](https://github.com/sc0ttj/scrollstory) for tiny scroll library
-
 - Better game support:
-  - an `audio()` addon, with loops, panning, volume, effects 
   - a `tick()` addon (time-based animation): 
     - a gameloop with ticker that emits "ticks" at set intervals (always 30 times/second, for example)
     - rendering de-coupled from gameloop (fps can vary)
@@ -1759,6 +1754,8 @@ Rebuild to `dist/` using the command `npm run build`
 
 ### Animation (tweening)
 
+- [anime](https://github.com/juliangarnier/anime) - excellent, versatile lightweight animation library
+- [popmotion](https://github.com/Popmotion/popmotion) - another great animation library
 - [react-tween-state](https://github.com/chenglou/react-tween-state) - tween from one state to another (where I got `tweenState` idea from)
 - [phena](https://github.com/jeremenichelli/phena/) - a petit tweening engine based on requestAnimationFrame (adapted version inside `src/tweenState.js`)
 - [easing functions](https://gist.github.com/gre/1650294) - excellent set of easing functions (used by this project in `src/easings.js`)
