@@ -132,6 +132,7 @@ function Component(state, schema) {
   const strg = C.storage
   const useAudio = C.useAudio
   const onScroll = C.onScroll
+  const onLoop = C.onLoop
   const devtools = C.devtools
   const cache = C.memo ? C.memo : function(f){return f;}
   // used by storage add-on.. maybe try to remove at some point
@@ -143,7 +144,7 @@ function Component(state, schema) {
   // for debouncing render() calls, and window, document
   let timeout, w, d, raf, t
 
-  c.reactive = true                   // if true, re-render on every state change
+  c.reactive = onLoop ? false: true   // if true, re-render on every state change.. set to false if using onLoop
   c.immutable = true                  // if true, freeze the state object after updating it
   c.debug = devtools ? true : false   //  if true, maintain a history of state changes in `.log`
   c.scopedCss = true                  // auto prefix component css with a unique id
@@ -155,6 +156,8 @@ function Component(state, schema) {
   c.i = c.log.length
 
   c.view = props => props // the default view (just return the props)
+  c.draw = c.view // alias, make more sense when drawing to canvas (rather than DOM)
+  c.ctx = null;  // will be the canvas context, if set
 
   c.middleware = []
 
@@ -266,7 +269,7 @@ function Component(state, schema) {
       }
 
       // re-render component
-      if (c.reactive) c.render(c.container)
+      if (c.reactive) c.render(c.container, c.ctx)
 
       if (t && !c.isNode) cancelAnimationFrame(t)
 
@@ -361,6 +364,17 @@ function Component(state, schema) {
     if (onScroll) {
       onScroll(fn, c);
     }
+    return c
+  }
+
+  /**
+   * Game loop (fixed interval loop, variable interval rendering)
+   *
+   * @param {object}
+   *
+   */
+  c.onLoop = fn => {
+    if (onLoop) onLoop(fn, c);
     return c
   }
 
@@ -520,7 +534,7 @@ function Component(state, schema) {
   * our component styling, in a <style> tag
   */
   c.toString = function() {
-    let view = c.view(c.state)
+    let view = c.view(c.state, c.ctx)
     let str = ''
     let style = ''
 
@@ -528,7 +542,7 @@ function Component(state, schema) {
     if (!c.done && strg) {
       const pState = strg.getItem(c, c.state);
       c(pState);
-      view = typeof c.view === "function" ? c.view(pState) : view
+      view = typeof c.view === "function" ? c.view(pState, c.ctx) : view
     }
 
     // get component styles, nicely indented
@@ -543,48 +557,67 @@ function Component(state, schema) {
    * Re-render the component and add it to the page
    * @param {string|element} container - the element which holds the component
    */
-  c.render = function(el) {
+  c.render = function(el, ctxType) {
     if (c.isNode) return c.toString()
 
-    let view = typeof c.view === "function" ? c.view(c.state) : null
+    let view;
 
     // get state from localStorage, if it's in there
     if (!c.html && strg) {
       const pState = strg.getItem(c, c.state);
-      view = typeof c.view === "function" ? c.view(pState) : null
+      view = typeof c.view === "function" ? c.view(pState, c.ctx) : null
       c(pState); // set state
     }
+
     // make sure we have container as an HTML Element
     if (d && !c.html) el = d.querySelector(el)
     c.html = c.container = el
+
+    // get the cavas context, if needed
+    if (c.html && c.html.getContext) {
+      c.ctx = c.ctx ? c.ctx : c.html.getContext(ctxType ? ctxType : '2d')
+    }
 
     if (timeout) cancelAnimationFrame(timeout)
 
     timeout = raf(() => {
       if (c.css && c.style) c.setCss()
-      if (c.container && view) {
-        try {
-          domDiff(c.container.firstElementChild, view.outerHTML ? view.outerHTML : view)
-          // console.log('diffed')
-        } catch (err) {
-          if (view.outerHTML) {
-            c.container.innerHTML = ''
-            c.container.append(view)
-            // console.log('cleared & appended')
-          } else {
-            c.container.innerHTML = view
-            // console.log('replaced innerHTML')
+
+      // if we a container, lets (re)render the view (if any) to the page
+      if (c.html) {
+        view = typeof c.view === "function" ? c.view(c.state, c.ctx) : null
+        // if container exists, is *not* a canvas
+        if (!c.ctx) {
+          // get the view
+          // try to update view:
+          // try DOM diffing, else append to empty innerHTML, else replace innerHTML
+          try {
+            domDiff(c.html.firstElementChild, view.outerHTML ? view.outerHTML : view)
+            //console.log('diffed')
+          } catch (err) {
+            if (view && view.outerHTML) {
+              c.html.innerHTML = ''
+              c.html.append(view)
+              //console.log('cleared & appended')
+            } else {
+              c.html.innerHTML = view
+              //console.log('replaced innerHTML')
+            }
           }
+        } else {
+          // else if container exists and *is* a canvas
+          c.view(c.state, c.ctx)
         }
       }
       // for devtools
-      if (devtools && c.container) {
-        c.container.firstChild.setAttribute('data-uid', c.uid)
-        devtools.populateUI(c.container)
+      if (devtools && c.html) {
+        c.html.firstChild.setAttribute('data-uid', c.uid)
+        devtools.populateUI(c.html)
       }
     })
 
-    return c.container
+    // return the container element
+    return c.html
   }
 
   // for devtools
