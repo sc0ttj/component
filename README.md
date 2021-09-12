@@ -1153,7 +1153,7 @@ The `onLoop` add-on gives you a fixed-interval loop in which you run your given 
 
 ### In browsers:
 
-```js
+```html
 <script src="https://unpkg.com/@scottjarvis/component"></script>
 <script src="https://unpkg.com/@scottjarvis/component/dist/onLoop.min.js"></script>
 <script>
