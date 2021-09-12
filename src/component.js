@@ -7,6 +7,7 @@
 // t = target
 // s = source
 const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=0010
+  const d = document; // TODO: support shadow DOM - check the root, set accordingly
   const job = {
     cfg: {
       orig: t
@@ -14,7 +15,7 @@ const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=
     // t = target
     // s = source
     replace(t, s = t) {
-      const v = document.createElement("template")
+      const v = d.createElement("template")
       v.innerHTML = s
       const vHTML = v.content.firstChild.nextElementSibling
       if (vHTML.nodeName !== t.nodeName) {
@@ -132,6 +133,7 @@ function Component(state, schema) {
   const strg = C.storage
   const useAudio = C.useAudio
   const onScroll = C.onScroll
+  const onLoop = C.onLoop
   const devtools = C.devtools
   const cache = C.memo ? C.memo : function(f){return f;}
   // used by storage add-on.. maybe try to remove at some point
@@ -171,9 +173,10 @@ function Component(state, schema) {
 
   if (!c.isNode) {
     w = window
-    d = document
+    d = document  // TODO: support shadow DOM - check the root, set accordingly
     raf = requestAnimationFrame
     // the <style> elem into which we put our component CSS
+    // TODO: only do this if component styles are defined
     c.css = d.createElement("style")
     c.css.id = c.uid
     d.head.appendChild(c.css)
@@ -266,7 +269,7 @@ function Component(state, schema) {
       }
 
       // re-render component
-      if (c.reactive) c.render(c.container)
+      if (c.reactive) c.render(c.container, c.ctx)
 
       if (t && !c.isNode) cancelAnimationFrame(t)
 
@@ -362,6 +365,34 @@ function Component(state, schema) {
       onScroll(fn, c);
     }
     return c
+  }
+
+  /**
+   * Game loop (fixed interval loop, variable interval rendering)
+   *
+   * @param {object}
+   *
+   */
+  if (onLoop) {
+    c.onLoop = (fn, o) => {
+      const opts = {
+        minFps: 15,
+        targetFps: 60,
+        maxRestarts: Infinity,
+        runTime: Infinity,
+        forceSetTimeout: false,
+        autoResume: true,
+        // override the options above with any passed into the component
+        ...o,
+      }
+      // create a controllable loop, if needed
+      c.loop = c.loop ? c.loop : new onLoop({ ...c.state, ...opts }, fn, c)
+      // attach the methods to control the loop
+      c.start = () => c.loop.start();
+      c.stop = () => c.loop.stop();
+      c.pause = () => c.loop.pause();
+      c.resume = () => c.loop.resume();
+    }
   }
 
   c.on = (ev, fn) => {
@@ -520,7 +551,7 @@ function Component(state, schema) {
   * our component styling, in a <style> tag
   */
   c.toString = function() {
-    let view = c.view(c.state)
+    let view = c.view(c.state, c.ctx)
     let str = ''
     let style = ''
 
@@ -528,7 +559,7 @@ function Component(state, schema) {
     if (!c.done && strg) {
       const pState = strg.getItem(c, c.state);
       c(pState);
-      view = typeof c.view === "function" ? c.view(pState) : view
+      view = typeof c.view === "function" ? c.view(pState, c.ctx) : view
     }
 
     // get component styles, nicely indented
@@ -543,48 +574,70 @@ function Component(state, schema) {
    * Re-render the component and add it to the page
    * @param {string|element} container - the element which holds the component
    */
-  c.render = function(el) {
+  c.render = function(el, ctxType) {
     if (c.isNode) return c.toString()
 
-    let view = typeof c.view === "function" ? c.view(c.state) : null
+    let view;
 
     // get state from localStorage, if it's in there
     if (!c.html && strg) {
       const pState = strg.getItem(c, c.state);
-      view = typeof c.view === "function" ? c.view(pState) : null
+      view = typeof c.view === "function" ? c.view(pState, c.ctx) : null
       c(pState); // set state
     }
+
     // make sure we have container as an HTML Element
-    if (d && !c.html) el = d.querySelector(el)
+    if (d && !c.html) {
+      // TODO: support shadow DOM - check the root , set `d` accordingly
+      el = d.querySelector(el)
+    }
     c.html = c.container = el
+
+    // get the canvas context, if needed
+    if (c.html && c.html.getContext) {
+      c.ctx = c.ctx ? c.ctx : c.html.getContext(ctxType ? ctxType : '2d')
+    }
 
     if (timeout) cancelAnimationFrame(timeout)
 
     timeout = raf(() => {
       if (c.css && c.style) c.setCss()
-      if (c.container && view) {
-        try {
-          domDiff(c.container.firstElementChild, view.outerHTML ? view.outerHTML : view)
-          // console.log('diffed')
-        } catch (err) {
-          if (view.outerHTML) {
-            c.container.innerHTML = ''
-            c.container.append(view)
-            // console.log('cleared & appended')
-          } else {
-            c.container.innerHTML = view
-            // console.log('replaced innerHTML')
+
+      // if we a container, lets (re)render the view (if any) to the page
+      if (c.html) {
+        view = typeof c.view === "function" ? c.view(c.state, c.ctx) : null
+        // if container exists, is *not* a canvas
+        if (!c.ctx) {
+          // get the view
+          // try to update view:
+          // try DOM diffing, else append to empty innerHTML, else replace innerHTML
+          try {
+            domDiff(c.html.firstElementChild, view.outerHTML ? view.outerHTML : view)
+            //console.log('diffed')
+          } catch (err) {
+            if (view && view.outerHTML) {
+              c.html.innerHTML = ''
+              c.html.append(view)
+              //console.log('cleared & appended')
+            } else {
+              c.html.innerHTML = view
+              //console.log('replaced innerHTML')
+            }
           }
+        } else {
+          // else if container exists and *is* a canvas
+          c.view(c.state, c.ctx)
         }
       }
       // for devtools
-      if (devtools && c.container) {
-        c.container.firstChild.setAttribute('data-uid', c.uid)
-        devtools.populateUI(c.container)
+      if (devtools && c.html) {
+        c.html.firstChild.setAttribute('data-uid', c.uid)
+        devtools.populateUI(c.html)
       }
     })
 
-    return c.container
+    // return the container element
+    return c.html
   }
 
   // for devtools

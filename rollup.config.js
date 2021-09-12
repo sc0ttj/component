@@ -113,6 +113,16 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
+    input: "src/onLoop.js",
+    output: {
+      file: "dist/onLoop.min.js",
+      sourcemap: true,
+      name: "onLoop",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
     input: "src/render.js",
     output: {
       file: "dist/render.min.js",

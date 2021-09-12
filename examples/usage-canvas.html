@@ -1,0 +1,35 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - canvas demo</title>
+  <script src="../dist/component.min.js"></script>
+</head>
+<body>
+
+  <canvas class="container"></canvas>
+
+<script>
+  // define a new component
+  const Foo = new Component({ x: 0, y: 0 });
+
+  // define a "view", that draws to the components canvas
+  Foo.view = (props, ctx) => {
+    ctx.moveTo(0, 0);
+    ctx.strokeStyle = 'blue';
+    ctx.lineTo(props.x, props.y);
+    ctx.stroke();
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.fillRect(props.x / 2, props.y / 2, 50, 50);
+  };
+
+  // render to a canvas, and attach its context (`ctx`) to our component
+  Foo.render('.container', '2d');
+
+  // update the canvas
+  Foo.setState({ x: 300, y: 150 });
+
+</script>
+
+</body>
+</html>
