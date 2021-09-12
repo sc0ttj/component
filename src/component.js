@@ -7,6 +7,7 @@
 // t = target
 // s = source
 const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=0010
+  const d = document; // TODO: support shadow DOM - check the root, set accordingly
   const job = {
     cfg: {
       orig: t
@@ -14,7 +15,7 @@ const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=
     // t = target
     // s = source
     replace(t, s = t) {
-      const v = document.createElement("template")
+      const v = d.createElement("template")
       v.innerHTML = s
       const vHTML = v.content.firstChild.nextElementSibling
       if (vHTML.nodeName !== t.nodeName) {
@@ -144,7 +145,7 @@ function Component(state, schema) {
   // for debouncing render() calls, and window, document
   let timeout, w, d, raf, t
 
-  c.reactive = onLoop ? false: true   // if true, re-render on every state change.. set to false if using onLoop
+  c.reactive = true                   // if true, re-render on every state change
   c.immutable = true                  // if true, freeze the state object after updating it
   c.debug = devtools ? true : false   //  if true, maintain a history of state changes in `.log`
   c.scopedCss = true                  // auto prefix component css with a unique id
@@ -156,8 +157,6 @@ function Component(state, schema) {
   c.i = c.log.length
 
   c.view = props => props // the default view (just return the props)
-  c.draw = c.view // alias, make more sense when drawing to canvas (rather than DOM)
-  c.ctx = null;  // will be the canvas context, if set
 
   c.middleware = []
 
@@ -174,9 +173,10 @@ function Component(state, schema) {
 
   if (!c.isNode) {
     w = window
-    d = document
+    d = document  // TODO: support shadow DOM - check the root, set accordingly
     raf = requestAnimationFrame
     // the <style> elem into which we put our component CSS
+    // TODO: only do this if component styles are defined
     c.css = d.createElement("style")
     c.css.id = c.uid
     d.head.appendChild(c.css)
@@ -373,9 +373,26 @@ function Component(state, schema) {
    * @param {object}
    *
    */
-  c.onLoop = fn => {
-    if (onLoop) onLoop(fn, c);
-    return c
+  if (onLoop) {
+    c.onLoop = (fn, o) => {
+      const opts = {
+        minFps: 15,
+        targetFps: 60,
+        maxRestarts: Infinity,
+        runTime: Infinity,
+        forceSetTimeout: false,
+        autoResume: true,
+        // override the options above with any passed into the component
+        ...o,
+      }
+      // create a controllable loop, if needed
+      c.loop = c.loop ? c.loop : new onLoop({ ...c.state, ...opts }, fn, c)
+      // attach the methods to control the loop
+      c.start = () => c.loop.start();
+      c.stop = () => c.loop.stop();
+      c.pause = () => c.loop.pause();
+      c.resume = () => c.loop.resume();
+    }
   }
 
   c.on = (ev, fn) => {
@@ -570,10 +587,13 @@ function Component(state, schema) {
     }
 
     // make sure we have container as an HTML Element
-    if (d && !c.html) el = d.querySelector(el)
+    if (d && !c.html) {
+      // TODO: support shadow DOM - check the root , set `d` accordingly
+      el = d.querySelector(el)
+    }
     c.html = c.container = el
 
-    // get the cavas context, if needed
+    // get the canvas context, if needed
     if (c.html && c.html.getContext) {
       c.ctx = c.ctx ? c.ctx : c.html.getContext(ctxType ? ctxType : '2d')
     }

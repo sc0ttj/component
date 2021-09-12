@@ -10,7 +10,7 @@
 
 **Component** is a simple, "stateful component" thing.
 
-It lets you create re-usable, "functional components" - basically functions that have a "state". 
+It lets you create re-usable, "functional components" - basically functions that have a "state".
 
 A "state" is a snapshot of your application data at a specific time.
 
@@ -30,6 +30,7 @@ A "state" is a snapshot of your application data at a specific time.
   - auto re-render on state change
   - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
   - DOM diffing uses real DOM Nodes (not VDOM)
+  - or use an HTML5 `<canvas>` instead of a DOM-based view
 - Works **server-side**, in Node:
   - render your components as strings (HTML, or stringified JSON)
   - render your components as data (JS objects, Arrays, etc)
@@ -55,6 +56,7 @@ A "state" is a snapshot of your application data at a specific time.
   - `springTo`: animate nicely from one state to the next (using spring physics)
   - `onScroll`:  enables easy scroll-based animations (using debounced scroll event)
   - `useAudio`: add dynamic audio to your components (uses Web Audio API)
+  - `onLoop`: a fixed-interval loop, suitable for games, animations, time-dependant stuff
   - `storage`: enables persistent states (between page refreshes, etc)
   - `syncTabs`: Synchronize state updates & page renders between browser tabs
   - `devtools`: enables easier component debugging in the browser
@@ -128,6 +130,33 @@ header1.setState({ title: "Hello again!" });
 header1({ title: "Hello a 3rd time!" });
 ```
 
+### Using the `<canvas>`
+
+Your component "views" don't have to be HTML or SVG, they can use a `<canvas>` element, instead:
+
+```html
+<canvas class="container"></canvas>
+
+<script>
+const Foo = new Component({ x: 0, y: 0 });
+
+// define a "view", that draws to the components canvas
+Foo.view = (props, ctx) => {
+  ctx.beginPath();
+  ctx.fillStyle = 'red';
+  ctx.fillRect(props.x / 2, props.y / 2, 50, 50);
+};
+
+// render to a canvas, using a 2d context, which will get passed into the "view"
+Foo.render('.container', '2d');
+
+// update component state, the canvas will re-render
+Foo.setState({ x: 300, y: 150 });
+</script>
+```
+
+Also see the `onLoop` add-on for `<canvas>` related info.
+
 ### Nested components
 
 Child components should be regular functions that return part of the view of the parent component:
@@ -138,13 +167,13 @@ const Foo = new Component({ title: "Hey!", items: [ "one", "two" ] });
 const Header = txt => `<h2>${txt}</h2>`
 const List   = i   => `<ul>${i.map(item => `<li>${i}</li>`).join('')}</ul>`
 
-Foo.view = props => 
+Foo.view = props =>
   `<div id="myapp">
     ${Header(props.title)}
     ${List(props.items)}
   </div>`
 
-Foo.render('.container');  
+Foo.render('.container');
 ```
 
 But you can also nest proper (stateful) components inside other components, too:
@@ -262,7 +291,7 @@ These are the methods and properties attached to the components you create.
 ### Properties:
 
 - **.state**: an object, contains your app data, read-only - cannot be modified directly
-- **.schema**: an object against which to validate your component state (_optional)_ 
+- **.schema**: an object against which to validate your component state (_optional)_
 - **.container**: the HTML Element into which the components view is rendered (_optional_)
 - **.html**: alias of `.container`
 - **.css**: the `<style>` Element which holds the component styles (_optional_)
@@ -301,20 +330,20 @@ Define a schema object. For each property included, the value should be:
 - a `typeof` type name, as a string
 - or a validator function, that returns true or false
 
-Then create your component, passing in the schema as the second parameter to `Component()`. 
+Then create your component, passing in the schema as the second parameter to `Component()`.
 
 ```js
 function Foo() {
-  const defaults = { 
-    count: 0, 
-    age: 20 
+  const defaults = {
+    count: 0,
+    age: 20
     items: [ "one", "two" ],
     foo: {
       bar: "whatever"
     }
   };
 
-  const schema = { 
+  const schema = {
     count: "number",
     age: age => typeof age === "number" && age > 17,
     items: "array",
@@ -427,7 +456,7 @@ function Foo(props) {
 
 If using `style()`, the CSS will be auto-prefixed with the `id` or CSS `class` of the components container, when the component is first added to the page using `foo.render('.container')`.
 
-_This CSS "auto-scoping" will prevent a components styles affecting other parts on the page_. It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself. 
+_This CSS "auto-scoping" will prevent a components styles affecting other parts on the page_. It also keeps your component CSS clean - no need to prefix anything with a unique ID or class yourself.
 
 - If your container has no class or id attributes, then a unique string, `foo.uid`, will be used instead.
 - You can disable automatic CSS "scoping"/prefixing by using `foo.scopedCss = false`.
@@ -439,7 +468,7 @@ To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-
 
 Define "actions" to update your state in specific ways.
 
-These are like regular methods, except they're always chainable, they hook into the [emitter](#using-the-emitter-module) add-on automatically, and they're tagged by name in your components state history. 
+These are like regular methods, except they're always chainable, they hook into the [emitter](#using-the-emitter-module) add-on automatically, and they're tagged by name in your components state history.
 
 ```js
 function Foo() {
@@ -504,7 +533,7 @@ Here's how to use the emitter:
 
 Let's listen to the `foo` components actions, using another component, `logger`:
 
-```js  
+```js
 // Define some listening component
 const logger = new Component({})
 
@@ -558,7 +587,7 @@ foo.html.addEventListener("click", e => {
 
 The storage module makes components remember their state between page refreshes, using `localStorage`.
 
-Note that `storage` can be polyfilled for NodeJS, so works in Node too - by saving to JSON files. 
+Note that `storage` can be polyfilled for NodeJS, so works in Node too - by saving to JSON files.
 
 - In NodeJS, the state persists between script invocations, rather than page refreshes.
 
@@ -605,7 +634,7 @@ Counter.view = props => htmel`
 // simply define a "store name" (where to save your data) before you render
 Counter.store = 'Counter';
 
-// now we can render it into the page - it'll load in the last state 
+// now we can render it into the page - it'll load in the last state
 // from its localStorage "store" as the initial state
 Counter.render('.container')
 ```
@@ -739,7 +768,7 @@ The tween config (2nd param) takes the following properties:
 - `onSetState()` - called only on frames where the state is updated, receives `tweenProps`
 - `onStart()` called on the first frame, receives `tweenProps`
 - `onUpdate()` called on every frame, receives `tweenProps` on each frame
-- `onComplete()` called after last frame, receives final `tweenProps` 
+- `onComplete()` called after last frame, receives final `tweenProps`
 
 The `tweenProps` object returned to callbacks provides the tweening values of the current frame, and includes:
 
@@ -792,7 +821,7 @@ const Foo = new Component({ x: 100, y: 100 });
 
 Foo.view = props => `<div style="top:${props.y - 25}px;left:${props.x - 25}px"></div>`;
 
-Foo.style = props => `div { 
+Foo.style = props => `div {
   background-color: #d11;
   border: 2px solid #222;
   border-radius: 50%;
@@ -886,15 +915,15 @@ Foo.view = props => `
 `;
 
 // set the marker line through which elements must pass to trigger the animation:
-// - 50  means 50%, which is halfway down the screen, 
+// - 50  means 50%, which is halfway down the screen,
 // - 33  means 33% down from top,
 // - 100 means at bottom of screen
-Foo.onScroll.offset = 33; 
+Foo.onScroll.offset = 33;
 
 // now we can add the scroll event to the component
 Foo.onScroll(scrollProps => {
-  Foo.setState({ 
-    percent: Math.floor(scrollProps.progress * 100) 
+  Foo.setState({
+    percent: Math.floor(scrollProps.progress * 100)
   });
 });
 
@@ -986,14 +1015,14 @@ document.addEventListener('audioLoaded', function audioLoaded(e) {
 </script>
 ```
 
-### Using your sounds 
+### Using your sounds
 
 The `useAudio({ ... })` method generates sound objects with the following methods:
 
 - `mySound.play()` - play a sound
 - `mySound.pause()` - pause a playing sound
 - `mySound.playFrom(time)` - play from the given time (in seconds)
-- `mySound.rapidFire(num, delay)` - play `num` times, with `delay` seconds between 
+- `mySound.rapidFire(num, delay)` - play `num` times, with `delay` seconds between
 - `mySound.fadeIn(duration)` - fade in over `duration` (in seconds)
 - `mySound.fadeOut(duration)` - fade out over `duration` (in seconds)
 - `mySound.stop(atTime)` - stop at given time (leave empty for immediate stop)
@@ -1005,7 +1034,7 @@ The `useAudio({ ... })` method generates sound objects with the following method
 
 ### Defining advanced sound objects
 
-Sounds can have many properties, which you can define when you create them, or adjust later, using `mySound.settings({ ... })`. 
+Sounds can have many properties, which you can define when you create them, or adjust later, using `mySound.settings({ ... })`.
 
 Lets define a sound with all possible properties enabled:
 
@@ -1019,7 +1048,7 @@ Foo.useAudio({
     filters: {
       delay: 0,         // give a duration, in seconds, like 0.2
       panning: -1,      // -1 is left, 0 is center, 1 is right
-      // add any combination of "biquad" filters 
+      // add any combination of "biquad" filters
       // (see https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode)
       lowshelf:  { freq:  400, gain: 0.2 },
       highshelf: { freq: 1200, gain: 0.2 },
@@ -1064,7 +1093,7 @@ Foo.useAudio({
         release: 0.25,
       },
     },
-    // callbacks 
+    // callbacks
     onPlay: props => console.log(props),   // props is the current state of the sound,
     onPause: props => console.log(props),  // and includes all settings for the filters
     onResume: props => console.log(props), // that you have enabled
@@ -1100,7 +1129,7 @@ Foo.audio.settings({
 });
 ```
 
-Calling `.settings()`, both on a single sound or on a library of sounds, will trigger the `onChange()` callback. 
+Calling `.settings()`, both on a single sound or on a library of sounds, will trigger the `onChange()` callback.
 
 The settings method can also take a callback as a second parameter, which is run after the settings have been changed:
 
@@ -1117,6 +1146,64 @@ mySound.settings(
 ```
 
 See [examples/usage-audio.html](examples/usage-audio.html) for examples and more information.
+
+## Using the `onLoop` module
+
+The `onLoop` add-on gives you a fixed-interval loop in which you run your given function, with the specified settings - like target FPS.
+
+### In browsers:
+
+```js
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/onLoop.min.js"></script>
+<script>
+  // add the game loop add-on to Component
+  Component.onLoop = onLoop
+
+  // use it here
+</script>
+```
+
+This is how you use it to move a box around on a `<canvas>` element:
+
+```js
+// define a new component
+const Game = new Component({
+  // now define our (boxes) properties
+  x: 0,
+  y: 0,
+});
+
+// define the game "view" - draw a box, positioned at props.x and props.y
+Game.view = (props, ctx) => {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.beginPath();
+  ctx.fillStyle = 'red';
+  ctx.fillRect(props.x / 2, props.y / 2, 50, 50);
+  ctx.closePath();
+};
+
+// define the function we want to run as our main loop
+Game.onLoop((props, dt) => {
+  let { x, y } = props;
+  x += 0.1 * dt
+  y += 0.1 * dt
+  // finally, set the new game state, triggers a re-render of the "view"
+  Game.setState({ x, y });
+});
+
+
+// add to page, and setup a "2d" canvas context
+Game.render('.container', '2d');
+
+// control the main loop
+Game.start();
+Game.pause();
+Game.resume();
+Game.stop();
+```
+
+That's all there is to it!
 
 ## Using `html` and `htmel` modules
 
@@ -1188,10 +1275,10 @@ html`<p data-json='${someObj}'>some text</p>`
 ```
 
 ```js
-// embed real DOM objects 
+// embed real DOM objects
 const elem = document.querySelector(".foo");
 const elems = document.querySelectorAll(".bar");
-html`<div>${elem}${elems}</div>` 
+html`<div>${elem}${elems}</div>`
 ```
 
 ```js
@@ -1274,7 +1361,7 @@ function Foo(state, schema) {
   const Foo = new Component({ ...defaults, ...state }, schema);
 
   // now let's use `htmel` to construct an HTML view..
-  
+
   Foo.view = props => htmel`
     <div style="${props.css}" ${props.attrs}>
       <h2>${props.title}</p>
@@ -1288,8 +1375,8 @@ function Foo(state, schema) {
   `;
 
   return Foo;
-} 
-  
+}
+
 ```
 
 ## Using JSON-LD (linked data)
@@ -1315,7 +1402,7 @@ Components that are nested inside other components are called _child components_
 All child components have the following in common:
 - you include the child component in the "view" of the parent component
 - child components do not trigger a re-render of the page
-- to re-render a child component that has changed, you must re-render the parent component 
+- to re-render a child component that has changed, you must re-render the parent component
 - nested components work with or without the `html`/`htmel` add-on(s)
 
 There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
@@ -1325,7 +1412,7 @@ There are two kinds of child component - _stateless_ and _stateful_ - and while 
 Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
 
 ```js
-// a stateless child component 
+// a stateless child component
 const h2 = text => `<h2>${text}</h2>`;
 
 // ...used inside the view of another component
@@ -1359,7 +1446,7 @@ This has a number of implications:
 
 For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
-## Using a more "React-like" pattern 
+## Using a more "React-like" pattern
 
 For more "React-like" patterns, you can import a standalone `render` method (~800 bytes) that's supposed to be used with some *optional* React-like "hooks" (~1.5kb), but _without_ `Component` itself.
 
@@ -1368,7 +1455,7 @@ Features of `render`:
 - adds your HTML or component to the page
 - updates the page using DOM diffing, inside a debounced `requestAnimationFrame`
 - works nicely with the optional `html` add-on
-- works nicely with the optional `hooks` add-on 
+- works nicely with the optional `hooks` add-on
 - a React-like API in 2.3kb (inc all the hooks)
 - that's it
 
@@ -1441,11 +1528,11 @@ The devtools only works in the browser.
 
 It's a bit like React devtools but simpler:
 
-- **Main Toolbar**: 
+- **Main Toolbar**:
   - **Choose component**: click "Select component" button, then choose a component on the page
   - **Choose layout**: can switch between bottom (horizontal) view, and side (vertical) view
 - **Overview tab**:check a components current state and HTML
-- **Details tab**: view other info about the selected component 
+- **Details tab**: view other info about the selected component
 - **History tab**: cycle through a components state history
 - **Editor tab**: edit a components view and styling
 
@@ -1524,7 +1611,7 @@ Rebuild to `dist/` using the command `npm run build`
 ## Changelog
 
 **1.3.2**
-- new optional add-ons: 
+- new optional add-ons:
   - `useAudio`
     - easily add dynamic audio capabilities to your components
     - uses Web Audio API, only works in browser
@@ -1546,13 +1633,13 @@ Rebuild to `dist/` using the command `npm run build`
   - `storage` - persistent state between page refreshes (browser) or script invocations (Node)
   - `devtools` - easier debugging of your components (browser only)
 - updates to `src/component.js`:
-  - fixed: in NodeJS, debounced logging now falls back to using setTimeout, if needed 
+  - fixed: in NodeJS, debounced logging now falls back to using setTimeout, if needed
   - added: support for all new add-ons
   - added: allow view to be HTML Object, not only String
   - added: `App.actionsList` property - the list of defined actions functions
   - added: `App()` will return the container (an HTML Element)
     - `App({...})` still returns `App` (for chainable actions, etc)
-  - added: `App.html` property - alias of `App.container` (returns an HTML Element) 
+  - added: `App.html` property - alias of `App.container` (returns an HTML Element)
 - update docs:
   - re-write README and examples to show re-usable components
   - add the new add-ons to README and examples
@@ -1563,7 +1650,7 @@ Rebuild to `dist/` using the command `npm run build`
 - the function returned calls `setState` in its constructor
   - this means you can now set state using a new syntax - via the constructor: `Foo({ count: 1 })`
   - this in turns allows for nicer nested stateful components:
-    - nested stateful components can now use the same syntax as stateless (plain function) components 
+    - nested stateful components can now use the same syntax as stateless (plain function) components
 - update in `tweenState`:  allow `shouldSetState` to be boolean (not only func that returns boolean)
 - updated examples, README, package.json, dist/, etc
 
@@ -1591,7 +1678,7 @@ Rebuild to `dist/` using the command `npm run build`
 - new feature: "middleware"
   - define an array of functions as `myComponent.middleware = [ someFunc, otherFunc ]`
   - each function will be run at the end of `setState()`
-- updated README, package.json, etc 
+- updated README, package.json, etc
 
 **1.1.8**
   - fixes in package.json
@@ -1609,12 +1696,12 @@ Rebuild to `dist/` using the command `npm run build`
 
 **1.1.6**
 - added `src/tweenState.js` and related support files (`src/raf.js`, `src/easings.js`)
-- new build process: 
+- new build process:
   - added `rollup` to bundle the source files into dist/ (see `rollup.config.js`)
   - added `src/index.js` to allow easier importing of multiple modules, if desired
 - updated package.json: `index.js` is the file imported in Node by default
 - now requires Node 10 or later (was Node 8)
-- updated README 
+- updated README
   - updated install instructions
   - added `tweenState` usage info
 
@@ -1629,7 +1716,7 @@ Rebuild to `dist/` using the command `npm run build`
   - when `debug` is true,  _don't_ console log state history on state change
   - to see the state history, access `App.log` yourself instead
  - see [examples/usage-in-browser.html](examples/usage-in-browser.html)
-  
+
 **1.1.4**
 - new: automatic "scoping" of component CSS
  - prevents component styles affecting other parts of page
@@ -1664,7 +1751,7 @@ Rebuild to `dist/` using the command `npm run build`
   - only re-render `.view()` if needed
   - only re-render `<style>` if needed
 - smaller filesize:
-  - smaller method names: 
+  - smaller method names:
     - `.forward()` => `.ff()`
     - `.rewind()`  => `.rw()`
     - `.history`   => `.log`
@@ -1690,9 +1777,9 @@ Rebuild to `dist/` using the command `npm run build`
     - methods
     - styles
     - views
-  
+
 - Better game support:
-  - a `tick()` addon (time-based animation): 
+  - a `tick()` addon (time-based animation):
     - a gameloop with ticker that emits "ticks" at set intervals (always 30 times/second, for example)
     - rendering de-coupled from gameloop (fps can vary)
   - render to canvas
@@ -1744,7 +1831,7 @@ Rebuild to `dist/` using the command `npm run build`
 ### CSS in JS
 
 - [zserge.com/posts/css-in-js](https://zserge.com/posts/css-in-js/) - 200 bytes scoped CSS
-- [twirl](https://github.com/benjamminj/twirl-js) - a tag for template literals, turns CSS into objects 
+- [twirl](https://github.com/benjamminj/twirl-js) - a tag for template literals, turns CSS into objects
 - `/(^|,)[\.#a-z][a-zA-Z0-9_\-:]*/gm` - match first part of CSS selector in a CSS string, useful for scoping (see https://regexr.com/524pu)
 - `document.styleSheets[0].cssRules[0].style.cssText.split(/\;[\s.]/).slice(0,-1)` - convert cssText to array, each item like "margin:0 auto;"
 - `str.replace(/([A-Z])/g, "-$1").toLowerCase()` - camelCase to hyphen-case converter
@@ -1768,7 +1855,7 @@ Rebuild to `dist/` using the command `npm run build`
 
 ### Generate spring-based CSS animations
 
-- [gerardabello/spring-animation-keyframes](https://github.com/gerardabello/spring-animation-keyframes) - generate css keyframes based on spring animations 
+- [gerardabello/spring-animation-keyframes](https://github.com/gerardabello/spring-animation-keyframes) - generate css keyframes based on spring animations
 - [codepunkt/css-spring](https://github.com/codepunkt/css-spring) - physics based css-keyframes for css-in-js or plain css
 
 ### Routers
@@ -1777,7 +1864,7 @@ Rebuild to `dist/` using the command `npm run build`
 
 ### Other tiny component libraries
 
-- [yo-yo](https://github.com/maxogden/yo-yo/) - tiny UI library, DOM diffing (uses `morphdom`), Event handling, ES6 tagged template literals 
+- [yo-yo](https://github.com/maxogden/yo-yo/) - tiny UI library, DOM diffing (uses `morphdom`), Event handling, ES6 tagged template literals
 - [choojs](http://github.com/choojs/) - A 4kb framework for creating sturdy frontend applications, uses `yo-yo`
 - [hyperapp](https://github.com/jorgebucaran/hyperapp) - The tiny framework for building web interfaces, React-like, uses h(), VDOM, etc
 - [preact](https://github.com/preactjs/preact) - a 3.1kb alternative to React.js

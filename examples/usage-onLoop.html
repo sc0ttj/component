@@ -1,0 +1,100 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - a "game" loop demo</title>
+  <script src="../dist/component.min.js"></script>
+  <script src="../dist/onLoop.min.js"></script>
+  <style>
+    .container { border: 1px solid #222; margin-top: 1em; }
+  </style>
+</head>
+<body>
+
+<h1>Game loop demo</h1>
+<p>A very simple demo of a fixed-interval loop, suitable for games.</p>
+<p>The square will move, pause, resume, and stop.</p>
+<p>Check the DevTools Console for more info.</p>
+
+<canvas class="container"></canvas>
+
+<script>
+
+// add the game loop add-on to Component
+Component.onLoop = onLoop
+
+
+// define a new component
+const Game = new Component({
+  // now define our game/app properties
+  x: 0,
+  y: 0,
+});
+
+
+const loopSettings = {
+  targetFps: 60,          // try to render at this speed
+  minFps: 15,             // reset game loop is drops below this speed (averaged)
+  maxRestarts: Infinity,  // The number of times onLoop will attempt to restart before stopping entirely
+  runTime: Infinity,      // how long, in milliseconds, to run the loop before it stops
+  forceSetTimeout: false, // whether setTimeout should be used instead of requestAnimationFrame
+  autoResume: false,      // auto resume when browser tab becomes visible (document.visibilityState)
+};
+console.log('onLoop settings: ', loopSettings);
+
+
+// let's pass in the function we want to run as our main loop, and the loop settings
+Game.onLoop((props, dt) => {
+    // do stuff here, like get/adjust properties from props
+    let { x, y } = props;
+    // let's just move our x and x positions constantly
+    x += 0.1 * dt
+    y += 0.1 * dt
+    // finally, set the new game state, triggers a re-render of the "view"
+    Game.setState({ x, y });
+  },
+  // pass in the loop settings as a 2nd parameter (optional)
+  loopSettings
+);
+
+
+// define the game "view"
+Game.view = (props, ctx) => {
+  // Clear the entire canvas
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  // now draw your game menu/level/objects/etc
+  ctx.beginPath(); // reset previous paths
+  ctx.fillStyle = 'red';
+  ctx.fillRect(props.x / 2, props.y / 2, 50, 50);
+  ctx.closePath();
+};
+
+
+// initial render to page, draws first frame
+Game.render('.container', '2d');
+
+
+// start the game loop, the component will re-render at a variable rate, while
+// the game logic (the func passed to `onLoop`) will run at fixed intervals
+Game.start();
+
+
+// control your game
+setTimeout(() => {
+  console.log('PAUSE');
+  Game.pause();
+}, 1000);
+
+setTimeout(() => {
+  console.log('RESUME');
+  Game.resume();
+}, 1500);
+
+setTimeout(() => {
+  console.log('STOP');
+  Game.stop(); // you cannot resume the loop after a stop()
+}, 2500);
+
+
+</script>
+</body>
+</html>
