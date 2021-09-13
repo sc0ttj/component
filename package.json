@@ -1,6 +1,6 @@
 {
 	"name": "@scottjarvis/component",
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"description": "A tiny reactive component library with state management, DOM diffing, tweening, server-side rendering and much more.",
 	"author": "sc0ttj",
 	"license": "MIT",
@@ -28,6 +28,7 @@
 		"functional",
 		"component",
 		"dom-diff",
+		"canvas",
 		"server-side-rendering",
 		"templating",
 		"pubsub",
@@ -36,6 +37,7 @@
 		"springs",
 		"scrolly",
 		"audio",
+		"gameloop",
 		"middleware",
 		"devtools"
 	],
@@ -48,7 +50,12 @@
 		"dist/emitter.min.js",
 		"dist/html.min.js",
 		"dist/htmel.min.js",
+		"dist/hooks.min.js",
+		"dist/onLoop.min.js",
+		"dist/onScroll.min.js",
+		"dist/springTo.min.js",
 		"dist/storage.min.js",
+		"dist/syncTabs.min.js",
 		"dist/useAudio.min.js",
 		"dist/devtools.min.js"
 	],

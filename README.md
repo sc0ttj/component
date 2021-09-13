@@ -1610,6 +1610,15 @@ Rebuild to `dist/` using the command `npm run build`
 
 ## Changelog
 
+**1.3.3**
+- added: support using `<canvas>` for component views:
+  - added simple canvas usage example to README 
+  - added [example/usage-canvas.html](example/usage-canvas.html)
+- new optional add-on:
+  - `onLoop`
+    - a fixed-interval loop, for time-dependant stuff (physics, games, etc)
+    - uses requestAnimationFrame, or setTimeout as a fallback
+
 **1.3.2**
 - new optional add-ons:
   - `useAudio`
