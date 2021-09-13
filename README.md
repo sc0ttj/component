@@ -1159,17 +1159,26 @@ The `onLoop` add-on gives you a fixed-interval loop in which you run your given 
 <script>
   // add the game loop add-on to Component
   Component.onLoop = onLoop
-
-  // use it here
 </script>
 ```
 
-This is how you use it to move a box around on a `<canvas>` element:
+### In ES6:
+
+```js
+import { Component, onLoop } from '@scottjarvis/component';
+
+Component.onLoop = onLoop
+
+```
+
+Here's a short example, showing how to move a box around on a `<canvas>` element:
 
 ```html
 <canvas class="container"></canvas>
 
 <script>
+Component.onLoop = onLoop
+
 // define a new component
 const Game = new Component({
   // now define our (boxes) properties
