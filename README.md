@@ -23,7 +23,7 @@ A "state" is a snapshot of your application data at a specific time.
   - plain HTML & CSS, no virtual DOM or JSX
   - should work with any test suite
 - Very **lightweight & modular** - use only what you need, for example:
-  - *~2.2 kb*, using the main `Component` library (_lots_ of features)
+  - *~2.5 kb*, using the main `Component` library (_lots_ of features)
   - *~810 bytes*, using only the standalone `htmel` module (for JSX-like HTML templating)
   - *~830 bytes*, using only the standalone `render` module (for "debounced" DOM diffing at 60fps)
 - Works **client-side**, in browsers:

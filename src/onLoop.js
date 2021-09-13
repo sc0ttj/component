@@ -78,6 +78,7 @@ class Options {
   maxRestarts = Infinity;
   runTime = Infinity;
   forceSetTimeout = false;
+  autoResume = true;
 
   constructor(options = {}) {
     Object.assign(this, options);

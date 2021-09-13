@@ -375,18 +375,8 @@ function Component(state, schema) {
    */
   if (onLoop) {
     c.onLoop = (fn, o) => {
-      const opts = {
-        minFps: 15,
-        targetFps: 60,
-        maxRestarts: Infinity,
-        runTime: Infinity,
-        forceSetTimeout: false,
-        autoResume: true,
-        // override the options above with any passed into the component
-        ...o,
-      }
       // create a controllable loop, if needed
-      c.loop = c.loop ? c.loop : new onLoop({ ...c.state, ...opts }, fn, c)
+      c.loop = c.loop ? c.loop : new onLoop(o, fn, c)
       // attach the methods to control the loop
       c.start = () => c.loop.start();
       c.stop = () => c.loop.stop();
