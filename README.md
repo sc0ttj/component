@@ -1218,7 +1218,9 @@ Game.stop();
 </script>
 ```
 
-That's all there is to it!
+That's (pretty much) all there is to it!
+
+See [examples/usage-onLoop.html](examples/usage-onLoop.html) for an more detailed example, and a bit more information.
 
 ## Using `html` and `htmel` modules
 
