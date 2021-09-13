@@ -1171,6 +1171,8 @@ Component.onLoop = onLoop
 
 ```
 
+### Example usage of `onLoop`
+
 Here's a short example, showing how to move a box around on a `<canvas>` element:
 
 ```html
