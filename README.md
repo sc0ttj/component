@@ -1166,7 +1166,10 @@ The `onLoop` add-on gives you a fixed-interval loop in which you run your given 
 
 This is how you use it to move a box around on a `<canvas>` element:
 
-```js
+```html
+<canvas class="container"></canvas>
+
+<script>
 // define a new component
 const Game = new Component({
   // now define our (boxes) properties
@@ -1201,6 +1204,7 @@ Game.start();
 Game.pause();
 Game.resume();
 Game.stop();
+</script>
 ```
 
 That's all there is to it!
