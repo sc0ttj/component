@@ -18,11 +18,13 @@ import tweenState from './tweenState.js'
 import emitter from './emitter.js'
 import html from './html.js'
 import htmel from './htmel.js'
+import ctx from './ctx.js'
 import storage from './storage.js'
 import syncTabs from './syncTabs.js'
 import useAudio from './useAudio.js'
 import onScroll from './onScroll.js'
+import onLoop from './onLoop.js'
 // react-like hooks
 import { hooks } from "./hooks.js"
 
-export { Component, render, tweenState, emitter, html, htmel, storage, syncTabs, useAudio, onScroll, hooks }
+export { Component, render, tweenState, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, hooks }

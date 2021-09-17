@@ -123,6 +123,16 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
+    input: "src/ctx.js",
+    output: {
+      file: "dist/ctx.min.js",
+      sourcemap: true,
+      name: "Ctx",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
     input: "src/render.js",
     output: {
       file: "dist/render.min.js",

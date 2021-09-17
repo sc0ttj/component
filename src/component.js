@@ -134,6 +134,7 @@ function Component(state, schema) {
   const useAudio = C.useAudio
   const onScroll = C.onScroll
   const onLoop = C.onLoop
+  const Ctx = C.Ctx
   const devtools = C.devtools
   const cache = C.memo ? C.memo : function(f){return f;}
   // used by storage add-on.. maybe try to remove at some point
@@ -584,8 +585,10 @@ function Component(state, schema) {
     c.html = c.container = el
 
     // get the canvas context, if needed
-    if (c.html && c.html.getContext) {
+    if (c.html && c.html.getContext && !c.ctx) {
       c.ctx = c.ctx ? c.ctx : c.html.getContext(ctxType ? ctxType : '2d')
+      // extend canvas if Ctx addon available (adds methods, makes all methods chainable)
+      if (c.ctx && Ctx) c.ctx = new Ctx(c.ctx);
     }
 
     if (timeout) cancelAnimationFrame(timeout)

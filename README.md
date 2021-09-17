@@ -51,6 +51,7 @@ A "state" is a snapshot of your application data at a specific time.
 - Works with these **optional add-ons**:
   - `validator`: validate states against a schema (_like a simple PropTypes_)
   - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
+  - `ctx`: an enhanced 2d &lt;canvas&gt; with extra shapes, methods, and a chainable API
   - `emitter`: an event emitter - share updates between components
   - `tweenState`: animate nicely from one state to the next (tweened)
   - `springTo`: animate nicely from one state to the next (using spring physics)
@@ -155,7 +156,7 @@ Foo.setState({ x: 300, y: 150 });
 </script>
 ```
 
-Also see the `onLoop` add-on for `<canvas>` related info.
+Also see the [`Ctx` add-on](#using-the-ctx-module) and the [`onLoop` add-on](#using-the-onloop-module) add-on for more `<canvas>` related info.
 
 ### Nested components
 
@@ -1202,7 +1203,7 @@ Game.onLoop((props, dt) => {
   let { x, y } = props;
   x += 0.1 * dt
   y += 0.1 * dt
-  // finally, set the new game state, triggers a re-render of the "view"
+  // finally, set the new game state, triggers a debounced re-render of the "view"
   Game.setState({ x, y });
 });
 
@@ -1395,6 +1396,192 @@ function Foo(state, schema) {
 }
 
 ```
+
+## Using the `ctx` module
+
+If using a `<canvas>` to render your components, you can **optionally** extend it using the `ctx` add-on, which adds new drawing methods & shapes, a few convenience methods, and a chainable API - in 2.4kb.
+
+Note - `ctx` only extends the context of Component canvases - it won't affect or extend other `<canvas>` elements.
+
+### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/ctx.min.js"></script>
+<script>
+Component.Ctx = Ctx;
+
+// use it here
+</script>
+```
+### In ES6:
+
+```js
+import { Component, Ctx } from '@scottjarvis/component';
+
+Component.Ctx = Ctx
+
+```
+
+### Example usage of `ctx`
+
+Here's a short example, showing a few of the additional drawing methods/shapes, and using the chainable API:
+
+```js
+// enable the enhanced canvas 2dContext API
+Component.Ctx = Ctx;
+
+// define a new component
+const Foo = new Component({ x: 0, y: 0 });
+
+// define a "view", that draws to the components canvas - the `ctx` param 
+// is enhanced with a chainable API, and additional shapes (drawing methods)
+Foo.view = (props, ctx) => {
+  ctx
+    .clear()
+    .size(800, 600)
+
+    .beginPath()
+    .fillStyle('yellow')
+    .fillRoundedRect(10, 70, 50, 75, 10)
+
+    .beginPath()
+    .strokeStyle('pink')
+    .lineWidth(4)
+    .strokeTriangle(220, 60, 50, 45)
+
+    .beginPath()
+    .fillStyle('green')
+    .fillRing(80, 100, 40, 50, 100)
+
+    .beginPath()
+    .strokeStyle('yellow')
+    .strokeStar(200, 200, 50, 5, 0)
+}
+
+// render into a canvas element on the page
+Foo.render('.some-canvas', '2d')
+```
+
+Here's a full list of the additional methods:
+
+General helper methods:
+
+```js
+ctx.clear()    // clear entire canvas
+ctx.size(w, h) // set canvas size (in pixels), respects the device pixel ratio
+```
+
+Drawing methods:
+
+Circles:
+
+```js
+ctx.circle(x, y, radius)
+ctx.fillCircle(x, y, radius)
+ctx.strokeCircle(x, y, radius)
+```
+
+Cardinal splines (curved/rounded lines):
+
+```js
+ctx.curve(points, tension, numOfSegments, closed)  // example: ctx.curve([x1,y1, x2,y2, x3,y3], 0.5, 5, true)
+```
+
+Ellipses:
+
+```js
+ctx.ellipse(x, y, w, h)
+ctx.fillEllipse(x, y, w, h)
+ctx.strokeEllipse(x, y, w, h)
+```
+
+Lines:
+
+```js
+ctx.line(px, py, x, y)
+```
+
+Polygons:
+
+```js
+ctx.polygon(x, y, radius, numOfSides, angle)
+ctx.fillPolygon(x, y, radius, numOfSides, angle)
+ctx.strokePolygon(x, y, radius, numOfSides, angle)
+```
+
+Rings (doughnuts):
+
+```js
+ctx.ring(x, y, innerRadius, outerRadius)
+ctx.fillRing(x, y, innerRadius, outerRadius)
+ctx.strokeRing(x, y, innerRadius, outerRadius)
+```
+
+Rounded rectangles:
+
+```js
+ctx.roundedRect(x, y, w, h, radius)
+ctx.fillRoundedRect(x, y, w, h, radius)
+ctx.strokeRoundedRect(x, y, w, h, radius)
+```
+
+Stars:
+
+```js
+ctx.star(x, y, radius, numOfSides, angle)
+ctx.fillStar(x, y, radius, numOfSides, angle)
+ctx.strokeStar(x, y, radius, numOfSides, angle)
+```
+
+Triangles:
+
+```js
+ctx.triangle(x, y, radius, angle)
+ctx.fillTriangle(x, y, radius, angle)
+ctx.strokeTriangle(x, y, radius, angle)
+```
+
+Transforms:
+
+```js
+ctx.rotateAt(x, y, angle)
+```
+
+Set any style properties, in one go:
+
+```js
+ctx.setStyle(obj) // obj can be { lineWidth: 4, fillStyle: 'yellow', ...etc }
+```
+
+Save canvas as image:
+
+```js
+ctx.image.saveAs('filename') // save current canvas as PNG image file
+ctx.image.toElement(image => console.log(image.src)) // <image> src is base64 encoded data
+```
+
+Save canvas as video:
+
+```js
+ctx.video.record(30) // optional params: fps, mimeType, audioBitsPerSecond, videoBitsPerSecond
+ctx.video.pause();
+ctx.video.resume();
+ctx.video.stop();
+// now we can use the video data, or save it to a file
+ctx.video.saveAs('filename')
+ctx.video.toElement(video => console.log(video.src)) // <video> src is base64 encoded data
+```
+
+Maths helpers:
+
+```js
+ctx.distance(x2, x1, y2, y1)
+ctx.angleFromPoints(x1, x2, y1, y2)
+ctx.toRadians(angle)
+ctx.random(min, max, decimal) // decimal is boolean
+```
+See [examples/usage-ctx.html](examples/usage-ctx.html) for examples and more information.
 
 ## Using JSON-LD (linked data)
 
