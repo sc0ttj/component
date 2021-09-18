@@ -44,6 +44,12 @@
     ctx
       .clear()  // using `clear(true)` will clear transforms too
       .size(640, 480)
+
+      .drawSvg(`<svg xmlns="http://www.w3.org/2000/svg" stroke="#000" stroke-width="2">
+       <rect x="80" y="60" width="150" height="150" rx="20" fill="#F00"/>
+       <rect x="100" y="80" width="150" height="150" rx="40" fill="#00F" fill-opacity=".7"/>
+      </svg>`, 100, 200, 250, 200) // urlOrCode, x, y, w, h
+
       .beginPath()
       .moveTo(0, 0)
       .strokeStyle('blue')
@@ -76,7 +82,7 @@
 
       .beginPath()
       .strokeStyle('yellow')
-      .strokeStar(200, 200, 50, 5, 0);
+      .strokeStar(200, 200, 50, 5, 0)
 
   };
 

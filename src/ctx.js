@@ -9,7 +9,10 @@
  * - https://github.com/Martin-Pitt/canvas-plus
  * - https://github.com/pkorac/cardinal-spline-js
  * - https://github.com/ericdrowell/concrete/blob/master/src/concrete.js
- * -
+ * - https://xosh.org/canvas-recorder/
+ * - see https://github.com/SMUsamaShah/CanvasRecorder
+ *
+ *
  *
  */
 
@@ -62,11 +65,18 @@ const PIXEL_RATIO = (function () {
 
 - steal ideas from: https://github.com/mattdesl/canvas-sketch
   - set size to 'a3', 'a4', PAL, NTSC, 480p, 720p, 1080p, etc
+  - set units to cm, pixels, dpi, etc
   - export as other formats
 
- - ctx.color('red')  // set stroke and fill colours at once
  - ctx.fullscreen()  // method for easily toggling fullscreen
  - ctx.square(x,y,w) // quicker than using rect
+
+ - keep the canvas "clean":
+    - if you import img into canvas from external domain, it becomes "dirty"
+    - you cannot grab the ImageData of a dirty canvas, so no video recording, etc!!
+    - so use backup/offscreen canvas to import/convert images, then convert to Blob, DataURI, ImageData, etc
+    - then import the data into the main canvas
+    - see  https://stackoverflow.com/a/67180474
 
  - improve triangles:
       equilateral triangle: .triangle(x, y, w)
@@ -95,15 +105,7 @@ const PIXEL_RATIO = (function () {
         [ 1.0, "green" ],
       ]);
 
- - text(txt, x, y)  // Draws text txt in position x and y
- - clearArc(x, y, radius, startAngle, endAngle, anticlockwise)
  - wrapper func for SVG to canvas (https://tristandunn.com/journal/rendering-svg-on-canvas/  ..doesn't work in Safari or iOS)
- - wrapped text
-
- - save as video (write each rendered frame to webm video if ctx.record=true)
-    - see https://xosh.org/canvas-recorder/
-    - see https://github.com/SMUsamaShah/CanvasRecorder/blob/master/CanvasRecorder.js
-    - see https://medium.com/@amatewasu/how-to-record-a-canvas-element-d4d0826d3591
 
  - camera (pan & zoom)
 
@@ -135,11 +137,14 @@ const PIXEL_RATIO = (function () {
       }
 
 
-- lerp (linear interpolation)
+ - easy events
 
-      const lerp = (start, end, t) => {
-        return (1-t)*start + t*end;
-      };
+      const rr = ctx.create.roundedRect(x,y,w,h,r);  // returns rr
+      ctx.draw(rr);
+      rr.on('mouseover', function(e) {
+        this // equals rr
+        e    // equals event
+      });
 
 - mouse interactivity
 
@@ -147,6 +152,38 @@ const PIXEL_RATIO = (function () {
       var rect = ctx.canvas.getBoundingClientRect();
       ctx.mousePos = {x:(event.clientX-rect.left)/ctx.canvas.scale, y:(event.clientY-rect.top)/ctx.canvas.scale};
     }
+
+ - map/background generator and tiler
+    - https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Static_maps
+    - https://mozdevs.github.io/gamedev-js-tiles/  and  https://github.com/mozdevs/gamedev-js-tiles
+    - https://github.com/basementuniverse/tily
+    - https://github.com/yagl/tiledmap
+
+
+ - sprite (series of images, easy to setup and control/animate)
+
+ - drawGrid(gridWidth, showLabels)
+    - see https://github.com/younglaker/EasyCanvas/blob/master/EasyCanvas.js
+
+      ctx
+        .lineWidth(2)
+        .strokeColor('black')
+        .drawGrid(20, true)
+
+ - text(txt, x, y)  // Draws text txt in position x and y
+ - clearArc(x, y, radius, startAngle, endAngle, anticlockwise)
+ - wrapped text
+
+- lerp (linear interpolation)
+
+      const lerp = (start, end, t) => {
+        return (1-t)*start + t*end;
+      };
+
+      function lerp(min, max, amount) {
+        return min + amount * ( max - min );
+      }
+
 
 - easily center drawing point:
 
@@ -178,35 +215,7 @@ const PIXEL_RATIO = (function () {
          rect.h
      );
 
- - map/background generator and tiler
-    - https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Static_maps
-    - https://mozdevs.github.io/gamedev-js-tiles/  and  https://github.com/mozdevs/gamedev-js-tiles
-    - https://github.com/basementuniverse/tily
-    - https://github.com/yagl/tiledmap
-
-
- - sprite (series of images, easy to setup and control/animate)
-
- - drawGrid(gridWidth, showLabels)
-    - see https://github.com/younglaker/EasyCanvas/blob/master/EasyCanvas.js
-
-      ctx
-        .lineWidth(2)
-        .strokeColor('black')
-        .drawGrid(20, true)
-
  - node graph (see https://github.com/paulfears/Graphs)
-
-
- - easy events
-
-      const rr = ctx.create.roundedRect(x,y,w,h,r);  // returns rr
-      ctx.draw(rr);
-
-      rr.on('mouseover', function(e) {
-        this // equals rr
-        e    // equals event
-      });
 
 */
 
@@ -275,6 +284,14 @@ const extraMethods = {
     this.canvas.style.height = h + 'px';
     if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
       this.context.scale(PIXEL_RATIO, PIXEL_RATIO);
+    }
+  },
+  isClean: function() {
+    try {
+        const pixel = this.getImageData(0, 0, 1, 1);
+        return true;
+    } catch(err) {
+        return false;
     }
   },
   // new drawing method & shapes
@@ -504,6 +521,45 @@ const extraMethods = {
   	return res;
   },
 
+  // helper function - creates an img element, caches it, then sets the
+  // onload method up to draw the image, and returns the image element - all
+  // that is left to do to it is set the src elsewhere
+  cacheImg: function(url, x, y, w = null, h = null) {
+    this.images = this.images || {};
+    this.images[url] = this.images[url] ? this.images[url] : new Image();
+    this.images[url].onload = () => {
+      this.images[url].width = w;
+      this.images[url].height = h;
+      return this.drawImage(this.images[url], x, y, w, h);
+    }
+    return this.images[url];
+  },
+
+  drawImg: function(url, x, y, w, h) {
+    // draw now, if available
+    if (url.outerHTML) return this.drawImage(url, x, y, w, h);
+    if (this.images && this.images[url] && this.images[url].src) {
+      return this.drawImage(this.images[url], x, y, w, h);
+    }
+    // or load it and cache it first, *then* set it's src attribute to trigger
+    // the 'onload' event, which will then draw the image to the canvas
+    extraMethods.cacheImg.apply(this, [url, x, y, w, h]).src = url;
+  },
+
+  drawSvg: function(url, x, y, w, h) {
+    // draw now, if available
+    if (url.outerHTML) return this.drawImage(url, x, y, w, h);
+    if (this.images && this.images[url] && this.images[url].src) {
+      return this.drawImage(this.images[url], x, y, w, h);
+    }
+    // or load it and cache it first, *then* set it's src attribute to trigger
+    // the 'onload' event, which will then draw the image to the canvas
+    // (support src using either a URL or SVG HTML code)
+    extraMethods.cacheImg.apply(this, [url, x, y, w, h]).src = !url.includes('<svg')
+      ? url
+      : "data:image/svg+xml; charset=utf8," + encodeURIComponent(url);
+  },
+
   // styling helpers
   setStyle: function(obj) {
     for(i in obj) {
@@ -573,8 +629,8 @@ window.Ctx = function(origCtx) {
   	this[curProp] = chainProperty(curProp, origCtx, this);
   }
 
-  // the above code replace context properties with methods in our new context,
-  // so put back the reference to the canvas element, so we want it
+  // the above code replaces context properties with methods in our new
+  // context, so put back the reference to the canvas element, cos we want it
   this.canvas = origCtx.canvas;
 
   // add more methods to the extended context - they're added here cos they're

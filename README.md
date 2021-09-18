@@ -1399,7 +1399,7 @@ function Foo(state, schema) {
 
 ## Using the `Ctx` module
 
-If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more, all in 2.6kb.
+If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more, all in less than 3kb.
 
 Note that `Ctx` only extends the 2dContext of Component canvases - it won't affect or extend other `<canvas>` elements.
 
@@ -1472,6 +1472,7 @@ General helper methods:
 ```js
 ctx.clear()    // clear entire canvas
 ctx.size(w, h) // set canvas size (in pixels), respects the device pixel ratio
+ctx.isClean()  // returns true if canvas not "tainted", else false
 ```
 
 Circles:
@@ -1494,6 +1495,13 @@ Ellipses:
 ctx.ellipse(x, y, w, h)
 ctx.fillEllipse(x, y, w, h)
 ctx.strokeEllipse(x, y, w, h)
+```
+
+Images:
+
+```js
+drawImg(input, x, y, w, h) // `input` can be a path, URL, Element
+drawSvg(input, x, y, w, h) // `input` can be a path, URL, Element, a string of SVG HTML
 ```
 
 Lines:
