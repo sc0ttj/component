@@ -1397,11 +1397,11 @@ function Foo(state, schema) {
 
 ```
 
-## Using the `ctx` module
+## Using the `Ctx` module
 
-If using a `<canvas>` to render your components, you can **optionally** extend it using the `ctx` add-on, which adds new drawing methods & shapes, a few convenience methods, and a chainable API - in 2.4kb.
+If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more, all in 2.6kb.
 
-Note - `ctx` only extends the context of Component canvases - it won't affect or extend other `<canvas>` elements.
+Note that `Ctx` only extends the 2dContext of Component canvases - it won't affect or extend other `<canvas>` elements.
 
 ### In browsers:
 
@@ -1423,7 +1423,7 @@ Component.Ctx = Ctx
 
 ```
 
-### Example usage of `ctx`
+### Example usage of `Ctx`
 
 Here's a short example, showing a few of the additional drawing methods/shapes, and using the chainable API:
 
@@ -1463,7 +1463,9 @@ Foo.view = (props, ctx) => {
 Foo.render('.some-canvas', '2d')
 ```
 
-Here's a full list of the additional methods:
+See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
+
+### Additional methods provided by `Ctx`
 
 General helper methods:
 
@@ -1471,8 +1473,6 @@ General helper methods:
 ctx.clear()    // clear entire canvas
 ctx.size(w, h) // set canvas size (in pixels), respects the device pixel ratio
 ```
-
-Drawing methods:
 
 Circles:
 
@@ -1485,7 +1485,7 @@ ctx.strokeCircle(x, y, radius)
 Cardinal splines (curved/rounded lines):
 
 ```js
-ctx.curve(points, tension, numOfSegments, closed)  // example: ctx.curve([x1,y1, x2,y2, x3,y3], 0.5, 5, true)
+ctx.curve(points, tension, numOfSeg, closed)  // e.g. ctx.curve([x1,y1, x2,y2, x3,y3], 0.5, 5, true)
 ```
 
 Ellipses:
@@ -1548,17 +1548,18 @@ Transforms:
 ctx.rotateAt(x, y, angle)
 ```
 
-Set any style properties, in one go:
+Styling:
 
 ```js
+// Set any style properties, all in one go
 ctx.setStyle(obj) // obj can be { lineWidth: 4, fillStyle: 'yellow', ...etc }
 ```
 
 Save canvas as image:
 
 ```js
-ctx.image.saveAs('filename') // save current canvas as PNG image file
-ctx.image.toElement(image => console.log(image.src)) // <image> src is base64 encoded data
+ctx.image.saveAs('filename') // save current canvas as PNG image 
+ctx.image.toElement(img => console.log(img.src)) // the <img> src is base64 encoded data
 ```
 
 Save canvas as video:
@@ -1568,10 +1569,21 @@ ctx.video.record(30) // optional params: fps, mimeType, audioBitsPerSecond, vide
 ctx.video.pause();
 ctx.video.resume();
 ctx.video.stop();
-// now we can use the video data, or save it to a file
+// now we can save the video to a file, or create a <video> element
 ctx.video.saveAs('filename')
-ctx.video.toElement(video => console.log(video.src)) // <video> src is base64 encoded data
+ctx.video.toElement(video => console.log(video.src)) // <video> src is Blob data
 ```
+
+> Ctx will try to create videos using these MIME-types, in this order, if none was given as 2nd param to ctx.video.record():
+>
+> - video/webm
+> - video/webm;codecs=vp9
+> - video/vp8
+> - video/webm;codecs=vp8
+> - video/webm;codecs=daala
+> - video/webm;codecs=h264
+> - video/mp4
+> - video/mpeg
 
 Maths helpers:
 
@@ -1581,7 +1593,7 @@ ctx.angleFromPoints(x1, x2, y1, y2)
 ctx.toRadians(angle)
 ctx.random(min, max, decimal) // decimal is boolean
 ```
-See [examples/usage-ctx.html](examples/usage-ctx.html) for examples and more information.
+See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
 
 ## Using JSON-LD (linked data)
 
