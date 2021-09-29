@@ -1497,7 +1497,7 @@ See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more inf
 
 ### Additional methods provided by `Ctx`
 
-#### General helper methods:
+#### General:
 
 ```js
 ctx.clear()                   // clear entire canvas
@@ -1512,17 +1512,17 @@ ctx.size(w, h, aspectRatio)   // set canvas size (in pixels), respects the devic
 ctx.camera(xCenter, yCenter, scale, rotation)
 ```
 
-- `xCenter` and `yCenter` are the x,y points you want the centre of the camera to "look at" or "focus on"
+- `xCenter` and `yCenter` are the x,y points you want the centre of the camera to "look at"
 - `scale` 1 = 100%, 2 = 200%, etc
 - `rotation` is in degrees
 
-### Chroma key (green screen effect)
+#### Chroma key (green screen effect)
 
 ```js
 ctx.chromaKey(tolerance, color)  
 ```
 
-Converts all pixels of the given colour (default green), within the given tolerance levels, to transparent pixels.
+Converts all pixels of matching `colour` (default green), within the tolerance levels, to transparent pixels.
 
 - `tolerance` is optional, defaults to `150`
 - `color` is an optional array containing RGB values, defaults to `[0,255,0]` (green)
@@ -1592,27 +1592,30 @@ drawImg(input, sx, sy, sw, sh, dx, dy, dWidth, qHeight)
 #### Lines:
 
 ```js
-ctx.line(px, py, x, y, dashPattern) // `dashPattern` an optional array of lengths, [ dash, gap, dash, gap, .. ]
+ctx.line(px, py, x, y, dashPattern)
 ```
+
+- `dashPattern` is an optional array of lengths, `[ dash, gap, dash, gap, .. ]`
+
 
 #### Maths helpers:
 
 ```js
-ctx.angleFromPoints(x1, x2, y1, y2) // returns angle in degrees
-ctx,angleToTarget(x1, y1, x2, y2)   // return a counter-clockwise rotation from y-axis
-ctx.clamp(x, min, max)              // returns number, clamped between min and max
-ctx.distance(x2, x1, y2, y1)        // returns distance in pixels between two points
+ctx.angleFromPoints(x1, x2, y1, y2) // returns an angle in degrees
+ctx,angleToTarget(x1, y1, x2, y2)   // returns a counter-clockwise rotation from y-axis
+ctx.clamp(x, min, max)              // returns a number, clamped between min and max
+ctx.distance(x2, x1, y2, y1)        // returns a distance in pixels between two points
 ctx.random(min, max, useDecimal)    // returns a random number, useDecimal is boolean
 ctx.randomFrom(array)               // returns a random item from the array
 ctx.seededRandom(seed)              // returns a seeded random number generator function
-ctx.toDeg(radians)                  // returns radians value in degrees
+ctx.toDeg(radians)                  // returns a adians value in degrees
 ctx.toRad(degrees)                  // returns a degrees value in radians
 ```
 
 #### Polygons:
 
 ```js
-ctx.polygon(points, dashPattern) // e.gpolygon([[x,y], [x,y], ..], [dash, gap, ..])
+ctx.polygon(points, dashPattern)      // e.g,  polygon([[x,y], [x,y], ..], [dash, gap, ..])
 ctx.fillPolygon(points, dashPattern)
 ctx.strokePolygon(points, dashPattern)
 ```
