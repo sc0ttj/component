@@ -10,8 +10,12 @@
  * - https://github.com/pkorac/cardinal-spline-js
  * - https://github.com/ericdrowell/concrete/blob/master/src/concrete.js
  * - https://xosh.org/canvas-recorder/
- * - see https://github.com/SMUsamaShah/CanvasRecorder
- *
+ * - https://github.com/SMUsamaShah/CanvasRecorder
+ * - https://github.com/straker/kontra
+ * - https://github.com/rezoner/CanvasQuery/blob/master/canvasquery.js
+ * - https://hmp.is.it/creating-chroma-key-effect-html5-canvas/
+ * - https://github.com/kikemadrigalr/chromaKey/blob/master/main.js
+ * -
  *
  *
  */
@@ -29,7 +33,7 @@ const ctxProps = 'canvas fillStyle font globalAlpha globalCompositeOperation lin
 */
 function chainMethod(fn, scope, chainReturn) {
   return function() {
-  	return fn.apply(scope, arguments) || chainReturn;
+    	return fn.apply(scope, arguments) || chainReturn;
   };
 }
 
@@ -52,148 +56,183 @@ function chainProperty(propName, scope, chainReturn) {
   };
 }
 
-// calculate these constants only once
-const PIx2 = Math.PI * 2;
-const PIo180 = Math.PI / 180;
 const PIXEL_RATIO = (function () {
   return (window && window.devicePixelRatio) || 1;
 })();
 
+// calculate maths constants only once
+const PI = Math.PI;
+const PIx2 = PI * 2;
+const PIo2 = PI / 2
+const RAD2DEG = 180 / PI;
+const DEG2RAD = PI / 180;
 
-
+// display settings
+//const maxWidth = 1920, maxHeight = 1200; // up to 1080p and 16:10
+//const fixedWidth = 1280, fixedHeight = 720;  // 720p
+//const fixedWidth = 1920, fixedHeight = 1080; // 1080p
+//const fixedWidth = 128,  fixedHeight = 128;  // PICO-8
+//const fixedWidth = 240,  fixedHeight = 136;  // TIC-80
 /* TODO
 
-- steal ideas from: https://github.com/mattdesl/canvas-sketch
-  - set size to 'a3', 'a4', PAL, NTSC, 480p, 720p, 1080p, etc
-  - set units to cm, pixels, dpi, etc
-  - export as other formats
+- brushes:
+  - presets for draw tool, fill and stroke styles
+  - see https://github.com/jimschubert/brushes.js
 
- - ctx.fullscreen()  // method for easily toggling fullscreen
- - ctx.square(x,y,w) // quicker than using rect
 
- - keep the canvas "clean":
-    - if you import img into canvas from external domain, it becomes "dirty"
-    - you cannot grab the ImageData of a dirty canvas, so no video recording, etc!!
-    - so use backup/offscreen canvas to import/convert images, then convert to Blob, DataURI, ImageData, etc
-    - then import the data into the main canvas
-    - see  https://stackoverflow.com/a/67180474
+- arrows:
+  - line arrows
+  - arc arrows
 
- - improve triangles:
-      equilateral triangle: .triangle(x, y, w)
-      right-angle triangle: .triangle(x, y, w, h)
-      custom triangle:      .triangle(x1, y1, x2, y2, x3, y3)
 
- - improve polygons:
-      stars, hexagons, etc: .polygon(x,y,radius,numSides,angle)
-      custom polygon:       .polygon([x1,y1,x2,y2,..]):
+- responsive canvas:
+  - auto resize on screen/orientation change
+  - option to maintain aspect ratio
+  - see https://github.com/Nelkor/ctx-2d/blob/master/index.js#L18
 
-                            .polygon([10,200,  10,200,   10,30,    10,30]);
-
-- linear gradient filled rectangle:
-
-      .gradientRect(100, 100, 50, 50, [
-        [ 0.0, "green" ],
-        [ 0.5, "blue"  ],
-        [ 1.0, "red"   ]
-      ]);
-
-- radial gradient filled circle:
-
-      .gradiantCircle(x,y,r, [
-        [ 0.0, "red"   ],
-        [ 0.1, "blue"  ],
-        [ 1.0, "green" ],
-      ]);
-
- - wrapper func for SVG to canvas (https://tristandunn.com/journal/rendering-svg-on-canvas/  ..doesn't work in Safari or iOS)
-
- - camera (pan & zoom)
-
-      const cameraViewport = {
-        width: 128,
-        height: 128,
-        originx: 64,
-        originy: 64,
-      };
-
-      function camera(x = 0, y = 0, rotation = 0, scale = 1) {
-        const rads = ctx.toRadians(rotation);
-        ctx.resetTransform();
-        ctx.translate(cameraViewport.originx, cameraViewport.originy);
-        ctx.rotate(rads);
-        ctx.scale(scale, scale);
-        ctx.translate(-cameraViewport.originx, -cameraViewport.originy);
-        ctx.translate(-x, -y);
-      }
-      // usage
-      camera(offsetx, offsety, angle, scale);
-
-      function worldToScreen(x, y) {
-        return {x: x - camera.x, y: y - camera.y};
+      const aspectRatio = canvas.maxWidth / canvas.maxHeight;
+      const width  = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      if (aspectRatio) {
+        if (width / height < aspectRatio) {
+          canvas.width = Math.min(width, canvas.maxWidth);
+          canvas.height = canvas.width / aspectRatio;
+        } else {
+          canvas.height = Math.min(height, canvas.maxHeight);
+          canvas.width = canvas.height * aspectRatio;
+        }
       }
 
-      function screenToWorld(x,y) {
-        return {x: x + camera.x, y: y + camera.y};
-      }
+- various goodies: colour, maths, seeded randoms, vectors, engine objects/entities, etc
+  - https://github.com/KilledByAPixel/LittleJS/blob/main/engine/engine.all.js
+
+- undo/redo:
+  - see https://github.com/jussi-kalliokoski/canvas-history.js
 
 
- - easy events
+- play/replay:
+  - https://github.com/despeset/ctxShark/blob/master/ctxShark.js
 
-      const rr = ctx.create.roundedRect(x,y,w,h,r);  // returns rr
-      ctx.draw(rr);
+
+- maths:
+    - plotting
+      - http://javascripter.net/faq/plotafunctiongraph.htm
+      - see https://github.com/d12/QuickPlotJS
+
+    - https://github.com/mattdesl/canvas-sketch-util/blob/master/docs/math.md
+
+    - interpolate colors and numbers: https://github.com/worksbyscott/Interpolator/blob/main/interpolator.js
+
+    - lerp (linear interpolation) for single value
+
+          function lerp(start, end, value) {
+            return start + value * ( end - start );
+          }
+
+          console.log( lerp(10, 20, 0.5) );  // => 15
+          console.log( lerp(10, 20, 2) );    // => 30
+
+    - inverse lerp:
+
+        function inverseLerp(start, end, value) {
+          return (value - start) / (end - start);
+        }
+
+        console.log( inverseLerp(10, 20, 15) );  // => 0.5
+        console.log( inverseLerp(10, 20, 30) );  // => 2
+
+
+    - lerp for 2d coordinates
+
+          function lerp2d([x0, y0] = [], [x1, y1] = [], t) {
+            return [
+              lerp(x0, x1, t),
+              lerp(y0, y1, t),
+            ];
+          }
+          // usage
+          lerp2d([px,py], [x,y])
+
+
+=== STUFF BELOW NEEDS ANIMATION LOOP ===
+
+
+- particle emitter
+  - https://gist.github.com/nickgs/104391ea388dde93610d27093533da64
+  - https://gist.github.com/incompl/4125971
+  - https://gist.github.com/fwon/29a7d67111c8105f9de82d45856910f8
+  - https://gist.github.com/rlemon/5658113
+  - https://gist.github.com/idettman/9ddd55250e8643b83aa22ee056c34cb6
+  - https://github.com/KilledByAPixel/LittleJS/blob/main/engine/engineParticle.js
+  - also see http://buildnewgames.com/particle-systems/  (repo: https://github.com/city41/particle.js)
+
+
+
+- visual FX:
+  - smoke: https://gist.github.com/Vayn/8909634
+  - fire:
+  - explosions:
+  - fireworks: https://gist.github.com/shortercode/6647f2c11e0788ef940c82a82932d780
+  - sparks:
+  - water:
+
+
+=== STUFF BELOW NEEDS INTERACTIVITY/EVENTS SYSTEM FIRST ===
+
+- collision detection:
+  - broad phase (narrowing it down):
+    - quad trees
+      - https://github.com/timohausmann/quadtree-js
+    - spatial has maps
+      - https://gist.github.com/troufster/710529
+      - https://gist.github.com/sc0ttj/b46aefceacb47990e59b36cceb6a81ad
+      - https://gist.github.com/sc0ttj/ec6d3faf1a77c2c8b366629a0f278f5d
+  - narrow phase (actual detecting of collisions)
+    - ?
+
+
+- https://github.com/vasturiano/canvas-color-tracker
+  - enables hover detection for canvas objects
+  - uses same method as threeJS (colours as hit areas):
+    - draws each object to shadow screen canvas, using a unique color
+    - assigns that color to the drawn object
+    - on mouse move,
+      - gets the colour under mouse x,y (from shadow canvas)
+      - looks up the object associated with that colour
+
+      const tracker = new ColorTracker();
+      const obj = { x,y,w,h,..etc };
+      const objColor = tracker.register(myObject);
+      // ...later
+      const hoverColor = ctx.getImageData(x, y, 1, 1).data;
+      const hoverObject = tracker.lookup(hoverColor);
+
+
+- easy events
+
+      const rr = ctx.create.roundedRect(x,y,w,h,r);  // caches and returns {x,y,w,h,r}
+      rr.draw();
       rr.on('mouseover', function(e) {
         this // equals rr
         e    // equals event
       });
 
-- mouse interactivity
 
-   function getMousePos(event) {
-      var rect = ctx.canvas.getBoundingClientRect();
-      ctx.mousePos = {x:(event.clientX-rect.left)/ctx.canvas.scale, y:(event.clientY-rect.top)/ctx.canvas.scale};
-    }
-
- - map/background generator and tiler
+- map/background generator and tiler
+    - https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps
     - https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Static_maps
+    - https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Scrolling_maps
     - https://mozdevs.github.io/gamedev-js-tiles/  and  https://github.com/mozdevs/gamedev-js-tiles
     - https://github.com/basementuniverse/tily
     - https://github.com/yagl/tiledmap
+    - https://www.redblobgames.com/grids/parts/ (lots of theory and algorithm)
 
 
- - sprite (series of images, easy to setup and control/animate)
-
- - drawGrid(gridWidth, showLabels)
-    - see https://github.com/younglaker/EasyCanvas/blob/master/EasyCanvas.js
-
-      ctx
-        .lineWidth(2)
-        .strokeColor('black')
-        .drawGrid(20, true)
-
- - text(txt, x, y)  // Draws text txt in position x and y
- - clearArc(x, y, radius, startAngle, endAngle, anticlockwise)
- - wrapped text
-
-- lerp (linear interpolation)
-
-      const lerp = (start, end, t) => {
-        return (1-t)*start + t*end;
-      };
-
-      function lerp(min, max, amount) {
-        return min + amount * ( max - min );
-      }
+- sprite (series of images, easy to setup and control/animate)
+  - see http://buildnewgames.com/sprite-animation/
 
 
-- easily center drawing point:
-
-    gotoCenter: function() {
-      ctx.translate(ctx.canvas.width / 2, ctx.canvas.width / 2); // center everything
-    }
-
- - image filters:  https://www.html5rocks.com/en/tutorials/canvas/imagefilters/
-
- - shadow casting? :
+- shadow casting? :
     - https://ncase.me/sight-and-light/  and https://github.com/ncase/sight-and-light
     - or  https://github.com/kreldjarn/shadowjs/blob/master/shadow.js:
 
@@ -215,7 +254,20 @@ const PIXEL_RATIO = (function () {
          rect.h
      );
 
- - node graph (see https://github.com/paulfears/Graphs)
+
+- field of view
+    - see https://legends2k.github.io/2d-fov/  and  https://github.com/legends2k/2d-fov
+
+
+- mouse interactivity - add properties that can be used by a useControls() addon
+
+     function getMousePos(event) {
+        var rect = ctx.canvas.getBoundingClientRect();
+        ctx.mousePos = {x:(event.clientX-rect.left)/ctx.canvas.scale, y:(event.clientY-rect.top)/ctx.canvas.scale};
+      }
+
+- node graph
+  - see https://github.com/paulfears/Graphs
 
 */
 
@@ -255,15 +307,7 @@ function downloadBlobAs(blob, name) {
   a.target = '_blank';
   a.href = url;
   a.download = fileName;
-  // simulate click
-  //if (document.createEvent) {
-  //  e = document.createEvent('MouseEvents');
-  //  e.initEvent('click', true, true);
-  //  a.dispatchEvent(e);
-  //}
-  //else if (a.click) {
-    a.click();
-  //}
+  a.click();
   window.URL.revokeObjectURL(url);
 }
 
@@ -272,19 +316,12 @@ const extraMethods = {
 
   // general helper funcs
   clear: function(resetTransform) {
-    if (resetTransform) this.setTransform(1, 0, 0, 1, 0, 0);
+    if (resetTransform === true) this.setTransform(1, 0, 0, 1, 0, 0);
     this.clearRect(0, 0, this.canvas.width * PIXEL_RATIO, this.canvas.height * PIXEL_RATIO);
   },
-  size: function(w, h) {
-    this.width = w;
-    this.height = h;
-    this.canvas.width = w * PIXEL_RATIO;
-    this.canvas.height = h * PIXEL_RATIO;
-    this.canvas.style.width = w + 'px';
-    this.canvas.style.height = h + 'px';
-    if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
-      this.context.scale(PIXEL_RATIO, PIXEL_RATIO);
-    }
+  fullscreen: function() {
+    if (!document.fullscreenElement) this.canvas.requestFullscreen();
+    else document.exitFullscreen();
   },
   isClean: function() {
     try {
@@ -294,26 +331,93 @@ const extraMethods = {
         return false;
     }
   },
+
+  size: function(w, h, a) {
+    if (this.w === w && this.h === h) return; // if no new size, just return
+    // if width or height not given, get them from aspect ratio
+    this.w = w ? w : h * a;
+    this.h = h ? h : w * a;
+    // respect device pixel ratio
+    this.canvas.width = this.w * PIXEL_RATIO;
+    this.canvas.height = this.h * PIXEL_RATIO;
+    // update the CSS too
+    this.canvas.style.width = this.w + 'px';
+    this.canvas.style.height = this.h + 'px';
+    this.canvas.style.objectFit = a ? 'contain' : null;
+    // adjust scale for pixel ratio
+    if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
+      this.scale(PIXEL_RATIO, PIXEL_RATIO);
+    }
+  },
+
+  // a simple "camera"
+  camera: function(x = 0, y = 0, scale = 1, degrees = 0) {
+    this.resetTransform();
+    this.translate(x, y);
+    this.rotate(degrees * DEG2RAD);
+    this.scale(scale, scale);
+    this.translate(-x, -y);
+  },
+
+  // replace green (by default) pixels with transparent ones
+  chromaKey: function(tolerance = 150, color = [0,255,0]) {
+    const t = tolerance > 250 ? 250 : tolerance; // more than 255 produces weird results
+    const imageData = this.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    const d = imageData.data;
+    let diff;
+
+    // for each pixel, get its diff from cache, or calculate it
+    // NOTE: we have separate routines for green, and other colours
+    // see next note
+
+    // if user wants to remove green
+    if (color[1] > color[0] && color[1] > color[2]) {
+      for (let i = 0, l = d.length; i < l; i += 4) {
+        if (d[i+1] > 50 && d[i+1] > d[i] && d[i+1] > d[i+2]) d[i+3] = 0;
+      }
+    // if user wants to remove anything else
+    } else {
+      for (let i = 0, l = d.length; i < l; i += 4) {
+        diff = Math.abs(color[0] - d[i+0]) +
+               Math.abs(color[1] - d[i+1]) +
+               Math.abs(color[2] - d[i+2]);
+        // NOTE: this bit doesn't work well if removing green (hence routine above)
+        if (diff < t) d[i+3] = (diff*diff)/t;
+      }
+    }
+    this.putImageData(imageData, 0, 0);
+  },
+
+  //getPixels: function() {
+  //  return this.getImageData(0, 0, this.canvas.width, this.canvas.height).data
+  //},
+
   // new drawing method & shapes
-  line: function(px, py, x, y) {
+  line: function(px, py, x, y, dashPattern = []) {
     this.beginPath();
+    this.save();
+    this.setLineDash(dashPattern);
     this.moveTo(px, py);
     this.lineTo(x, y);
     this.closePath();
     this.fill();
     this.stroke();
+    this.restore(); // use this cos we used setLineDash()
   },
-  circle: function(x, y, radius) {
+  circle: function(x,y,r,deg = 360,antiClockwise) {
     this.beginPath();
-    this.arc(x, y, radius, 0, PIx2, true);
+    this.arc(x, y, r, 0, deg*DEG2RAD, antiClockwise);
+    // go to center of circle, and _then_ close the path (creates a "pie"
+    // or "pacman" shape, if degrees < 360)
+    this.lineTo(x, y);
     this.closePath();
   },
-  fillCircle: function(x,y,radius) {
-    extraMethods.circle.apply(this, [x,y,radius])
+  fillCircle: function(x,y,radius,deg) {
+    extraMethods.circle.apply(this, [x,y,radius,deg])
     this.fill();
   },
-  strokeCircle: function(x,y,radius) {
-    extraMethods.circle.apply(this, [x,y,radius])
+  strokeCircle: function(x,y,radius,deg) {
+    extraMethods.circle.apply(this, [x,y,radius,deg])
     this.stroke();
   },
   ellipse: function(x, y, width, height) {
@@ -358,50 +462,90 @@ const extraMethods = {
   	extraMethods.ring.apply(this, [x, y, innerRadius, outerRadius]);
     this.stroke();
   },
+  gradientCircle: function(x, y, r, r2, offsetX = 0, offsetY = 0, fillSteps) {
+    const fillGradient = this.createRadialGradient(x + offsetX, y + offsetY, r2, x + offsetX, y + offsetY, r)
+    for (let i = 0; i < fillSteps.length; i++) {
+      fillGradient.addColorStop(fillSteps[i][0], fillSteps[i][1]);
+    }
+    this.fillStyle = fillGradient;
+    extraMethods.circle.apply(this, [x,y,r2])
+    this.fill();
+    this.closePath();
+  },
+  gradientRect: function(x, y, w, h, fillSteps, horiz = true) {
+    if (fillSteps) {
+      const fillGradient = horiz
+        ? this.createLinearGradient(x, y, x, y+h)
+        : this.createLinearGradient(x, y, x+w, y);
+      for (let i = 0; i < fillSteps.length; i++) {
+        fillGradient.addColorStop(fillSteps[i][0], fillSteps[i][1]);
+      }
+      this.fillStyle = fillGradient;
+      this.fillRect(x, y, w, h);
+      this.closePath();
+    }
+  },
   roundedRect: function(x, y, w, h, r) {
   	this.moveTo(x + r, y);
   	this.arcTo(x + w, y, x + w, y + r, r);
   	this.arcTo(x + w, y + h, x + w - r, y + h, r);
   	this.arcTo(x, y + h, x, y + h - r, r);
   	this.arcTo(x, y, x + r, y, r);
+    this.closePath();
   },
   fillRoundedRect: function(x, y, w, h, r) {
     this.beginPath();
   	extraMethods.roundedRect.apply(this, [x, y, w, h, r])
-    this.closePath();
     this.fill();
   },
   strokeRoundedRect: function(x, y, w, h, r) {
     this.beginPath();
   	extraMethods.roundedRect.apply(this, [x, y, w, h, r])
-    this.closePath();
     this.stroke();
   },
-  polygon: function(x,y,radius,s,a) {
+  polygon: function(points, dashPattern = [], restore = true) {
+    this.beginPath();
+    if (restore) this.save();
+    this.setLineDash(dashPattern);
+    const x = points[0][0];
+    const y = points[0][1];
+    this.moveTo(x, y);
+    points.shift(); // remove first element, we just went there
+    points.forEach(point => this.lineTo(point[0], point[1]));
+    this.closePath();
+    if (restore) this.restore(); // use this cos we used setLineDash()
+  },
+  fillPolygon: function (points, dashPattern = []) {
+    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
+    this.fill();
+    this.restore(); // use this cos we used setLineDash() in polygon()
+  },
+  strokePolygon: function (points, dashPattern = []) {
+    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
+    this.stroke();
+    this.restore(); // use this cos we used setLineDash() in polygon()
+  },
+  polyshape: function(x,y,radius,s,a) {
     const position 	= {x,y};
     const sides 		= s ? s : 6;
     const angle			= a ? a : 0;
     this.translate(position.x,position.y);
-    this.rotate(angle * PIo180);
+    this.rotate(angle * DEG2RAD);
     this.beginPath();
     this.moveTo(radius, 0);
-    for(var j = 0; j <= PIx2; j += Math.PI / (sides/2)) {
+    for(var j = 0; j <= PIx2; j += PI / (sides/2)) {
       this.lineTo(radius * Math.cos(j), radius * Math.sin(j));
     }
     this.closePath();
-    this.rotate(-angle * PIo180);
+    this.rotate(-angle * DEG2RAD);
     this.translate(-position.x,-position.y);
   },
-  fillPolygon: function(x,y,radius,s,a) {
-    const sides 		= s ? s : 6;
-    const angle			= a ? a : 0;
-    extraMethods.polygon.apply(this, [x,y,radius,sides,angle])
+  fillPolyshape: function(x,y,radius,s,a) {
+    extraMethods.polyshape.apply(this, [x,y,radius,s,a])
     this.fill();
   },
-  strokePolygon: function(x,y,radius,s,a) {
-    const sides 		= s ? s : 6;
-    const angle			= a ? a : 0;
-    extraMethods.polygon.apply(this, [x,y,radius,sides,angle])
+  strokePolyshape: function(x,y,radius,s,a) {
+    extraMethods.polyshape.apply(this, [x,y,radius,s,a])
     this.stroke();
   },
   star: function(x,y,radius,s,a) {
@@ -409,39 +553,40 @@ const extraMethods = {
     const sides 		= (s ? s : 5) * 2;
     const angle			= -90 - (a ? a : 0);
     this.translate(position.x,position.y);
-    this.rotate(angle * PIo180);
+    this.rotate(angle * DEG2RAD);
     this.beginPath();
     this.moveTo(radius, 0);
     let wobble = 2;
-    for(var j = 0; j <= PIx2; j += Math.PI / (sides/2)) {
+    for(var j = 0; j <= PIx2; j += PI / (sides/2)) {
     	wobble = wobble == 1 ? 2 : 1;
       this.lineTo(((radius / (wobble)) * Math.cos(j)),((radius / (wobble)) * Math.sin(j)));
     }
     this.closePath();
-    this.rotate(-angle * PIo180);
+    this.rotate(-angle * DEG2RAD);
     this.translate(-position.x,-position.y);
   },
   fillStar: function(x,y,radius,s,a) {
-    const sides = s ? s : 5;
-    const angle = a ? a : 0;
-    extraMethods.star.apply(this, [x,y,radius,sides,angle])
+    extraMethods.star.apply(this, [x,y,radius,s,a])
     this.fill();
   },
   strokeStar: function(x,y,radius,s,a) {
-    const sides = s ? s : 5;
-    const angle = a ? a : 0;
-    extraMethods.star.apply(this, [x,y,radius,sides,angle])
+    extraMethods.star.apply(this, [x,y,radius,s,a])
     this.stroke();
   },
+  square: function(x,y,w) {
+    this.beginPath();
+    this.rect(x, y, w, w);
+    this.closePath();
+  },
   triangle: function(x,y,radius,angle) {
-  	extraMethods.polygon.apply(this, [x,y,radius,3,angle ? angle : -90])
+  	extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
   },
   fillTriangle: function(x,y,radius,angle) {
-    extraMethods.polygon.apply(this, [x,y,radius,3,angle ? angle : -90])
+    extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
     this.fill();
   },
   strokeTriangle: function(x,y,radius,angle) {
-    extraMethods.polygon.apply(this, [x,y,radius,3,angle ? angle : -90])
+    extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
     this.stroke();
   },
   curve: function(points, tension, numOfSeg, close) { // also see a simpler alternative here: https://stackoverflow.com/a/49371349
@@ -521,43 +666,88 @@ const extraMethods = {
   	return res;
   },
 
+  // grids
+  drawGridBox(x, y, w, h, size, lineWidth = 0.1, color = '#444') {
+    this.save();
+    this.lineWidth = lineWidth;
+    this.strokeStyle = color;
+    this.moveTo(x,y)
+    this.lineTo(x+w,y)
+    this.lineTo(x+w,y+h)
+    this.lineTo(x,y+h)
+    this.lineTo(x,y)
+    // draw vertical lines
+    for (let i=1; i < w/size; i++) {
+      this.moveTo(x+size*i, y);
+      this.lineTo(x+size*i, y+h);
+    }
+    // draw horizontal lines
+    for (let i=1; i < h/size; i++) {
+      this.moveTo(x, y+size*i);
+      this.lineTo(x+w, y+size*i);
+    }
+    this.stroke();
+    this.closePath();
+    this.restore();
+  },
+  drawGrid(size, lineWidth = 0.1, strokeColor = '#444') {
+    extraMethods.drawGridBox.apply(this, [0,0,this.canvas.width,this.canvas.height,size,lineWidth,strokeColor])
+  },
+  checkerboard: function(x, y, w, h, gridSize, colorA, colorB) {
+    const tx = w / gridSize | 0;
+    const ty = h / gridSize | 0;
+    let color;
+    this.save();
+    this.rect(x, y, w, h);
+    for (var i = 0; i <= tx; i++) {
+      for (var j = 0; j <= ty; j++) {
+        if (j % 2) {
+          color = i % 2 ? colorA : colorB;
+        }
+        else {
+          color = i % 2 ? colorB : colorA;
+        }
+        this.fillStyle = color;
+        this.fillRect(x + i * gridSize, y + j * gridSize, gridSize, gridSize);
+      }
+    }
+    this.restore();
+  },
+
   // helper function - creates an img element, caches it, then sets the
   // onload method up to draw the image, and returns the image element - all
   // that is left to do to it is set the src elsewhere
-  cacheImg: function(url, x, y, w = null, h = null) {
-    this.images = this.images || {};
-    this.images[url] = this.images[url] ? this.images[url] : new Image();
-    this.images[url].onload = () => {
-      this.images[url].width = w;
-      this.images[url].height = h;
-      return this.drawImage(this.images[url], x, y, w, h);
+  cacheImg: function(url, x, y, w, h, dx, dy, dWidth, dHeight) {
+    if (this.cache[url]) return this.cache[url];
+    this.cache[url] = new Image();
+    this.cache[url].onload = () => {
+      this.cache[url].width = w;
+      this.cache[url].height = h;
+      return dx
+        ? this.drawImage(this.cache[url], x, y, w, h, dx, dy, dWidth, dHeight)
+        : this.drawImage(this.cache[url], x, y, w, h);
     }
-    return this.images[url];
+    this.cache[url].crossOrigin = 'anonymous';
+    return this.cache[url];
   },
 
-  drawImg: function(url, x, y, w, h) {
+  // for explanation of params,see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage/canvas_drawimage.jpg
+  drawImg: function(url, x, y, w, h, dx, dy, dWidth, dHeight) {
     // draw now, if available
-    if (url.outerHTML) return this.drawImage(url, x, y, w, h);
-    if (this.images && this.images[url] && this.images[url].src) {
-      return this.drawImage(this.images[url], x, y, w, h);
+    if (url.outerHTML) return dx
+      ? this.drawImage(url, x, y, w, h, dx, dy, dWidth, dHeight)
+      : this.drawImage(url, x, y, w, h);
+    if (!this.cache) this.cache = {};
+    if (this.cache[url] && this.cache[url].src) {
+      return dx
+      ? this.drawImage(this.cache[url], x, y, w, h, dx, dy, dWidth, dHeight)
+      : this.drawImage(this.cache[url], x, y, w, h);
     }
     // or load it and cache it first, *then* set it's src attribute to trigger
     // the 'onload' event, which will then draw the image to the canvas
-    extraMethods.cacheImg.apply(this, [url, x, y, w, h]).src = url;
-  },
-
-  drawSvg: function(url, x, y, w, h) {
-    // draw now, if available
-    if (url.outerHTML) return this.drawImage(url, x, y, w, h);
-    if (this.images && this.images[url] && this.images[url].src) {
-      return this.drawImage(this.images[url], x, y, w, h);
-    }
-    // or load it and cache it first, *then* set it's src attribute to trigger
-    // the 'onload' event, which will then draw the image to the canvas
-    // (support src using either a URL or SVG HTML code)
-    extraMethods.cacheImg.apply(this, [url, x, y, w, h]).src = !url.includes('<svg')
-      ? url
-      : "data:image/svg+xml; charset=utf8," + encodeURIComponent(url);
+    extraMethods.cacheImg.apply(this, [url, x, y, w, h, dx, dy, dWidth, dHeight]).src = !url.includes('<svg')
+          ? url
+          : "data:image/svg+xml; charset=utf8," + encodeURIComponent(url);
   },
 
   // styling helpers
@@ -568,27 +758,67 @@ const extraMethods = {
   },
 
   // maths helpers
-  rotateAt: function(x, y, a) {
-    this.translate(x, y);
-    this.rotate(a);
-    this.translate(-x, -y);
+  angleFromPoints: function(x1, x2, y1, y2) {
+    return Math.atan2(y2 - y1, x2 - x1) // returns radians
+    // see https://stackoverflow.com/a/1707251
+    // The * DEG2RAD converts radians to degrees,
+    // the + 180 makes sure its always positive i.e. 0-360 deg,
+    // rather than -180 to 180 deg
+    return Math.atan2(y2 - y1, x2 - x1) * DEG2RAD + 180;
+  },
+  angleToTarget: function (x, y, x1, y1) {
+    // atan2 returns the counter-clockwise angle in respect to the x-axis, but
+    // the canvas rotation system is based on the y-axis (rotation of 0 = up).
+    // so we need to add a quarter rotation to return a counter-clockwise
+    // rotation in respect to the y-axis
+    return Math.atan2(y1 - y, x1 - x) + PIo2;
+  },
+  clamp: function(x, min, max) {
+    return Math.min(Math.max(min, x), max);
   },
   distance: function(x2, x1, y2, y1) {
     return Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
   },
-  angleFromPoints: function(x1, x2, y1, y2) {
-    return Math.atan2(y2-y1, x2-x1);
-  },
-  toRadians: function(angle) {
-    return angle * PIo180;
+  seededRandom: function (str) {
+    // see https://stackoverflow.com/a/47593316/2124254
+    // see https://github.com/bryc/code/blob/master/jshash/PRNGs.m
+    // based on the above references, this was the smallest code yet decent
+    // quality seed random function (from https://github.com/straker/kontra/blob/main/src/helpers.js)#
+    //
+    // first create a suitable hash of the seed string using xfnv1a
+    // @see https://github.com/bryc/code/blob/master/jshash/PRNGs.md#addendum-a-seed-generating-functions
+    for (var i = 0, h = 2166136261 >>> 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+    }
+    h += h << 13;
+    h ^= h >>> 7;
+    h += h << 3;
+    h ^= h >>> 17;
+    let seed = (h += h << 5) >>> 0;
+    // then return the seed function and discard the first result
+    // @see https://github.com/bryc/code/blob/master/jshash/PRNGs.md#lcg-lehmer-rng
+    let rand = () => ((2 ** 31 - 1) & (seed = Math.imul(48271, seed))) / 2 ** 31;
+    rand();
+    return rand;
   },
   random: function(min, max, decimal) {
-    if (decimal) {
-      return Math.random() * (max - min) + min;
-    }
+    if (decimal) return Math.random() * (max - min) + min;
     return Math.floor(Math.random() * (max - min+1)) + min;
   },
-
+  randomFrom(arr) {
+    return extraMethods.random.apply(this, [1, arr.length])
+  },
+  rotateAt: function(x, y, deg) {
+    this.translate(x, y);
+    this.rotate(deg * DEG2RAD);
+    this.translate(-x, -y);
+  },
+  toRad: function(deg) { // degrees to radians
+    return deg * DEG2RAD;
+  },
+  toDeg: function(rad) { // radians to degrees
+    return rad * RAD2DEG;
+  }
 };
 
 const extraMethodNames = Object.keys(extraMethods);
@@ -596,8 +826,9 @@ const extraMethodNames = Object.keys(extraMethods);
 /**
 * @class Canvas Context2D Wrapper.
 * @param {CanvasRenderingContext2D} origCtx	Canvas Context2D that will be wrapped.
+* @param {Component} c	the @scottjarvis/component to which the ctx is attached (optional)
 */
-window.Ctx = function(origCtx) {
+window.Ctx = function(origCtx, c) {
   let n = ctxMethods.length;
   let curProp;
   let chunks;
@@ -652,15 +883,17 @@ window.Ctx = function(origCtx) {
         img.height = h;
         cb(img);
       };
+      img.crossOrigin = 'anonymous';
       // set the src to trigger img.onload
       img.src = this.canvas.toDataURL('image/png');
     },
   };
 
   this.video = {
+
     // record canvas to video data
     record: (fps, mimeType = supportedType, audioBitsPerSecond = 128000, videoBitsPerSecond = 2500000) => {
-      if (this.isRecording === true) return;
+      if (this.isRecording === true) return true;
       const framesPerSecond = (fps > 0 && fps <=60) ? fps : 24;
       chunks = [];
       // set media recorder options
@@ -719,6 +952,7 @@ window.Ctx = function(origCtx) {
         const { w, h }  = this;
         video.width = w;
         video.height = h;
+        video.crossOrigin = 'anonymous';
         video.src = URL.createObjectURL(this.videoBlob);
         video.load();
         cb(video);

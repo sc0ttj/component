@@ -9,14 +9,16 @@
     .container, video {
       border: 1px solid #222;
       margin: 1em;
+      width: 640px;
+      height: 480px;
     }
   </style>
 </head>
 <body>
 
   <canvas class="container"></canvas>
-
-  <video controls></video>
+  <br>
+  <video crossorigin="*" controls></video>
 
 <script>
 
@@ -35,23 +37,61 @@
   // will be a reference to Foo.ctx, so we can access it outside the components view
   let context;
 
+  let frame = 1; // frame count
+
+  const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
 
   // define a "view", that draws to the components canvas
   Foo.view = (props, ctx) => {
 
-    context = ctx;
+    if (frame === 1) {
+      context = ctx;
+      // set the canvas size (w, h, aspectRatio)
+
+      ctx.size(640, 480)           // set width and height, ignore aspect ratio
+      //ctx.size(640, 480, null)   // same as above
+      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 480
+      //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
+      //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
+      //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
+    }
 
     ctx
       .clear()  // using `clear(true)` will clear transforms too
-      .size(640, 480)
+      .beginPath()
 
-      .drawSvg(`<svg xmlns="http://www.w3.org/2000/svg" stroke="#000" stroke-width="2">
-       <rect x="80" y="60" width="150" height="150" rx="20" fill="#F00"/>
-       <rect x="100" y="80" width="150" height="150" rx="40" fill="#00F" fill-opacity=".7"/>
-      </svg>`, 100, 200, 250, 200) // urlOrCode, x, y, w, h
+      // uncomment one of the lines below to try out the "camera":
+      // camera(xCenter, yCenter, scale, rotation); // rotation is in degrees
+      //.camera(000, 000, 2, 0)
+      //.camera(320, 240, 2, 0)
+      //.camera(640, 480, 2, 0)
+      //.camera(320, 240, 4-(1+frame/400), 0)
+
+      .beginPath()
+      .drawGrid(12)
+
+      .beginPath()
+      .drawGridBox(400,280, 200,100, 25, 0.5, '#c00')
+
+      .beginPath()
+      .checkerboard(30, 300-frame, 100, 100, 15, '#222', '#efefef')
+
+      .beginPath()
+      .fillStyle('purple')
+      .polygon([
+          [10 + props.y, 10],
+          [200- + props.y / 2,10 + props.y],
+          [200,200],
+          [100 + props.y, 220],
+        ],
+        [],  // line dash pattern [dash,gap,dash,gap,..]
+        true // fill or not
+      )
+      .fill()
 
       .beginPath()
       .moveTo(0, 0)
+      .lineWidth(2)
       .strokeStyle('blue')
       .lineTo(props.x, props.y)
       .stroke()
@@ -68,23 +108,73 @@
       .stroke()
 
       .beginPath()
-      .fillStyle('red')
-      .fillRect((props.x / 2) + 6, (props.y / 2) + 6, 38, 38)
-
-      .beginPath()
       .strokeStyle('pink')
       .lineWidth(4)
       .strokeTriangle(220, 60, 50, 45)
+
+      .beginPath()
+      .fillStyle('orange')
+      .fillCircle(320, 240, 20, 0 + frame)
 
       .beginPath()
       .fillStyle('green')
       .fillRing(80, 100, (props.y / 8) + 10, (props.y / 8) + 20, 100)
 
       .beginPath()
-      .strokeStyle('yellow')
-      .strokeStar(200, 200, 50, 5, 0)
+      .gradientRect(props.y, props.y, 200, 80,
+        // fill gradient settings
+        [
+          [ 0.0, "red"   ],
+          [ 0.5, "blue"  ],
+          [ 1.0, "rgb(0,255,0)" ],
+        ],
+        true // horizontal (optional), defaults to true (false is vertical)
+      )
 
+      .beginPath()
+      .gradientCircle(
+        (props.y+10)*2, props.y-100,   // position x, y
+        5, 50,                         // innerRadius, outerRadius
+        50-props.y/5, 50-props.y/5,    // radius offset (from center of circle) x, y
+        // fill gradient settings
+        [
+          [ 0, "red"   ],
+          [ 1, "yellow" ],
+        ],
+      )
+
+      .beginPath()
+      .strokeStyle('gold')
+      .fillStyle('yellow')
+      .strokeStar(200, 200, 50, 5, 0)
+      .fill()
+
+      .drawImg(`<svg xmlns="http://www.w3.org/2000/svg" stroke="#000" stroke-width="1">
+       <rect x="80" y="60" width="150" height="150" rx="20" fill="#F00"/>
+       <rect x="100" y="80" width="150" height="150" rx="40" fill="#00F" fill-opacity=".7"/>
+      </svg>`, 100 + props.y, 200 - props.y / 2, 250, 150) // urlOrElemOrCode, x, y, w, h
+
+      .drawImg('https://cdn.glitch.com/4c9ebeb9-8b9a-4adc-ad0a-238d9ae00bb5%2Fmdn_logo-only_color.svg', 100+frame, 350, 150, 150)
+
+      // pacman
+      ctx.circle(320, 360, 50, 0+frame, false) // x, y, radius, deg, antiClockwise
+      ctx.fillStyle("yellow");
+      ctx.fill()
+
+      // uncomment one of the lines below to try the "chroma key" filtering
+
+      //.chromaKey(200, [255,0,0]) // make red pixels transparent, with a tolerance of 200
+      //.chromaKey(150, [0,0,255]) // make blue pixels transparent, with a tolerance of 150
+      //.chromaKey(150, [0,255,0]) // make green pixels transparent, green is always max tolerance
+      //.chromaKey()               // make green pixels transparent, same as above
+
+      // maths helpers
+      //console.log(`The distance from 0,0 to 0,${props.y} is`, ctx.distance(0, 0, 0, props.y))
+      //console.log(`Random number from arr: ${ctx.randomFrom(arr)}`)
+
+      frame++;
   };
+
 
   // render to a canvas, and attach its context (`ctx`) to our component
   Foo.render('.container', '2d');
@@ -93,29 +183,27 @@
   // ..after the first frame renders (takes about 16 milliseconds)
   // we can access `ctx` outside this components view, as `context`
   setTimeout(() => {
-    context.video.record(24); // start recording a video @24fps
+    context.video.record(60); // start recording a video @60fps
   }, 20);
 
 
   // move stuff around a bit in an animated loop
   const loop = setInterval(() => {
-
     Foo.setState({
       x: 300,
       y: Foo.state.y += 1
     });
-
   }, 1000 / 60);
 
 
-  // after 3 seconds, stop loop, stop recording the canvas to video,
+  // after 5 seconds, stop loop, stop recording the canvas to video,
   // and offer to download it
   setTimeout(() => {
     clearInterval(loop);
     context.video.stop();
     context.video.toElement(el => document.querySelector('video').src = el.src);
-    context.video.saveAs('canvas-as-video.webm');
-  }, 3000);
+    //context.video.saveAs('canvas-as-video.webm');
+  }, 5500);
 
 </script>
 </body>

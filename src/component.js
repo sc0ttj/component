@@ -586,9 +586,11 @@ function Component(state, schema) {
 
     // get the canvas context, if needed
     if (c.html && c.html.getContext && !c.ctx) {
-      c.ctx = c.ctx ? c.ctx : c.html.getContext(ctxType ? ctxType : '2d')
+      c.ctx = c.html.getContext(ctxType ? ctxType : '2d')
       // extend canvas if Ctx addon available (adds methods, makes all methods chainable)
-      if (c.ctx && Ctx) c.ctx = new Ctx(c.ctx);
+      if (c.ctx && Ctx) {
+        c.ctx = new Ctx(c.ctx, c);
+      }
     }
 
     if (timeout) cancelAnimationFrame(timeout)

@@ -1399,9 +1399,39 @@ function Foo(state, schema) {
 
 ## Using the `Ctx` module
 
-If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more, all in less than 3kb.
+If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more. 
 
-Note that `Ctx` only extends the 2dContext of Component canvases - it won't affect or extend other `<canvas>` elements.
+Features:
+
+- extra drawing methods: 
+  - cardinals splines (smooth curves, with segments and optional points) 
+  - circles & ellipses 
+  - gradient-filled rectangles (linear) and circles (radial)
+  - grids
+  - polygons from any array of points
+  - polyshapes, like hexagons, etc
+  - rounded corner rectangles
+  - rings (doughnuts)
+  - stars
+  - triangles
+  - more..
+- a simple camera:
+  - pan, scale, rotate
+- chainable API:
+  - all methods are chainable unless they return something (see regular canvas API)
+- maths helper functions:
+  - convert between radians/degrees, get distances, etc
+- save to image and video:
+  - embed SVG as code, Element or file with `ctx.drawImg()`, which handles caching for you
+  - save canvas as an image with `ctx.canvas.image.saveAs('filename.png')`
+  - record canvas to video with `ctx.canvas.video.record()`
+  - save the video with `ctx.canvas.video.saveAs('filename.webm')`
+- less than 4kb, gzipped
+
+Note: 
+
+- only extends the 2dContext of Component canvases - it won't affect or extend other `<canvas>` elements.
+- only works in the browser, unless you polyfill the `<canvas>` 2d context in your NodeJS program.
 
 ### In browsers:
 
@@ -1467,15 +1497,38 @@ See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more inf
 
 ### Additional methods provided by `Ctx`
 
-General helper methods:
+#### General helper methods:
 
 ```js
-ctx.clear()    // clear entire canvas
-ctx.size(w, h) // set canvas size (in pixels), respects the device pixel ratio
-ctx.isClean()  // returns true if canvas not "tainted", else false
+ctx.clear()                   // clear entire canvas
+ctx.fullscreen()              // toggle fullscreen mode
+ctx.isClean()                 // returns true if canvas not "tainted", else false
+ctx.size(w, h, aspectRatio)   // set canvas size (in pixels), respects the device pixel ratio
 ```
 
-Circles:
+#### Camera:
+
+```js
+ctx.camera(xCenter, yCenter, scale, rotation)
+```
+
+- `xCenter` and `yCenter` are the x,y points you want the centre of the camera to "look at" or "focus on"
+- `scale` 1 = 100%, 2 = 200%, etc
+- `rotation` is in degrees
+
+### Chroma key (green screen effect)
+
+```js
+ctx.chromaKey(tolerance, color)  
+```
+
+Converts all pixels of the given colour (default green), within the given tolerance levels, to transparent pixels.
+
+- `tolerance` is optional, defaults to `150`
+- `color` is an optional array containing RGB values, defaults to `[0,255,0]` (green)
+
+
+#### Circles:
 
 ```js
 ctx.circle(x, y, radius)
@@ -1483,13 +1536,13 @@ ctx.fillCircle(x, y, radius)
 ctx.strokeCircle(x, y, radius)
 ```
 
-Cardinal splines (curved/rounded lines):
+#### Cardinal splines (curved/rounded lines):
 
 ```js
-ctx.curve(points, tension, numOfSeg, closed)  // e.g. ctx.curve([x1,y1, x2,y2, x3,y3], 0.5, 5, true)
+ctx.curve(points, tension, numOfSeg, closed)  // e.g. ctx.curve([x1,y1, x2,y2, ...], 0.5, 5, true)
 ```
 
-Ellipses:
+#### Ellipses:
 
 ```js
 ctx.ellipse(x, y, w, h)
@@ -1497,28 +1550,82 @@ ctx.fillEllipse(x, y, w, h)
 ctx.strokeEllipse(x, y, w, h)
 ```
 
-Images:
+#### Gradient filled circle (radial):
 
 ```js
-drawImg(input, x, y, w, h) // `input` can be a path, URL, Element
-drawSvg(input, x, y, w, h) // `input` can be a path, URL, Element, a string of SVG HTML
+ctx.gradientCircle(x, y, innerRadius, outerRadius, xOffset, yOffset, fillGradient)
 ```
 
-Lines:
+The `fillGradient` param should be an array of color stops, like this:
 
 ```js
-ctx.line(px, py, x, y)
+[
+  [ 0.0, "blue"  ],
+  [ 0.5, "#f00"  ],
+  [ 1.0, "green" ],
+]
 ```
 
-Polygons:
+#### Gradient filled rectangles (linear):
 
 ```js
-ctx.polygon(x, y, radius, numOfSides, angle)
-ctx.fillPolygon(x, y, radius, numOfSides, angle)
-ctx.strokePolygon(x, y, radius, numOfSides, angle)
+ctx.gradientRect(x, y, w, h, fillGradient, horizontal) // `horizontal` is boolean
 ```
 
-Rings (doughnuts):
+#### Grids:
+
+```js
+ctx.drawGrid(cellSize, lineWidth, strokeColor) // fills canvas area
+ctx.drawGridBox(x, y, w, h, cellSize, lineWidth, strokeColor) // grid in a box
+ctx.checkerboard(x, y, w, h, cellSize, colorA, colorB)
+```
+
+#### Images:
+
+```js
+drawImg(input, x, y, w, h) 
+drawImg(input, sx, sy, sw, sh, dx, dy, dWidth, qHeight)
+```
+
+- `input` can be a path, URL, Element, a string of SVG HTML
+
+#### Lines:
+
+```js
+ctx.line(px, py, x, y, dashPattern) // `dashPattern` an optional array of lengths, [ dash, gap, dash, gap, .. ]
+```
+
+#### Maths helpers:
+
+```js
+ctx.angleFromPoints(x1, x2, y1, y2) // returns angle in degrees
+ctx,angleToTarget(x1, y1, x2, y2)   // return a counter-clockwise rotation from y-axis
+ctx.clamp(x, min, max)              // returns number, clamped between min and max
+ctx.distance(x2, x1, y2, y1)        // returns distance in pixels between two points
+ctx.random(min, max, useDecimal)    // returns a random number, useDecimal is boolean
+ctx.randomFrom(array)               // returns a random item from the array
+ctx.seededRandom(seed)              // returns a seeded random number generator function
+ctx.toDeg(radians)                  // returns radians value in degrees
+ctx.toRad(degrees)                  // returns a degrees value in radians
+```
+
+#### Polygons:
+
+```js
+ctx.polygon(points, dashPattern) // e.gpolygon([[x,y], [x,y], ..], [dash, gap, ..])
+ctx.fillPolygon(points, dashPattern)
+ctx.strokePolygon(points, dashPattern)
+```
+
+#### Polyshapes (hexagons, octogons, stars, etc)
+
+```js
+ctx.polyshape(x, y, radius, numOfSides, degrees)
+ctx.fillPolyshape(x, y, radius, numOfSides, degrees)
+ctx.strokePolyshape(x, y, radius, numOfSides, degrees)
+```
+
+#### Rings (doughnuts):
 
 ```js
 ctx.ring(x, y, innerRadius, outerRadius)
@@ -1526,51 +1633,57 @@ ctx.fillRing(x, y, innerRadius, outerRadius)
 ctx.strokeRing(x, y, innerRadius, outerRadius)
 ```
 
-Rounded rectangles:
+#### Rounded rectangles:
 
 ```js
-ctx.roundedRect(x, y, w, h, radius)
-ctx.fillRoundedRect(x, y, w, h, radius)
-ctx.strokeRoundedRect(x, y, w, h, radius)
+ctx.roundedRect(x, y, w, h, borderRadius)
+ctx.fillRoundedRect(x, y, w, h, borderRadius)
+ctx.strokeRoundedRect(x, y, w, h, borderRadius)
 ```
 
-Stars:
+#### Square:
 
 ```js
-ctx.star(x, y, radius, numOfSides, angle)
-ctx.fillStar(x, y, radius, numOfSides, angle)
-ctx.strokeStar(x, y, radius, numOfSides, angle)
+ctx.square(x, y, w)
 ```
 
-Triangles:
+#### Stars:
 
 ```js
-ctx.triangle(x, y, radius, angle)
-ctx.fillTriangle(x, y, radius, angle)
-ctx.strokeTriangle(x, y, radius, angle)
+ctx.star(x, y, radius, numOfSides, degrees)
+ctx.fillStar(x, y, radius, numOfSides, degrees)
+ctx.strokeStar(x, y, radius, numOfSides, degrees)
 ```
 
-Transforms:
+#### Triangles:
 
 ```js
-ctx.rotateAt(x, y, angle)
+ctx.triangle(x, y, radius, degrees)
+ctx.fillTriangle(x, y, radius, degrees)
+ctx.strokeTriangle(x, y, radius, degrees)
 ```
 
-Styling:
+#### Transforms:
+
+```js
+ctx.rotateAt(x, y, degrees)
+```
+
+#### Styling:
 
 ```js
 // Set any style properties, all in one go
 ctx.setStyle(obj) // obj can be { lineWidth: 4, fillStyle: 'yellow', ...etc }
 ```
 
-Save canvas as image:
+#### Save canvas as image:
 
 ```js
 ctx.image.saveAs('filename') // save current canvas as PNG image 
 ctx.image.toElement(img => console.log(img.src)) // the <img> src is base64 encoded data
 ```
 
-Save canvas as video:
+#### Save canvas as video:
 
 ```js
 ctx.video.record(30) // optional params: fps, mimeType, audioBitsPerSecond, videoBitsPerSecond
@@ -1582,25 +1695,17 @@ ctx.video.saveAs('filename')
 ctx.video.toElement(video => console.log(video.src)) // <video> src is Blob data
 ```
 
-> Ctx will try to create videos using these MIME-types, in this order, if none was given as 2nd param to ctx.video.record():
->
-> - video/webm
-> - video/webm;codecs=vp9
-> - video/vp8
-> - video/webm;codecs=vp8
-> - video/webm;codecs=daala
-> - video/webm;codecs=h264
-> - video/mp4
-> - video/mpeg
+Ctx will try to create videos using these MIME-types, in this order, if none was given as 2nd param to ctx.video.record():
 
-Maths helpers:
+- video/webm
+- video/webm;codecs=vp9
+- video/vp8
+- video/webm;codecs=vp8
+- video/webm;codecs=daala
+- video/webm;codecs=h264
+- video/mp4
+- video/mpeg
 
-```js
-ctx.distance(x2, x1, y2, y1)
-ctx.angleFromPoints(x1, x2, y1, y2)
-ctx.toRadians(angle)
-ctx.random(min, max, decimal) // decimal is boolean
-```
 See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
 
 ## Using JSON-LD (linked data)
