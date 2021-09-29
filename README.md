@@ -1522,7 +1522,7 @@ ctx.camera(xCenter, yCenter, scale, rotation)
 ctx.chromaKey(tolerance, color)  
 ```
 
-Converts all pixels of matching `colour` (default green), within the tolerance levels, to transparent pixels.
+Make all pixels matching `colour` (default green) within the tolerance levels, transparent.
 
 - `tolerance` is optional, defaults to `150`
 - `color` is an optional array containing RGB values, defaults to `[0,255,0]` (green)
