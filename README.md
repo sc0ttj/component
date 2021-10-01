@@ -1631,7 +1631,7 @@ ctx.inverseLerp(start, end, value)  // returns a number, reverse of above
 ctx.random(min, max, useDecimal)    // returns a random number, useDecimal is boolean
 ctx.randomFrom(array)               // returns a random item from the array
 ctx.seededRandom(seed)              // returns a seeded random number generator function
-ctx.toDeg(radians)                  // returns a adians value in degrees
+ctx.toDeg(radians)                  // returns a radians value in degrees
 ctx.toRad(degrees)                  // returns a degrees value in radians
 ```
 
