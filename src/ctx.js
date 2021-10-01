@@ -70,11 +70,6 @@ const DEG2RAD = PI / 180;
 
 /* TODO
 
-- brushes:
-  - presets for draw tool, fill and stroke styles
-  - see https://github.com/jimschubert/brushes.js
-
-
 - responsive canvas:
   - auto resize on screen/orientation change
   - option to maintain aspect ratio
@@ -159,6 +154,12 @@ const DEG2RAD = PI / 180;
 
 
 === STUFF BELOW NEEDS INTERACTIVITY/EVENTS SYSTEM FIRST ===
+
+- brushes:
+  - presets for draw tool, fill and stroke styles
+  - respond to pointer pressure (thickness, colour, alpha, etc)
+  - see https://github.com/jimschubert/brushes.js
+
 
 - collision detection:
   - broad phase (narrowing it down):
