@@ -1667,6 +1667,14 @@ ctx.fillRoundedRect(x, y, w, h, borderRadius)
 ctx.strokeRoundedRect(x, y, w, h, borderRadius)
 ```
 
+#### Spirals
+
+```js
+ctx.spiral(x, y, rad, steps, rotation, lineWidth, stroke)
+```
+
+- `rotation` is in degrees
+
 #### Square:
 
 ```js

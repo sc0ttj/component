@@ -21,6 +21,10 @@
   <video crossorigin="*" controls></video>
 
 <script>
+  let context; // will be a reference to Foo.ctx, so we can access it outside the components view
+  let frame = 1; // frame count
+  const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
+
 
   // Enable the enhanced canvas 2dContext API (optional).
   // The extended `ctx` enables:
@@ -33,21 +37,10 @@
 
   // define a new component
   const Foo = new Component({ x: 280, y: 100 });
-
-  // will be a reference to Foo.ctx, so we can access it outside the components view
-  let context;
-
-  let frame = 1; // frame count
-
-  const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
-
-
   // define a "view", that draws to the components canvas
   Foo.view = (props, ctx) => {
-
     if (frame === 1) {
       context = ctx;
-
       // set the canvas size (w, h, aspectRatio)
       ctx.size(640, 480)           // set width and height, ignore aspect ratio
       //ctx.size(640, 480, null)   // same as above
@@ -171,6 +164,8 @@
       .arrow(150, 360, 50, 60,     0,   10,        3,     33)
       //         x1,  y1,  r, start,  end, antiClockwise, style, size,  whichEnd    headAngle
       .arcArrow(150, 360, 50,     0,  180,         false,     0,   10,         3,   33)
+
+      .spiral(500, 100,  80, 300,  frame, 2, '#c44')
 
       // uncomment one of the lines below to try the "chroma key" filtering
 

@@ -16,6 +16,7 @@
  * - https://hmp.is.it/creating-chroma-key-effect-html5-canvas/
  * - https://github.com/kikemadrigalr/chromaKey/blob/master/main.js
  * - http://dbp-consulting.com/tutorials/canvas/CanvasArrow.html
+ * - https://github.com/Bewelge/FreeDraw/
  *
  *
  */
@@ -67,12 +68,6 @@ const PIo2 = PI / 2
 const RAD2DEG = 180 / PI;
 const DEG2RAD = PI / 180;
 
-// display settings
-//const maxWidth = 1920, maxHeight = 1200; // up to 1080p and 16:10
-//const fixedWidth = 1280, fixedHeight = 720;  // 720p
-//const fixedWidth = 1920, fixedHeight = 1080; // 1080p
-//const fixedWidth = 128,  fixedHeight = 128;  // PICO-8
-//const fixedWidth = 240,  fixedHeight = 136;  // TIC-80
 /* TODO
 
 - brushes:
@@ -656,6 +651,36 @@ const extraMethods = {
   strokePolyshape: function(x,y,radius,s,a) {
     extraMethods.polyshape.apply(this, [x,y,radius,s,a])
     this.stroke();
+  },
+  spiral: function(x,y,rad,iter,rotation,lineWidth,stroke) {
+		let stepSize = rad / (iter+1);
+		let i = 0;
+		let ang = stepSize/Math.PI*2 * i;
+
+		rotation = rotation*DEG2RAD;
+
+		this.save();
+		this.lineWidth = lineWidth;
+
+		this.strokeStyle = stroke;
+		let midx = (x) ;
+		let midy = (y) ;
+		x = (x) + ang * Math.cos(ang - rotation);
+		y = (y) + ang * Math.sin(ang - rotation);
+		this.beginPath();
+
+		while (i < iter) {
+			i++;
+			ang = stepSize/Math.PI*2 * i;
+			this.moveTo(x, y);
+			x = midx + ang * Math.cos(ang - rotation);
+			y = midy + ang * Math.sin(ang - rotation);
+			this.lineTo(x, y);
+		}
+
+		this.stroke();
+		this.closePath();
+		this.restore();
   },
   star: function(x,y,radius,s,a) {
     const position 	= {x,y};
