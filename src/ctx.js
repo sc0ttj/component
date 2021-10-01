@@ -342,7 +342,6 @@ const extraMethods = {
         return false;
     }
   },
-
   size: function(w, h, a) {
     if (this.w === w && this.h === h) return; // if no new size, just return
     // if width or height not given, get them from aspect ratio
@@ -370,17 +369,15 @@ const extraMethods = {
     this.translate(-x, -y);
   },
 
-  // replace green (by default) pixels with transparent ones
+  // "green screen" filter - replaces green (by default) pixels with transparent ones
   chromaKey: function(tolerance = 150, color = [0,255,0]) {
     const t = tolerance > 250 ? 250 : tolerance; // more than 255 produces weird results
     const imageData = this.getImageData(0, 0, this.canvas.width, this.canvas.height);
     const d = imageData.data;
     let diff;
-
     // for each pixel, get its diff from cache, or calculate it
     // NOTE: we have separate routines for green, and other colours
-    // see next note
-
+    // see next note..
     // if user wants to remove green
     if (color[1] > color[0] && color[1] > color[2]) {
       for (let i = 0, l = d.length; i < l; i += 4) {
@@ -403,7 +400,8 @@ const extraMethods = {
   //  return this.getImageData(0, 0, this.canvas.width, this.canvas.height).data
   //},
 
-  // source:  http://dbp-consulting.com/tutorials/canvas/CanvasArrow.html
+  // drawing methods
+
   arcArrow: function(x,y,r,startangle,endangle,anticlockwise,style=0,d=10,which=1,angle=Math.PI/8) {
     // get radians from degrees
     startangle = startangle * DEG2RAD;
@@ -444,7 +442,6 @@ const extraMethods = {
     }
     this.restore();
   },
-
   arrow: function(x1,y1,x2,y2,style = 1,d = 10,which = 1,angle = Math.PI/8){
     angle = angle*DEG2RAD;
     // For ends with arrow we actually want to stop before we get to the arrow
@@ -463,7 +460,6 @@ const extraMethods = {
       tox = x2;
       toy = y2;
     }
-
     // Draw the shaft of the arrow
     this.lineWidth=this.lineWidth>2?2:this.lineWidth; // anything over 2 looks bad (arrow head not close enough to edges of line)
     this.beginPath();
@@ -496,19 +492,6 @@ const extraMethods = {
       drawHead(this,topx,topy,x1,y1,botx,boty,style);
     }
   },
-
-  // new drawing method & shapes
-  line: function(px, py, x, y, dashPattern = []) {
-    this.beginPath();
-    this.save();
-    this.setLineDash(dashPattern);
-    this.moveTo(px, py);
-    this.lineTo(x, y);
-    this.closePath();
-    this.fill();
-    this.stroke();
-    this.restore(); // use this cos we used setLineDash()
-  },
   circle: function(x,y,r,deg = 360,antiClockwise) {
     this.beginPath();
     this.arc(x, y, r, 0, deg*DEG2RAD, antiClockwise);
@@ -516,213 +499,6 @@ const extraMethods = {
     // or "pacman" shape, if degrees < 360)
     this.lineTo(x, y);
     this.closePath();
-  },
-  fillCircle: function(x,y,radius,deg) {
-    extraMethods.circle.apply(this, [x,y,radius,deg])
-    this.fill();
-  },
-  strokeCircle: function(x,y,radius,deg) {
-    extraMethods.circle.apply(this, [x,y,radius,deg])
-    this.stroke();
-  },
-  ellipse: function(x, y, width, height) {
-    let kappa, ox, oy, xe, xm, ye, ym;
-    kappa = .5522848;
-    ox = (width / 2) * kappa;
-    oy = (height / 2) * kappa;
-    xe = x + width;
-    ye = y + height;
-    xm = x + width / 2;
-    ym = y + height / 2;
-    this.moveTo(x, ym);
-    this.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-    this.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-    this.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-    this.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-  },
-  fillEllipse: function(x, y, width, height) {
-    this.beginPath();
-  	extraMethods.ellipse.apply(this, [x, y, width, height])
-    this.closePath();
-    this.fill();
-  },
-  strokeEllipse: function(x, y, width, height) {
-    this.beginPath();
-  	extraMethods.ellipse.apply(this, [x, y, width, height])
-    this.closePath();
-    this.stroke();
-  },
-  ring: function(x, y, innerRadius, outerRadius) {
-    this.beginPath();
-    this.arc(x, y, innerRadius, 0, PIx2, false);
-    this.moveTo(outerRadius, 0);
-    this.arc(x, y, outerRadius, PIx2, 0, true);
-    this.closePath();
-  },
-  fillRing: function(x, y, innerRadius, outerRadius) {
-  	extraMethods.ring.apply(this, [x, y, innerRadius, outerRadius]);
-    this.fill();
-  },
-  strokeRing: function(x, y, innerRadius, outerRadius) {
-  	extraMethods.ring.apply(this, [x, y, innerRadius, outerRadius]);
-    this.stroke();
-  },
-  gradientCircle: function(x, y, r, r2, offsetX = 0, offsetY = 0, fillSteps) {
-    const fillGradient = this.createRadialGradient(x + offsetX, y + offsetY, r2, x + offsetX, y + offsetY, r)
-    for (let i = 0; i < fillSteps.length; i++) {
-      fillGradient.addColorStop(fillSteps[i][0], fillSteps[i][1]);
-    }
-    this.fillStyle = fillGradient;
-    extraMethods.circle.apply(this, [x,y,r2])
-    this.fill();
-    this.closePath();
-  },
-  gradientRect: function(x, y, w, h, fillSteps, horiz = true) {
-    if (fillSteps) {
-      const fillGradient = horiz
-        ? this.createLinearGradient(x, y, x, y+h)
-        : this.createLinearGradient(x, y, x+w, y);
-      for (let i = 0; i < fillSteps.length; i++) {
-        fillGradient.addColorStop(fillSteps[i][0], fillSteps[i][1]);
-      }
-      this.fillStyle = fillGradient;
-      this.fillRect(x, y, w, h);
-      this.closePath();
-    }
-  },
-  roundedRect: function(x, y, w, h, r) {
-  	this.moveTo(x + r, y);
-  	this.arcTo(x + w, y, x + w, y + r, r);
-  	this.arcTo(x + w, y + h, x + w - r, y + h, r);
-  	this.arcTo(x, y + h, x, y + h - r, r);
-  	this.arcTo(x, y, x + r, y, r);
-    this.closePath();
-  },
-  fillRoundedRect: function(x, y, w, h, r) {
-    this.beginPath();
-  	extraMethods.roundedRect.apply(this, [x, y, w, h, r])
-    this.fill();
-  },
-  strokeRoundedRect: function(x, y, w, h, r) {
-    this.beginPath();
-  	extraMethods.roundedRect.apply(this, [x, y, w, h, r])
-    this.stroke();
-  },
-  polygon: function(points, dashPattern = [], restore = true) {
-    this.beginPath();
-    if (restore) this.save();
-    this.setLineDash(dashPattern);
-    const x = points[0][0];
-    const y = points[0][1];
-    this.moveTo(x, y);
-    points.shift(); // remove first element, we just went there
-    points.forEach(point => this.lineTo(point[0], point[1]));
-    this.closePath();
-    if (restore) this.restore(); // use this cos we used setLineDash()
-  },
-  fillPolygon: function (points, dashPattern = []) {
-    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
-    this.fill();
-    this.restore(); // use this cos we used setLineDash() in polygon()
-  },
-  strokePolygon: function (points, dashPattern = []) {
-    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
-    this.stroke();
-    this.restore(); // use this cos we used setLineDash() in polygon()
-  },
-  polyshape: function(x,y,radius,s,a) {
-    const position 	= {x,y};
-    const sides 		= s ? s : 6;
-    const angle			= a ? a : 0;
-    this.translate(position.x,position.y);
-    this.rotate(angle * DEG2RAD);
-    this.beginPath();
-    this.moveTo(radius, 0);
-    for(var j = 0; j <= PIx2; j += PI / (sides/2)) {
-      this.lineTo(radius * Math.cos(j), radius * Math.sin(j));
-    }
-    this.closePath();
-    this.rotate(-angle * DEG2RAD);
-    this.translate(-position.x,-position.y);
-  },
-  fillPolyshape: function(x,y,radius,s,a) {
-    extraMethods.polyshape.apply(this, [x,y,radius,s,a])
-    this.fill();
-  },
-  strokePolyshape: function(x,y,radius,s,a) {
-    extraMethods.polyshape.apply(this, [x,y,radius,s,a])
-    this.stroke();
-  },
-  spiral: function(x,y,rad,iter,rotation,lineWidth,stroke) {
-		let stepSize = rad / (iter+1);
-		let i = 0;
-		let ang = stepSize/Math.PI*2 * i;
-
-		rotation = rotation*DEG2RAD;
-
-		this.save();
-		this.lineWidth = lineWidth;
-
-		this.strokeStyle = stroke;
-		let midx = (x) ;
-		let midy = (y) ;
-		x = (x) + ang * Math.cos(ang - rotation);
-		y = (y) + ang * Math.sin(ang - rotation);
-		this.beginPath();
-
-		while (i < iter) {
-			i++;
-			ang = stepSize/Math.PI*2 * i;
-			this.moveTo(x, y);
-			x = midx + ang * Math.cos(ang - rotation);
-			y = midy + ang * Math.sin(ang - rotation);
-			this.lineTo(x, y);
-		}
-
-		this.stroke();
-		this.closePath();
-		this.restore();
-  },
-  star: function(x,y,radius,s,a) {
-    const position 	= {x,y};
-    const sides 		= (s ? s : 5) * 2;
-    const angle			= -90 - (a ? a : 0);
-    this.translate(position.x,position.y);
-    this.rotate(angle * DEG2RAD);
-    this.beginPath();
-    this.moveTo(radius, 0);
-    let wobble = 2;
-    for(var j = 0; j <= PIx2; j += PI / (sides/2)) {
-    	wobble = wobble == 1 ? 2 : 1;
-      this.lineTo(((radius / (wobble)) * Math.cos(j)),((radius / (wobble)) * Math.sin(j)));
-    }
-    this.closePath();
-    this.rotate(-angle * DEG2RAD);
-    this.translate(-position.x,-position.y);
-  },
-  fillStar: function(x,y,radius,s,a) {
-    extraMethods.star.apply(this, [x,y,radius,s,a])
-    this.fill();
-  },
-  strokeStar: function(x,y,radius,s,a) {
-    extraMethods.star.apply(this, [x,y,radius,s,a])
-    this.stroke();
-  },
-  square: function(x,y,w) {
-    this.beginPath();
-    this.rect(x, y, w, w);
-    this.closePath();
-  },
-  triangle: function(x,y,radius,angle) {
-  	extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
-  },
-  fillTriangle: function(x,y,radius,angle) {
-    extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
-    this.fill();
-  },
-  strokeTriangle: function(x,y,radius,angle) {
-    extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
-    this.stroke();
   },
   curve: function(points, tension, numOfSeg, close) { // also see a simpler alternative here: https://stackoverflow.com/a/49371349
   	// options or defaults
@@ -735,7 +511,6 @@ const extraMethods = {
   	let i;
   	let cache = new Float32Array((numOfSeg+2)*4);
   	let cachePtr = 4;
-
   	// begin..
   	pts = points.slice(0);
   	if (close) {
@@ -763,7 +538,6 @@ const extraMethods = {
   		cache[cachePtr++] =	st3 - st2;			// c4
   	}
   	cache[++cachePtr] = 1;
-
   	// the parser func
   	function parse(pts, cache, l) {
   		for (let i = 2; i < l; i += 2) {
@@ -783,10 +557,8 @@ const extraMethods = {
   			}
   		}
   	}
-
   	// calculate/parse the points
   	parse(pts, cache, l);
-
   	if (close) {
   		pts = [];
   		pts.push(points[l - 4], points[l - 3], points[l - 2], points[l - 1]); // second last and last
@@ -797,11 +569,246 @@ const extraMethods = {
   	for(i = 0, l = res.length; i < l; i += 2) {
   		this.lineTo(res[i], res[i+1]);
     }
-
   	return res;
+  },
+  ellipse: function(x, y, width, height) {
+    let kappa, ox, oy, xe, xm, ye, ym;
+    kappa = .5522848;
+    ox = (width / 2) * kappa;
+    oy = (height / 2) * kappa;
+    xe = x + width;
+    ye = y + height;
+    xm = x + width / 2;
+    ym = y + height / 2;
+    this.moveTo(x, ym);
+    this.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+    this.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
+    this.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+    this.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
+  },
+  fillCircle: function(x,y,radius,deg) {
+    extraMethods.circle.apply(this, [x,y,radius,deg])
+    this.fill();
+  },
+  fillEllipse: function(x, y, width, height) {
+    this.beginPath();
+  	extraMethods.ellipse.apply(this, [x, y, width, height])
+    this.closePath();
+    this.fill();
+  },
+  fillPolygon: function (points, dashPattern = []) {
+    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
+    this.fill();
+    this.restore(); // use this cos we used setLineDash() in polygon()
+  },
+  fillPolyshape: function(x,y,radius,s,a) {
+    extraMethods.polyshape.apply(this, [x,y,radius,s,a])
+    this.fill();
+  },
+  fillRing: function(x, y, innerRadius, outerRadius) {
+  	extraMethods.ring.apply(this, [x, y, innerRadius, outerRadius]);
+    this.fill();
+  },
+  fillRoundedRect: function(x, y, w, h, r) {
+    this.beginPath();
+  	extraMethods.roundedRect.apply(this, [x, y, w, h, r])
+    this.fill();
+  },
+  fillStar: function(x,y,radius,s,a) {
+    extraMethods.star.apply(this, [x,y,radius,s,a])
+    this.fill();
+  },
+  fillTriangle: function(x,y,radius,angle) {
+    extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
+    this.fill();
+  },
+  gradientCircle: function(x, y, r, r2, offsetX = 0, offsetY = 0, fillSteps) {
+    const fillGradient = this.createRadialGradient(x + offsetX, y + offsetY, r2, x + offsetX, y + offsetY, r)
+    for (let i = 0; i < fillSteps.length; i++) {
+      fillGradient.addColorStop(fillSteps[i][0], fillSteps[i][1]);
+    }
+    this.fillStyle = fillGradient;
+    extraMethods.circle.apply(this, [x,y,r2])
+    this.fill();
+    this.closePath();
+  },
+  gradientRect: function(x, y, w, h, fillSteps, horiz = true) {
+    if (fillSteps) {
+      const fillGradient = horiz
+        ? this.createLinearGradient(x, y, x, y+h)
+        : this.createLinearGradient(x, y, x+w, y);
+      for (let i = 0; i < fillSteps.length; i++) {
+        fillGradient.addColorStop(fillSteps[i][0], fillSteps[i][1]);
+      }
+      this.fillStyle = fillGradient;
+      this.fillRect(x, y, w, h);
+      this.closePath();
+    }
+  },
+  line: function(px, py, x, y, dashPattern = []) {
+    this.beginPath();
+    this.save();
+    this.setLineDash(dashPattern);
+    this.moveTo(px, py);
+    this.lineTo(x, y);
+    this.closePath();
+    this.fill();
+    this.stroke();
+    this.restore(); // use this cos we used setLineDash()
+  },
+  polygon: function(points, dashPattern = [], restore = true) {
+    this.beginPath();
+    if (restore) this.save();
+    this.setLineDash(dashPattern);
+    const x = points[0][0];
+    const y = points[0][1];
+    this.moveTo(x, y);
+    points.shift(); // remove first element, we just went there
+    points.forEach(point => this.lineTo(point[0], point[1]));
+    this.closePath();
+    if (restore) this.restore(); // use this cos we used setLineDash()
+  },
+  polyshape: function(x,y,radius,s,a) {
+    const position 	= {x,y};
+    const sides 		= s ? s : 6;
+    const angle			= a ? a : 0;
+    this.translate(position.x,position.y);
+    this.rotate(angle * DEG2RAD);
+    this.beginPath();
+    this.moveTo(radius, 0);
+    for(var j = 0; j <= PIx2; j += PI / (sides/2)) {
+      this.lineTo(radius * Math.cos(j), radius * Math.sin(j));
+    }
+    this.closePath();
+    this.rotate(-angle * DEG2RAD);
+    this.translate(-position.x,-position.y);
+  },
+  ring: function(x, y, innerRadius, outerRadius) {
+    this.beginPath();
+    this.arc(x, y, innerRadius, 0, PIx2, false);
+    this.moveTo(outerRadius, 0);
+    this.arc(x, y, outerRadius, PIx2, 0, true);
+    this.closePath();
+  },
+  roundedRect: function(x, y, w, h, r) {
+  	this.moveTo(x + r, y);
+  	this.arcTo(x + w, y, x + w, y + r, r);
+  	this.arcTo(x + w, y + h, x + w - r, y + h, r);
+  	this.arcTo(x, y + h, x, y + h - r, r);
+  	this.arcTo(x, y, x + r, y, r);
+    this.closePath();
+  },
+  spiral: function(x,y,rad,iter,rotation,lineWidth,stroke) {
+		let stepSize = rad / (iter+1);
+		let i = 0;
+		let ang = stepSize/Math.PI*2 * i;
+		rotation = rotation*DEG2RAD;
+		this.save();
+		this.lineWidth = lineWidth;
+		this.strokeStyle = stroke;
+		let midx = (x) ;
+		let midy = (y) ;
+		x = (x) + ang * Math.cos(ang - rotation);
+		y = (y) + ang * Math.sin(ang - rotation);
+		this.beginPath();
+		while (i < iter) {
+			i++;
+			ang = stepSize/Math.PI*2 * i;
+			this.moveTo(x, y);
+			x = midx + ang * Math.cos(ang - rotation);
+			y = midy + ang * Math.sin(ang - rotation);
+			this.lineTo(x, y);
+		}
+		this.stroke();
+		this.closePath();
+		this.restore();
+  },
+  square: function(x,y,w) {
+    this.beginPath();
+    this.rect(x, y, w, w);
+    this.closePath();
+  },
+  star: function(x,y,radius,s,a) {
+    const position 	= {x,y};
+    const sides 		= (s ? s : 5) * 2;
+    const angle			= -90 - (a ? a : 0);
+    this.translate(position.x,position.y);
+    this.rotate(angle * DEG2RAD);
+    this.beginPath();
+    this.moveTo(radius, 0);
+    let wobble = 2;
+    for(var j = 0; j <= PIx2; j += PI / (sides/2)) {
+    	wobble = wobble == 1 ? 2 : 1;
+      this.lineTo(((radius / (wobble)) * Math.cos(j)),((radius / (wobble)) * Math.sin(j)));
+    }
+    this.closePath();
+    this.rotate(-angle * DEG2RAD);
+    this.translate(-position.x,-position.y);
+  },
+  strokeCircle: function(x,y,radius,deg) {
+    extraMethods.circle.apply(this, [x,y,radius,deg])
+    this.stroke();
+  },
+  strokeEllipse: function(x, y, width, height) {
+    this.beginPath();
+  	extraMethods.ellipse.apply(this, [x, y, width, height])
+    this.closePath();
+    this.stroke();
+  },
+  strokeRing: function(x, y, innerRadius, outerRadius) {
+  	extraMethods.ring.apply(this, [x, y, innerRadius, outerRadius]);
+    this.stroke();
+  },
+  strokeRoundedRect: function(x, y, w, h, r) {
+    this.beginPath();
+  	extraMethods.roundedRect.apply(this, [x, y, w, h, r])
+    this.stroke();
+  },
+  strokePolygon: function (points, dashPattern = []) {
+    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
+    this.stroke();
+    this.restore(); // use this cos we used setLineDash() in polygon()
+  },
+  strokePolyshape: function(x,y,radius,s,a) {
+    extraMethods.polyshape.apply(this, [x,y,radius,s,a])
+    this.stroke();
+  },
+  strokeStar: function(x,y,radius,s,a) {
+    extraMethods.star.apply(this, [x,y,radius,s,a])
+    this.stroke();
+  },
+  strokeTriangle: function(x,y,radius,angle) {
+    extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
+    this.stroke();
+  },
+  triangle: function(x,y,radius,angle) {
+  	extraMethods.polyshape.apply(this, [x,y,radius,3,angle ? angle : -90])
   },
 
   // grids
+  checkerboard: function(x, y, w, h, gridSize, colorA, colorB) {
+    const tx = w / gridSize | 0;
+    const ty = h / gridSize | 0;
+    let color;
+    this.save();
+    this.rect(x, y, w, h);
+    for (var i = 0; i <= tx; i++) {
+      for (var j = 0; j <= ty; j++) {
+        if (j % 2) {
+          color = i % 2 ? colorA : colorB;
+        }
+        else {
+          color = i % 2 ? colorB : colorA;
+        }
+        this.fillStyle = color;
+        this.fillRect(x + i * gridSize, y + j * gridSize, gridSize, gridSize);
+      }
+    }
+    this.restore();
+  },
+  drawGrid(size, lineWidth = 0.1, strokeColor = '#444') {
+    extraMethods.drawGridBox.apply(this, [0,0,this.canvas.width,this.canvas.height,size,lineWidth,strokeColor])
+  },
   drawGridBox(x, y, w, h, size, lineWidth = 0.1, color = '#444') {
     this.save();
     this.lineWidth = lineWidth;
@@ -823,29 +830,6 @@ const extraMethods = {
     }
     this.stroke();
     this.closePath();
-    this.restore();
-  },
-  drawGrid(size, lineWidth = 0.1, strokeColor = '#444') {
-    extraMethods.drawGridBox.apply(this, [0,0,this.canvas.width,this.canvas.height,size,lineWidth,strokeColor])
-  },
-  checkerboard: function(x, y, w, h, gridSize, colorA, colorB) {
-    const tx = w / gridSize | 0;
-    const ty = h / gridSize | 0;
-    let color;
-    this.save();
-    this.rect(x, y, w, h);
-    for (var i = 0; i <= tx; i++) {
-      for (var j = 0; j <= ty; j++) {
-        if (j % 2) {
-          color = i % 2 ? colorA : colorB;
-        }
-        else {
-          color = i % 2 ? colorB : colorA;
-        }
-        this.fillStyle = color;
-        this.fillRect(x + i * gridSize, y + j * gridSize, gridSize, gridSize);
-      }
-    }
     this.restore();
   },
 
