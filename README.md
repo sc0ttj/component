@@ -1511,7 +1511,7 @@ ctx.size(w, h, aspectRatio)   // set canvas size (in pixels), respects the devic
 
 ```js
 xtc.arrow(x1, y1, x2, y2, style, size, whichEnd, headDeg)
-ctx.arcArrow(x1, y1, radius, startDeg, endADeg, antiClockwise, style, size, whichEnd, headDeg)
+ctx.arcArrow(x1, y1, radius, startDeg, endDeg, antiClockwise, style, size, whichEnd, headDeg)
 ```
 
 - about `startDeg`, `endDeg` and `headDeg`:
