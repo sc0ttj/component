@@ -1404,6 +1404,7 @@ If using a `<canvas>` to render components, you can **optionally** extend it usi
 Features:
 
 - extra drawing methods: 
+  - arrows and arced arrows
   - cardinals splines (smooth curves, with segments and optional points) 
   - circles & ellipses 
   - gradient-filled rectangles (linear) and circles (radial)
@@ -1426,12 +1427,12 @@ Features:
   - save canvas as an image with `ctx.canvas.image.saveAs('filename.png')`
   - record canvas to video with `ctx.canvas.video.record()`
   - save the video with `ctx.canvas.video.saveAs('filename.webm')`
-- less than 4kb, gzipped
+- less than 5kb, minified & gzipped
 
 Note: 
 
-- only extends the 2dContext of Component canvases - it won't affect or extend other `<canvas>` elements.
-- only works in the browser, unless you polyfill the `<canvas>` 2d context in your NodeJS program.
+- only extends the 2dContext of Component canvases - it won't affect other `<canvas>`s.
+- only works in browser, unless `<canvas>` 2d context is polyfilled in your NodeJS app.
 
 ### In browsers:
 
@@ -1509,16 +1510,16 @@ ctx.size(w, h, aspectRatio)   // set canvas size (in pixels), respects the devic
 #### Arrows:
 
 ```js
-xtc.arrow(x1, y1, x2, y2, style, headSize, whichEnd, headAngle)
-ctx.arcArrow(x1, y1, radius, startAngle, endAngle, antiClockwise, style, headSize, whichEnd, headAngle)
+xtc.arrow(x1, y1, x2, y2, style, size, whichEnd, headDeg)
+ctx.arcArrow(x1, y1, radius, startDeg, endADeg, antiClockwise, style, size, whichEnd, headDeg)
 ```
 
-- about `startAngle`, `endAngle` and `headAngle`:
-  - these should be given in degrees
+- about `startDeg`, `endDeg` and `headDeg`:
+  - these should be given in degrees, not radians
 - about `style` (arrow head style):
   - `0` gives plain triangle heads
   - `1` gives nice curved arrows heads
-- about `headSize`:
+- about `size`:
   - the length in pixels of the arrow head
 - about `whichEnd` (which end to put the arrow head):
    - `0` is none
