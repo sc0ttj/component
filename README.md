@@ -1626,8 +1626,8 @@ ctx.angleFromPoints(x1, x2, y1, y2) // returns an angle in degrees
 ctx,angleToTarget(x1, y1, x2, y2)   // returns a counter-clockwise rotation from y-axis
 ctx.clamp(x, min, max)              // returns a number, clamped between min and max
 ctx.distance(x2, x1, y2, y1)        // returns a distance in pixels between two points
-ctx.lerp(start, end, value)         // returns a numer, linearly interpolated
-ctx.inverseLerp(start, end, value)  // returns a numer, reverse of above
+ctx.lerp(start, end, value)         // returns a number, linearly interpolated
+ctx.inverseLerp(start, end, value)  // returns a number, reverse of above
 ctx.random(min, max, useDecimal)    // returns a random number, useDecimal is boolean
 ctx.randomFrom(array)               // returns a random item from the array
 ctx.seededRandom(seed)              // returns a seeded random number generator function
