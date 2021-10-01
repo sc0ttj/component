@@ -41,13 +41,14 @@
 
   const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
 
+
   // define a "view", that draws to the components canvas
   Foo.view = (props, ctx) => {
 
     if (frame === 1) {
       context = ctx;
-      // set the canvas size (w, h, aspectRatio)
 
+      // set the canvas size (w, h, aspectRatio)
       ctx.size(640, 480)           // set width and height, ignore aspect ratio
       //ctx.size(640, 480, null)   // same as above
       //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 480
@@ -61,8 +62,9 @@
       .beginPath()
 
       // uncomment one of the lines below to try out the "camera":
-      // camera(xCenter, yCenter, scale, rotation); // rotation is in degrees
-      //.camera(000, 000, 2, 0)
+      // usage: camera(xCenter, yCenter, scale, rotation); // rotation is in degrees
+
+      //.camera(ctx.canvas.width/2, ctx.canvas.height/2, 1, 0)
       //.camera(320, 240, 2, 0)
       //.camera(640, 480, 2, 0)
       //.camera(320, 240, 4-(1+frame/400), 0)
@@ -157,9 +159,18 @@
       .drawImg('https://cdn.glitch.com/4c9ebeb9-8b9a-4adc-ad0a-238d9ae00bb5%2Fmdn_logo-only_color.svg', 100+frame, 350, 150, 150)
 
       // pacman
-      ctx.circle(320, 360, 50, 0+frame, false) // x, y, radius, deg, antiClockwise
+      ctx.circle(320, 360, 50, 0+frame, false) // x, y, radius, degrees, antiClockwise
       ctx.fillStyle("yellow");
       ctx.fill()
+
+      .strokeStyle('black')
+      .fillStyle('black')
+      .lineWidth(1)
+
+      //      x1,  y1, x2, y2, style, size, whichEnd,  headAngle
+      .arrow(150, 360, 50, 60,     0,   10,        3,     33)
+      //         x1,  y1,  r, start,  end, antiClockwise, style, size,  whichEnd    headAngle
+      .arcArrow(150, 360, 50,     0,  180,         false,     0,   10,         3,   33)
 
       // uncomment one of the lines below to try the "chroma key" filtering
 

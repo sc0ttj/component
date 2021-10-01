@@ -1506,6 +1506,26 @@ ctx.isClean()                 // returns true if canvas not "tainted", else fals
 ctx.size(w, h, aspectRatio)   // set canvas size (in pixels), respects the device pixel ratio
 ```
 
+#### Arrows:
+
+```js
+xtc.arrow(x1, y1, x2, y2, style, headSize, whichEnd, headAngle)
+ctx.arcArrow(x1, y1, radius, startAngle, endAngle, antiClockwise, style, headSize, whichEnd, headAngle)
+```
+
+- about `startAngle`, `endAngle` and `headAngle`:
+  - these should be given in degrees
+- about `style` (arrow head style):
+  - `0` gives plain triangle heads
+  - `1` gives nice curved arrows heads
+- about `headSize`:
+  - the length in pixels of the arrow head
+- about `whichEnd` (which end to put the arrow head):
+   - `0` is none
+   - `1` is start
+   - `2` is end
+   - `3` is both
+
 #### Camera:
 
 ```js
@@ -1531,9 +1551,9 @@ Make all pixels matching `colour` (default green) within the tolerance levels, t
 #### Circles:
 
 ```js
-ctx.circle(x, y, radius)
-ctx.fillCircle(x, y, radius)
-ctx.strokeCircle(x, y, radius)
+ctx.circle(x, y, radius, degrees, antiClockwise)
+ctx.fillCircle(x, y, radius, degrees, antiClockwise)
+ctx.strokeCircle(x, y, radius, degrees, antiClockwise)
 ```
 
 #### Cardinal splines (curved/rounded lines):

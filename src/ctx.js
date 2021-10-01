@@ -311,6 +311,35 @@ function downloadBlobAs(blob, name) {
   window.URL.revokeObjectURL(url);
 }
 
+// draw arrow heads
+const drawHead = function(ctx,x0,y0,x1,y1,x2,y2,style) {
+  // all cases do this.
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x0,y0);
+  ctx.lineTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  switch(style) {
+    case 0:
+      // straight filled, add the bottom as a line and fill.
+      ctx.beginPath();
+      ctx.moveTo(x0,y0);
+      ctx.lineTo(x1,y1);
+      ctx.lineTo(x2,y2);
+      ctx.lineTo(x0,y0);
+      ctx.fill();
+      break;
+    case 1:
+      //filled head, add the bottom as a quadraticCurveTo curve and fill
+      const cpx = (x0+x1+x2)/3;
+      const cpy = (y0+y1+y2)/3;
+      ctx.quadraticCurveTo(cpx,cpy,x0,y0);
+      ctx.fill();
+      break;
+  }
+  ctx.restore();
+};
+
 // define extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
 
@@ -391,6 +420,100 @@ const extraMethods = {
   //getPixels: function() {
   //  return this.getImageData(0, 0, this.canvas.width, this.canvas.height).data
   //},
+
+  // source:  http://dbp-consulting.com/tutorials/canvas/CanvasArrow.html
+  arcArrow: function(x,y,r,startangle,endangle,anticlockwise,style=0,d=10,which=1,angle=Math.PI/8) {
+    // get radians from degrees
+    startangle = startangle * DEG2RAD;
+    endangle = endangle * DEG2RAD;
+    angle = angle * DEG2RAD;
+    this.save();
+    this.lineWidth=this.lineWidth>2?2:this.lineWidth; // anything over 2 looks bad (arrow head not close enough to edges of line)
+    this.beginPath();
+    this.arc(x,y,r,startangle,endangle,anticlockwise);
+    this.stroke();
+    let sx, sy, lineangle, destx, desty;
+    this.strokeStyle='rgba(0,0,0,0)';	// don't show the shaft
+    if(which&1){	    // draw the destination end
+    	sx = Math.cos(startangle)*r+x;
+    	sy = Math.sin(startangle)*r+y;
+    	lineangle = Math.atan2(x-sx,sy-y);
+    	if(anticlockwise){
+    	    destx = sx+10*Math.cos(lineangle);
+    	    desty = sy+10*Math.sin(lineangle);
+    	}else{
+    	    destx = sx-10*Math.cos(lineangle);
+    	    desty = sy-10*Math.sin(lineangle);
+    	}
+  	  extraMethods.arrow.apply(this, [sx,sy,destx,desty,style,d,2,angle*RAD2DEG])
+    }
+    if(which&2){	    // draw the origination end
+  	  sx = Math.cos(endangle)*r+x;
+  	  sy = Math.sin(endangle)*r+y;
+  	  lineangle = Math.atan2(x-sx,sy-y);
+    	if(anticlockwise){
+    	  destx = sx-10*Math.cos(lineangle);
+    	  desty = sy-10*Math.sin(lineangle);
+    	}else{
+    	  destx = sx+10*Math.cos(lineangle);
+    	  desty = sy+10*Math.sin(lineangle);
+    	}
+  	  extraMethods.arrow.apply(this, [sx,sy,destx,desty,style,d,2,angle*RAD2DEG])
+    }
+    this.restore();
+  },
+
+  arrow: function(x1,y1,x2,y2,style = 1,d = 10,which = 1,angle = Math.PI/8){
+    angle = angle*DEG2RAD;
+    // For ends with arrow we actually want to stop before we get to the arrow
+    // so that wide lines won't put a flat end on the arrow.
+    const dist = Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+    const ratio = (dist-d/3)/dist;
+    let tox, toy, fromx, fromy;
+    if (which === 1){
+      fromx = x1;
+      fromy = y1;
+      tox = Math.round(x1+(x2-x1)*ratio);
+      toy = Math.round(y1+(y2-y1)*ratio);
+    }else{
+      fromx = x1+(x2-x1)*(1-ratio);
+      fromy = y1+(y2-y1)*(1-ratio);
+      tox = x2;
+      toy = y2;
+    }
+
+    // Draw the shaft of the arrow
+    this.lineWidth=this.lineWidth>2?2:this.lineWidth; // anything over 2 looks bad (arrow head not close enough to edges of line)
+    this.beginPath();
+    this.moveTo(fromx,fromy);
+    this.lineTo(tox,toy);
+    this.stroke();
+    // calculate the angle of the line
+    const lineangle = Math.atan2(y2-y1,x2-x1);
+    // h is the line length of a side of the arrow head
+    const h = Math.abs(d/Math.cos(angle));
+    let angle1, topx, topy, angle2, botx, boty;
+
+    if (which&1){	// handle far end arrow head
+      angle1 = lineangle+Math.PI+angle;
+      topx = x2+Math.cos(angle1)*h;
+      topy = y2+Math.sin(angle1)*h;
+      angle2 = lineangle+Math.PI-angle;
+      botx = x2+Math.cos(angle2)*h;
+      boty = y2+Math.sin(angle2)*h;
+      drawHead(this,topx,topy,x2,y2,botx,boty,style);
+    }
+    if (which&2){	// handle far end arrow head
+      // handle near end arrow head
+      angle1 = lineangle+angle;
+      topx = x1+Math.cos(angle1)*h;
+      topy = y1+Math.sin(angle1)*h;
+      angle2 = lineangle-angle;
+      botx = x1+Math.cos(angle2)*h;
+      boty = y1+Math.sin(angle2)*h;
+      drawHead(this,topx,topy,x1,y1,botx,boty,style);
+    }
+  },
 
   // new drawing method & shapes
   line: function(px, py, x, y, dashPattern = []) {
