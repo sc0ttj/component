@@ -1710,7 +1710,7 @@ ctx.image.toElement(img => console.log(img.src)) // the <img> src is base64 enco
 #### Save canvas as video:
 
 ```js
-ctx.video.record(30) // optional params: fps, mimeType, audioBitsPerSecond, videoBitsPerSecond
+ctx.video.record() // optional params are: fps, mimeType, audioBitsPerSecond, videoBitsPerSecond
 ctx.video.pause();
 ctx.video.resume();
 ctx.video.stop();
