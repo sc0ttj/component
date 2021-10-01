@@ -334,6 +334,9 @@ const extraMethods = {
     if (!document.fullscreenElement) this.canvas.requestFullscreen();
     else document.exitFullscreen();
   },
+  //getPixels: function() {
+  //  return this.getImageData(0, 0, this.canvas.width, this.canvas.height).data
+  //},
   isClean: function() {
     try {
         const pixel = this.getImageData(0, 0, 1, 1);
@@ -395,10 +398,6 @@ const extraMethods = {
     }
     this.putImageData(imageData, 0, 0);
   },
-
-  //getPixels: function() {
-  //  return this.getImageData(0, 0, this.canvas.width, this.canvas.height).data
-  //},
 
   // drawing methods
 
