@@ -80,11 +80,6 @@ const DEG2RAD = PI / 180;
   - see https://github.com/jimschubert/brushes.js
 
 
-- arrows:
-  - line arrows
-  - arc arrows
-
-
 - responsive canvas:
   - auto resize on screen/orientation change
   - option to maintain aspect ratio
@@ -122,15 +117,6 @@ const DEG2RAD = PI / 180;
     - https://github.com/mattdesl/canvas-sketch-util/blob/master/docs/math.md
 
     - interpolate colors and numbers: https://github.com/worksbyscott/Interpolator/blob/main/interpolator.js
-
-    - lerp (linear interpolation) for single value
-
-          function lerp(start, end, value) {
-            return start + value * ( end - start );
-          }
-
-          console.log( lerp(10, 20, 0.5) );  // => 15
-          console.log( lerp(10, 20, 2) );    // => 30
 
     - inverse lerp:
 
@@ -901,6 +887,12 @@ const extraMethods = {
   },
   distance: function(x2, x1, y2, y1) {
     return Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+  },
+  inverseLerp: function(start, end, value) {
+    return (value - start) / (end - start);
+  },
+  lerp: function(start, end, value) {
+    return start + value * ( end - start );
   },
   seededRandom: function (str) {
     // see https://stackoverflow.com/a/47593316/2124254
