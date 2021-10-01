@@ -15,7 +15,7 @@
  * - https://github.com/rezoner/CanvasQuery/blob/master/canvasquery.js
  * - https://hmp.is.it/creating-chroma-key-effect-html5-canvas/
  * - https://github.com/kikemadrigalr/chromaKey/blob/master/main.js
- * -
+ * - http://dbp-consulting.com/tutorials/canvas/CanvasArrow.html
  *
  *
  */
