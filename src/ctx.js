@@ -1018,7 +1018,7 @@ window.Ctx = function(origCtx, c) {
     // record canvas to video data
     record: (fps, mimeType = supportedType, audioBitsPerSecond = 128000, videoBitsPerSecond = 2500000) => {
       if (this.isRecording === true) return true;
-      const framesPerSecond = (fps > 0 && fps <=60) ? fps : 24;
+      const framesPerSecond = (fps > 0 && fps <=60) ? fps : 60;
       chunks = [];
       // set media recorder options
       const opts = {
