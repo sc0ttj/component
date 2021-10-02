@@ -51,6 +51,7 @@ A "state" is a snapshot of your application data at a specific time.
 - Works with these **optional add-ons**:
   - `validator`: validate states against a schema (_like a simple PropTypes_)
   - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
+  - `ctx`: an enhanced 2d &lt;canvas&gt; with extra shapes, methods, and a chainable API
   - `emitter`: an event emitter - share updates between components
   - `tweenState`: animate nicely from one state to the next (tweened)
   - `springTo`: animate nicely from one state to the next (using spring physics)
@@ -155,7 +156,7 @@ Foo.setState({ x: 300, y: 150 });
 </script>
 ```
 
-Also see the `onLoop` add-on for `<canvas>` related info.
+Also see the [`Ctx` add-on](#using-the-ctx-module) and the [`onLoop` add-on](#using-the-onloop-module) add-on for more `<canvas>` related info.
 
 ### Nested components
 
@@ -463,6 +464,124 @@ _This CSS "auto-scoping" will prevent a components styles affecting other parts 
 - When rendering your component in NodeJS, or using `foo.toString()`, your CSS will **not** be auto prefixed.
 
 To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
+
+## Using JSON-LD (linked data)
+
+Adding linked data to your components is easy - just define it as part of your view:
+
+```js
+  Foo.view = props => `
+    <div>
+      <script type="application/ld+json">{ ... }</script>
+      ...
+    </div>`
+  ```
+
+- add a JSON-LD script before your component HTML
+- use the `props` passed in to define/update whatever you need
+- your JSON-LD will be updated along with your view, whenever your component re-renders
+
+## Server side rendering
+
+If running a NodeJS server, you can render the components as HTML strings or JSON.
+
+Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
+
+```js
+// create an HTML view, using template literals
+var htmlView = props => `
+    <div id=${props.id}>
+      ${Heading("Total so far = " + props.count)}
+      ${List(props.items)}
+      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
+    </div>`
+
+// or return the state itself (pure headless component)
+var dataOnlyView = props => props
+
+// Choose a view to render
+App.view = htmlView
+
+// render the component
+App.render()
+
+// ..other rendering options...
+
+// print it to the terminal
+console.log(App.render())
+```
+
+If rendering a component that has a `.view()` and `.style()` in NodeJS (or if calling `.toString()` directly), the output will be a string like this one:
+
+```
+"<style>
+#foo h1 {
+  color: red;
+}
+.btn {
+  padding: 6px;
+}
+</style>
+<div id=\"foo\">
+  <h1>Total so far = 101</h1>
+  <button class=\"btn\" onclick=\"App.clickBtn(1);\">Click here</button>
+</div>"
+```
+
+^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
+
+Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
+
+## Using "nested components"
+
+Components that are nested inside other components are called _child components_.
+
+All child components have the following in common:
+- you include the child component in the "view" of the parent component
+- child components do not trigger a re-render of the page
+- to re-render a child component that has changed, you must re-render the parent component
+- nested components work with or without the `html`/`htmel` add-on(s)
+
+There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
+
+### 1. Using "stateless" child components:
+
+Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
+
+```js
+// a stateless child component
+const h2 = text => `<h2>${text}</h2>`;
+
+// ...used inside the view of another component
+Foo.view = props => `
+  <div>
+    ${h2(props.text)}
+    <p> ... </p>
+  </div>
+`;
+```
+
+### 2. Using "stateful" child components:
+
+Stateful components are _any components with a state_, usually created like so:
+
+```js
+const Foo = new Component({ ...someData });
+```
+
+NOTE: When nested inside another component, even stateful child components _do not_ run their own `setState()` & `render()` methods - they simply return their (newly updated) view.
+
+This has a number of implications:
+
+- better performance (fewer page re-renders)
+- enforces similar behaviour to stateless child components:
+  - i.e, only parent components trigger page re-renders
+  - child components have no `.container` property
+- calling `setState()` of a stateful child component:
+  -  _will_ update its state and run its "middleware"
+  - will _not_ re-render anything!
+
+For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
 ## Using "actions"
 
@@ -1202,7 +1321,7 @@ Game.onLoop((props, dt) => {
   let { x, y } = props;
   x += 0.1 * dt
   y += 0.1 * dt
-  // finally, set the new game state, triggers a re-render of the "view"
+  // finally, set the new game state, triggers a debounced re-render of the "view"
   Game.setState({ x, y });
 });
 
@@ -1396,74 +1515,352 @@ function Foo(state, schema) {
 
 ```
 
-## Using JSON-LD (linked data)
+## Using the `Ctx` module
 
-Adding linked data to your components is easy - just define it as part of your view:
+If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more. 
+
+Features:
+
+- extra drawing methods: 
+  - arrows and arced arrows
+  - cardinals splines (smooth curves, with segments and optional points) 
+  - circles & ellipses 
+  - gradient-filled rectangles (linear) and circles (radial)
+  - grids
+  - polygons from any array of points
+  - polyshapes, like hexagons, etc
+  - rounded corner rectangles
+  - rings (doughnuts)
+  - stars
+  - triangles
+  - more..
+- a simple camera:
+  - pan, scale, rotate
+- chainable API:
+  - all methods are chainable unless they return something (see regular canvas API)
+- maths helper functions:
+  - convert between radians/degrees, get distances, etc
+- save to image and video:
+  - embed SVG as code, Element or file with `ctx.drawImg()`, which handles caching for you
+  - save canvas as an image with `ctx.canvas.image.saveAs('filename.png')`
+  - record canvas to video with `ctx.canvas.video.record()`
+  - save the video with `ctx.canvas.video.saveAs('filename.webm')`
+- less than 5kb, minified & gzipped
+
+Note: 
+
+- only extends the 2dContext of Component canvases - it won't affect other `<canvas>`s.
+- only works in browser, unless `<canvas>` 2d context is polyfilled in your NodeJS app.
+
+### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component"></script>
+<script src="https://unpkg.com/@scottjarvis/component/dist/ctx.min.js"></script>
+<script>
+Component.Ctx = Ctx;
+
+// use it here
+</script>
+```
+### In ES6:
 
 ```js
-  Foo.view = props => `
-    <div>
-      <script type="application/ld+json">{ ... }</script>
-      ...
-    </div>`
-  ```
+import { Component, Ctx } from '@scottjarvis/component';
 
-- add a JSON-LD script before your component HTML
-- use the `props` passed in to define/update whatever you need
-- your JSON-LD will be updated along with your view, whenever your component re-renders
+Component.Ctx = Ctx
 
-## Using "nested components"
-
-Components that are nested inside other components are called _child components_.
-
-All child components have the following in common:
-- you include the child component in the "view" of the parent component
-- child components do not trigger a re-render of the page
-- to re-render a child component that has changed, you must re-render the parent component
-- nested components work with or without the `html`/`htmel` add-on(s)
-
-There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
-
-### 1. Using "stateless" child components:
-
-Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
-
-```js
-// a stateless child component
-const h2 = text => `<h2>${text}</h2>`;
-
-// ...used inside the view of another component
-Foo.view = props => `
-  <div>
-    ${h2(props.text)}
-    <p> ... </p>
-  </div>
-`;
 ```
 
-### 2. Using "stateful" child components:
+### Example usage of `Ctx`
 
-Stateful components are _any components with a state_, usually created like so:
+Here's a short example, showing a few of the additional drawing methods/shapes, and using the chainable API:
 
 ```js
-const Foo = new Component({ ...someData });
+// enable the enhanced canvas 2dContext API
+Component.Ctx = Ctx;
+
+// define a new component
+const Foo = new Component({ x: 0, y: 0 });
+
+// define a "view", that draws to the components canvas - the `ctx` param 
+// is enhanced with a chainable API, and additional shapes (drawing methods)
+Foo.view = (props, ctx) => {
+  ctx
+    .clear()
+    .size(800, 600)
+
+    .beginPath()
+    .fillStyle('yellow')
+    .fillRoundedRect(10, 70, 50, 75, 10)
+
+    .beginPath()
+    .strokeStyle('pink')
+    .lineWidth(4)
+    .strokeTriangle(220, 60, 50, 45)
+
+    .beginPath()
+    .fillStyle('green')
+    .fillRing(80, 100, 40, 50, 100)
+
+    .beginPath()
+    .strokeStyle('yellow')
+    .strokeStar(200, 200, 50, 5, 0)
+}
+
+// render into a canvas element on the page
+Foo.render('.some-canvas', '2d')
 ```
 
-NOTE: When nested inside another component, even stateful child components _do not_ run their own `setState()` & `render()` methods - they simply return their (newly updated) view.
+See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
 
-This has a number of implications:
+### Additional methods provided by `Ctx`
 
-- better performance (fewer page re-renders)
-- enforces similar behaviour to stateless child components:
-  - i.e, only parent components trigger page re-renders
-  - child components have no `.container` property
-- calling `setState()` of a stateful child component:
-  -  _will_ update its state and run its "middleware"
-  - will _not_ re-render anything!
+#### General:
 
-For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
+```js
+ctx.clear()                   // clear entire canvas
+ctx.fullscreen()              // toggle fullscreen mode
+ctx.isClean()                 // returns true if canvas not "tainted", else false
+ctx.size(w, h, aspectRatio)   // set canvas size (in pixels), respects the device pixel ratio
+```
 
-## Using a more "React-like" pattern
+#### Arrows:
+
+```js
+ctx.arrow(x1, y1, x2, y2, style, size, whichEnd, headDeg)
+ctx.arcArrow(x1, y1, radius, startDeg, endDeg, antiClockwise, style, size, whichEnd, headDeg)
+```
+
+- about `startDeg`, `endDeg` and `headDeg`:
+  - these should be given in degrees, not radians
+- about `style` (arrow head style):
+  - `0` gives plain triangle heads
+  - `1` gives nice curved arrows heads
+- about `size`:
+  - the length in pixels of the arrow head
+- about `whichEnd` (which end to put the arrow head):
+   - `0` is none
+   - `1` is start
+   - `2` is end
+   - `3` is both
+
+#### Camera:
+
+```js
+ctx.camera(xCenter, yCenter, scale, rotation)
+```
+
+- `xCenter` and `yCenter` are the x,y points you want the centre of the camera to "look at"
+- `scale` 1 = 100%, 2 = 200%, etc
+- `rotation` is in degrees
+
+#### Chroma key (green screen effect)
+
+```js
+ctx.chromaKey(tolerance, color)  
+```
+
+Make all pixels matching `colour` (default green) within the tolerance levels, transparent.
+
+- `tolerance` is optional, defaults to `150`
+- `color` is an optional array containing RGB values, defaults to `[0,255,0]` (green)
+
+
+#### Circles:
+
+```js
+ctx.circle(x, y, radius, degrees, antiClockwise)
+ctx.fillCircle(x, y, radius, degrees, antiClockwise)
+ctx.strokeCircle(x, y, radius, degrees, antiClockwise)
+```
+
+#### Cardinal splines (curved/rounded lines):
+
+```js
+ctx.curve(points, tension, numOfSeg, closed)  // e.g. ctx.curve([x1,y1, x2,y2, ...], 0.5, 5, true)
+```
+
+#### Ellipses:
+
+```js
+ctx.ellipse(x, y, w, h)
+ctx.fillEllipse(x, y, w, h)
+ctx.strokeEllipse(x, y, w, h)
+```
+
+#### Gradient filled circle (radial):
+
+```js
+ctx.gradientCircle(x, y, innerRadius, outerRadius, xOffset, yOffset, fillGradient)
+```
+
+The `fillGradient` param should be an array of color stops, like this:
+
+```js
+[
+  [ 0.0, "blue"  ],
+  [ 0.5, "#f00"  ],
+  [ 1.0, "green" ],
+]
+```
+
+#### Gradient filled rectangles (linear):
+
+```js
+ctx.gradientRect(x, y, w, h, fillGradient, horizontal) // `horizontal` is boolean
+```
+
+#### Grids:
+
+```js
+ctx.drawGrid(cellSize, lineWidth, strokeColor) // fills canvas area
+ctx.drawGridBox(x, y, w, h, cellSize, lineWidth, strokeColor) // grid in a box
+ctx.checkerboard(x, y, w, h, cellSize, colorA, colorB)
+```
+
+#### Images:
+
+```js
+drawImg(input, x, y, w, h) 
+drawImg(input, sx, sy, sw, sh, dx, dy, dWidth, dHeight)
+```
+
+- `input` can be a path, URL, Element, a string of SVG HTML
+
+#### Lines:
+
+```js
+ctx.line(px, py, x, y, dashPattern)
+```
+
+- `dashPattern` is an optional array of lengths, `[ dash, gap, dash, gap, .. ]`
+
+
+#### Maths helpers:
+
+```js
+ctx.angleFromPoints(x1, x2, y1, y2) // returns an angle in degrees
+ctx,angleToTarget(x1, y1, x2, y2)   // returns a counter-clockwise rotation from y-axis
+ctx.clamp(x, min, max)              // returns a number, clamped between min and max
+ctx.distance(x2, x1, y2, y1)        // returns a distance in pixels between two points
+ctx.lerp(start, end, value)         // returns a number, linearly interpolated
+ctx.inverseLerp(start, end, value)  // returns a number, reverse of above
+ctx.random(min, max, useDecimal)    // returns a random number, useDecimal is boolean
+ctx.randomFrom(array)               // returns a random item from the array
+ctx.seededRandom(seed)              // returns a seeded random number generator function
+ctx.toDeg(radians)                  // returns a radians value in degrees
+ctx.toRad(degrees)                  // returns a degrees value in radians
+```
+
+#### Polygons:
+
+```js
+ctx.polygon(points, dashPattern)      // e.g,  polygon([[x,y], [x,y], ..], [dash, gap, ..])
+ctx.fillPolygon(points, dashPattern)
+ctx.strokePolygon(points, dashPattern)
+```
+
+#### Polyshapes (hexagons, octogons, stars, etc)
+
+```js
+ctx.polyshape(x, y, radius, numOfSides, degrees)
+ctx.fillPolyshape(x, y, radius, numOfSides, degrees)
+ctx.strokePolyshape(x, y, radius, numOfSides, degrees)
+```
+
+#### Rings (doughnuts):
+
+```js
+ctx.ring(x, y, innerRadius, outerRadius)
+ctx.fillRing(x, y, innerRadius, outerRadius)
+ctx.strokeRing(x, y, innerRadius, outerRadius)
+```
+
+#### Rounded rectangles:
+
+```js
+ctx.roundedRect(x, y, w, h, borderRadius)
+ctx.fillRoundedRect(x, y, w, h, borderRadius)
+ctx.strokeRoundedRect(x, y, w, h, borderRadius)
+```
+
+#### Spirals
+
+```js
+ctx.spiral(x, y, rad, steps, rotation, lineWidth, stroke)
+```
+
+- `rotation` is in degrees
+
+#### Square:
+
+```js
+ctx.square(x, y, w)
+```
+
+#### Stars:
+
+```js
+ctx.star(x, y, radius, numOfSides, degrees)
+ctx.fillStar(x, y, radius, numOfSides, degrees)
+ctx.strokeStar(x, y, radius, numOfSides, degrees)
+```
+
+#### Triangles:
+
+```js
+ctx.triangle(x, y, radius, degrees)
+ctx.fillTriangle(x, y, radius, degrees)
+ctx.strokeTriangle(x, y, radius, degrees)
+```
+
+#### Transforms:
+
+```js
+ctx.rotateAt(x, y, degrees)
+```
+
+#### Styling:
+
+```js
+// Set any style properties, all in one go
+ctx.setStyle(obj) // obj can be { lineWidth: 4, fillStyle: 'yellow', ...etc }
+```
+
+#### Save canvas as image:
+
+```js
+ctx.image.saveAs('filename') // save current canvas as PNG image 
+ctx.image.toElement(img => console.log(img.src)) // the <img> src is base64 encoded data
+```
+
+#### Save canvas as video:
+
+```js
+ctx.video.record() // optional params are: fps, mimeType, audioBitsPerSecond, videoBitsPerSecond
+ctx.video.pause();
+ctx.video.resume();
+ctx.video.stop();
+// now we can save the video to a file, or create a <video> element
+ctx.video.saveAs('filename')
+ctx.video.toElement(video => console.log(video.src)) // <video> src is Blob data
+```
+
+Ctx will try to create videos using these MIME-types, in this order, if none was given as 2nd param to ctx.video.record():
+
+- video/webm
+- video/webm;codecs=vp9
+- video/vp8
+- video/webm;codecs=vp8
+- video/webm;codecs=daala
+- video/webm;codecs=h264
+- video/mp4
+- video/mpeg
+
+See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
+
+## Using a the "React hooks" module
 
 For more "React-like" patterns, you can import a standalone `render` method (~800 bytes) that's supposed to be used with some *optional* React-like "hooks" (~1.5kb), but _without_ `Component` itself.
 
@@ -1568,57 +1965,6 @@ Contains modified versions of:
 
 ![Devtools - horizontal view](https://user-images.githubusercontent.com/2726610/108628107-de41ec00-7450-11eb-9c9a-3ae98e81a797.png "Devtools (horizontal view)")
 
-## Server side rendering
-
-If running a NodeJS server, you can render the components as HTML strings or JSON.
-
-Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
-
-```js
-// create an HTML view, using template literals
-var htmlView = props => `
-    <div id=${props.id}>
-      ${Heading("Total so far = " + props.count)}
-      ${List(props.items)}
-      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
-    </div>`
-
-// or return the state itself (pure headless component)
-var dataOnlyView = props => props
-
-// Choose a view to render
-App.view = htmlView
-
-// render the component
-App.render()
-
-// ..other rendering options...
-
-// print it to the terminal
-console.log(App.render())
-```
-
-If rendering a component that has a `.view()` and `.style()` in NodeJS (or if calling `.toString()` directly), the output will be a string like this one:
-
-```
-"<style>
-#foo h1 {
-  color: red;
-}
-.btn {
-  padding: 6px;
-}
-</style>
-<div id=\"foo\">
-  <h1>Total so far = 101</h1>
-  <button class=\"btn\" onclick=\"App.clickBtn(1);\">Click here</button>
-</div>"
-```
-
-^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
-
-Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
-
 ## Making changes to `Component`
 
 Look in `src/`, make any changes you like.
@@ -1631,10 +1977,15 @@ Rebuild to `dist/` using the command `npm run build`
 - added: support using `<canvas>` for component views:
   - added simple canvas usage example to README 
   - added [examples/usage-canvas.html](examples/usage-canvas.html)
-- new optional add-on:
+- new optional add-ons:
   - `onLoop`
     - a fixed-interval loop, for time-dependant stuff (physics, games, etc)
     - uses requestAnimationFrame, or setTimeout as a fallback
+    - only 1kb minified & gzipped
+  - `Ctx`
+    - extends the `<canvas>` 2d context with lots of extra features
+    - works in browser only, unless canvas is polyfilled in NodeJS
+    - only 4.4kb minified & gzipped
 
 **1.3.2**
 - new optional add-ons:

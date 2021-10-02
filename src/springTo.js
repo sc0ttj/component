@@ -164,7 +164,7 @@ const setTweenedValues = function(state, vals) {
 const springTo = function(self, newState, springCfg) {
   let spring;
   let timeout;
-  
+
   const defaults = {
     onUpdate: noop,
     onComplete: noop,
@@ -175,19 +175,19 @@ const springTo = function(self, newState, springCfg) {
     ...springCfg,
     // wrap the users callbacks, so they receive the current tweened values as props
     onStart: props => {
-      console.log('onStart => props', props);
+      //console.log('onStart => props', props);
       const tweenedState = setTweenedValues(newState, [...props.values])
       return springCfg.onStart(tweenedState)
     },
     onUpdate: props => {
-      console.log('onUpdate => props', props);
+      //console.log('onUpdate => props', props);
       const tweenedState = setTweenedValues(newState, [...props.values])
-      console.log('onUpdate => tweenedState', tweenedState);
+      //console.log('onUpdate => tweenedState', tweenedState);
       if (frame === 1) cfg.onStart(props);
       return springCfg.onUpdate(tweenedState)
     },
     onComplete: props => {
-      console.log('onComplete => props', props);
+      //console.log('onComplete => props', props);
       const tweenedState = setTweenedValues(newState, [...props.values])
       return springCfg.onComplete(tweenedState)
     },
