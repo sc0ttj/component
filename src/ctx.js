@@ -322,7 +322,8 @@ const drawHead = function(ctx,x0,y0,x1,y1,x2,y2,style) {
   ctx.restore();
 };
 
-// define extra methods to add/bind to our extended 2d canvas context
+
+// Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
 
   // general helper funcs
@@ -947,6 +948,9 @@ const extraMethods = {
 
 const extraMethodNames = Object.keys(extraMethods);
 
+
+// ...Now the main function to export
+
 /**
 * @class Canvas Context2D Wrapper.
 * @param {CanvasRenderingContext2D} origCtx	Canvas Context2D that will be wrapped.
@@ -988,9 +992,10 @@ window.Ctx = function(origCtx, c) {
   // context, so put back the reference to the canvas element, cos we want it
   this.canvas = origCtx.canvas;
 
+
   // add more methods to the extended context - they're added here cos they're
-  // grouped/namespaced under ctx.image.* and ctx.video.* and the above
-  // loops that make methods chainable don't handle this
+  // nested/namespaced under ctx.image.* and ctx.video.* and the above
+  // loops that make methods chainable don't handle nested objects
 
   this.image = {
     // download canvas as an image file, called ${name}
@@ -1013,6 +1018,8 @@ window.Ctx = function(origCtx, c) {
     },
   };
 
+  // NOTE - the video methods defined here are arrow functions cos we want
+  // `this` to refer to our extended context, not the original one
   this.video = {
 
     // record canvas to video data
