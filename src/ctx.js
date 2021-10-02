@@ -100,6 +100,9 @@ const DEG2RAD = PI / 180;
 
 
 - maths:
+    - axes:
+      - generic X and Y axis generation, with ticks and labels
+
     - plotting
       - http://javascripter.net/faq/plotafunctiongraph.htm
       - see https://github.com/d12/QuickPlotJS
@@ -107,16 +110,6 @@ const DEG2RAD = PI / 180;
     - https://github.com/mattdesl/canvas-sketch-util/blob/master/docs/math.md
 
     - interpolate colors and numbers: https://github.com/worksbyscott/Interpolator/blob/main/interpolator.js
-
-    - inverse lerp:
-
-        function inverseLerp(start, end, value) {
-          return (value - start) / (end - start);
-        }
-
-        console.log( inverseLerp(10, 20, 15) );  // => 0.5
-        console.log( inverseLerp(10, 20, 30) );  // => 2
-
 
     - lerp for 2d coordinates
 

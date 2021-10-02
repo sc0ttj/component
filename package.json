@@ -45,6 +45,7 @@
 		"dist/index.min.js",
 		"dist/index.esm.js",
 		"dist/component.min.js",
+		"dist/ctx.min.js",
 		"dist/render.min.js",
 		"dist/tweenState.min.js",
 		"dist/emitter.min.js",
