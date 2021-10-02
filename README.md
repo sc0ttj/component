@@ -1977,10 +1977,15 @@ Rebuild to `dist/` using the command `npm run build`
 - added: support using `<canvas>` for component views:
   - added simple canvas usage example to README 
   - added [examples/usage-canvas.html](examples/usage-canvas.html)
-- new optional add-on:
+- new optional add-ons:
   - `onLoop`
     - a fixed-interval loop, for time-dependant stuff (physics, games, etc)
     - uses requestAnimationFrame, or setTimeout as a fallback
+    - only 1kb minified & gzipped
+  - `Ctx`
+    - extends the `<canvas>` 2d context with lots of extra features
+    - works in browser only, unless canvas is polyfilled in NodeJS
+    - only 4.4kb minified & gzipped
 
 **1.3.2**
 - new optional add-ons:
