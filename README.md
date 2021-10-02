@@ -465,40 +465,72 @@ _This CSS "auto-scoping" will prevent a components styles affecting other parts 
 
 To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
 
-## Using "actions"
+## Using JSON-LD (linked data)
 
-Define "actions" to update your state in specific ways.
-
-These are like regular methods, except they're always chainable, they hook into the [emitter](#using-the-emitter-module) add-on automatically, and they're tagged by name in your components state history.
+Adding linked data to your components is easy - just define it as part of your view:
 
 ```js
-function Foo() {
-  const Foo = new Component({ count: 0, items: [] });
+  Foo.view = props => `
+    <div>
+      <script type="application/ld+json">{ ... }</script>
+      ...
+    </div>`
+  ```
 
-  // define the actions
-  Foo.actions({
-    plus:       props => Foo({ count: Foo.state.count + props }),
-    minus:      props => Foo({ count: Foo.state.count - props }),
-    addItems:   props => Foo({ items: [ ...Foo.state.items, ...props ] }),
-  });
+- add a JSON-LD script before your component HTML
+- use the `props` passed in to define/update whatever you need
+- your JSON-LD will be updated along with your view, whenever your component re-renders
 
-  return Foo;
-}
+## Server side rendering
 
-const foo = new Foo();
+If running a NodeJS server, you can render the components as HTML strings or JSON.
 
-// use "actions" to update specific parts of your state
-foo.plus(105);
-foo.minus(5);
+Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
 
-// A components "actions" can be chained
-foo.minus(1)
-   .minus(1)
-   .plus(3)
-   .addItems([ { name: "one" }, { name: "two" } ]);
+```js
+// create an HTML view, using template literals
+var htmlView = props => `
+    <div id=${props.id}>
+      ${Heading("Total so far = " + props.count)}
+      ${List(props.items)}
+      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
+    </div>`
+
+// or return the state itself (pure headless component)
+var dataOnlyView = props => props
+
+// Choose a view to render
+App.view = htmlView
+
+// render the component
+App.render()
+
+// ..other rendering options...
+
+// print it to the terminal
+console.log(App.render())
 ```
 
-Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
+If rendering a component that has a `.view()` and `.style()` in NodeJS (or if calling `.toString()` directly), the output will be a string like this one:
+
+```
+"<style>
+#foo h1 {
+  color: red;
+}
+.btn {
+  padding: 6px;
+}
+</style>
+<div id=\"foo\">
+  <h1>Total so far = 101</h1>
+  <button class=\"btn\" onclick=\"App.clickBtn(1);\">Click here</button>
+</div>"
+```
+
+^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
+
+Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
 
 ## Using "nested components"
 
@@ -550,6 +582,41 @@ This has a number of implications:
   - will _not_ re-render anything!
 
 For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
+
+## Using "actions"
+
+Define "actions" to update your state in specific ways.
+
+These are like regular methods, except they're always chainable, they hook into the [emitter](#using-the-emitter-module) add-on automatically, and they're tagged by name in your components state history.
+
+```js
+function Foo() {
+  const Foo = new Component({ count: 0, items: [] });
+
+  // define the actions
+  Foo.actions({
+    plus:       props => Foo({ count: Foo.state.count + props }),
+    minus:      props => Foo({ count: Foo.state.count - props }),
+    addItems:   props => Foo({ items: [ ...Foo.state.items, ...props ] }),
+  });
+
+  return Foo;
+}
+
+const foo = new Foo();
+
+// use "actions" to update specific parts of your state
+foo.plus(105);
+foo.minus(5);
+
+// A components "actions" can be chained
+foo.minus(1)
+   .minus(1)
+   .plus(3)
+   .addItems([ { name: "one" }, { name: "two" } ]);
+```
+
+Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
 
 ## Using the `emitter` module
 
@@ -1792,73 +1859,6 @@ Ctx will try to create videos using these MIME-types, in this order, if none was
 - video/mpeg
 
 See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
-
-## Using JSON-LD (linked data)
-
-Adding linked data to your components is easy - just define it as part of your view:
-
-```js
-  Foo.view = props => `
-    <div>
-      <script type="application/ld+json">{ ... }</script>
-      ...
-    </div>`
-  ```
-
-- add a JSON-LD script before your component HTML
-- use the `props` passed in to define/update whatever you need
-- your JSON-LD will be updated along with your view, whenever your component re-renders
-
-## Server side rendering
-
-If running a NodeJS server, you can render the components as HTML strings or JSON.
-
-Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
-
-```js
-// create an HTML view, using template literals
-var htmlView = props => `
-    <div id=${props.id}>
-      ${Heading("Total so far = " + props.count)}
-      ${List(props.items)}
-      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
-    </div>`
-
-// or return the state itself (pure headless component)
-var dataOnlyView = props => props
-
-// Choose a view to render
-App.view = htmlView
-
-// render the component
-App.render()
-
-// ..other rendering options...
-
-// print it to the terminal
-console.log(App.render())
-```
-
-If rendering a component that has a `.view()` and `.style()` in NodeJS (or if calling `.toString()` directly), the output will be a string like this one:
-
-```
-"<style>
-#foo h1 {
-  color: red;
-}
-.btn {
-  padding: 6px;
-}
-</style>
-<div id=\"foo\">
-  <h1>Total so far = 101</h1>
-  <button class=\"btn\" onclick=\"App.clickBtn(1);\">Click here</button>
-</div>"
-```
-
-^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
-
-Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
 
 ## Using a the "React hooks" module
 
