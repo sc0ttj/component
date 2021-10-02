@@ -1605,7 +1605,7 @@ ctx.checkerboard(x, y, w, h, cellSize, colorA, colorB)
 
 ```js
 drawImg(input, x, y, w, h) 
-drawImg(input, sx, sy, sw, sh, dx, dy, dWidth, qHeight)
+drawImg(input, sx, sy, sw, sh, dx, dy, dWidth, dHeight)
 ```
 
 - `input` can be a path, URL, Element, a string of SVG HTML
