@@ -500,6 +500,57 @@ foo.minus(1)
 
 Using the add-on [emitter](#using-the-emitter-module) module, components can listen for and react to these actions. This is an easy way to share states between components, and for components to "talk to each other".
 
+## Using "nested components"
+
+Components that are nested inside other components are called _child components_.
+
+All child components have the following in common:
+- you include the child component in the "view" of the parent component
+- child components do not trigger a re-render of the page
+- to re-render a child component that has changed, you must re-render the parent component
+- nested components work with or without the `html`/`htmel` add-on(s)
+
+There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
+
+### 1. Using "stateless" child components:
+
+Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
+
+```js
+// a stateless child component
+const h2 = text => `<h2>${text}</h2>`;
+
+// ...used inside the view of another component
+Foo.view = props => `
+  <div>
+    ${h2(props.text)}
+    <p> ... </p>
+  </div>
+`;
+```
+
+### 2. Using "stateful" child components:
+
+Stateful components are _any components with a state_, usually created like so:
+
+```js
+const Foo = new Component({ ...someData });
+```
+
+NOTE: When nested inside another component, even stateful child components _do not_ run their own `setState()` & `render()` methods - they simply return their (newly updated) view.
+
+This has a number of implications:
+
+- better performance (fewer page re-renders)
+- enforces similar behaviour to stateless child components:
+  - i.e, only parent components trigger page re-renders
+  - child components have no `.container` property
+- calling `setState()` of a stateful child component:
+  -  _will_ update its state and run its "middleware"
+  - will _not_ re-render anything!
+
+For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
+
 ## Using the `emitter` module
 
 Any time a components state is changed via an "action", it can emit an event that other components can listen for - the "listener" will receive the state of the component that emitted the event.
@@ -1758,58 +1809,58 @@ Adding linked data to your components is easy - just define it as part of your v
 - use the `props` passed in to define/update whatever you need
 - your JSON-LD will be updated along with your view, whenever your component re-renders
 
-## Using "nested components"
+## Server side rendering
 
-Components that are nested inside other components are called _child components_.
+If running a NodeJS server, you can render the components as HTML strings or JSON.
 
-All child components have the following in common:
-- you include the child component in the "view" of the parent component
-- child components do not trigger a re-render of the page
-- to re-render a child component that has changed, you must re-render the parent component
-- nested components work with or without the `html`/`htmel` add-on(s)
-
-There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
-
-### 1. Using "stateless" child components:
-
-Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
+Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
 
 ```js
-// a stateless child component
-const h2 = text => `<h2>${text}</h2>`;
+// create an HTML view, using template literals
+var htmlView = props => `
+    <div id=${props.id}>
+      ${Heading("Total so far = " + props.count)}
+      ${List(props.items)}
+      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
+    </div>`
 
-// ...used inside the view of another component
-Foo.view = props => `
-  <div>
-    ${h2(props.text)}
-    <p> ... </p>
-  </div>
-`;
+// or return the state itself (pure headless component)
+var dataOnlyView = props => props
+
+// Choose a view to render
+App.view = htmlView
+
+// render the component
+App.render()
+
+// ..other rendering options...
+
+// print it to the terminal
+console.log(App.render())
 ```
 
-### 2. Using "stateful" child components:
+If rendering a component that has a `.view()` and `.style()` in NodeJS (or if calling `.toString()` directly), the output will be a string like this one:
 
-Stateful components are _any components with a state_, usually created like so:
-
-```js
-const Foo = new Component({ ...someData });
+```
+"<style>
+#foo h1 {
+  color: red;
+}
+.btn {
+  padding: 6px;
+}
+</style>
+<div id=\"foo\">
+  <h1>Total so far = 101</h1>
+  <button class=\"btn\" onclick=\"App.clickBtn(1);\">Click here</button>
+</div>"
 ```
 
-NOTE: When nested inside another component, even stateful child components _do not_ run their own `setState()` & `render()` methods - they simply return their (newly updated) view.
+^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
 
-This has a number of implications:
+Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
 
-- better performance (fewer page re-renders)
-- enforces similar behaviour to stateless child components:
-  - i.e, only parent components trigger page re-renders
-  - child components have no `.container` property
-- calling `setState()` of a stateful child component:
-  -  _will_ update its state and run its "middleware"
-  - will _not_ re-render anything!
-
-For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
-
-## Using a more "React-like" pattern
+## Using a the "React hooks" module
 
 For more "React-like" patterns, you can import a standalone `render` method (~800 bytes) that's supposed to be used with some *optional* React-like "hooks" (~1.5kb), but _without_ `Component` itself.
 
@@ -1913,57 +1964,6 @@ Contains modified versions of:
 **Horizontal view:**
 
 ![Devtools - horizontal view](https://user-images.githubusercontent.com/2726610/108628107-de41ec00-7450-11eb-9c9a-3ae98e81a797.png "Devtools (horizontal view)")
-
-## Server side rendering
-
-If running a NodeJS server, you can render the components as HTML strings or JSON.
-
-Just define a view - a function which receives the state as `props` and returns the view as a string, object, etc.
-
-```js
-// create an HTML view, using template literals
-var htmlView = props => `
-    <div id=${props.id}>
-      ${Heading("Total so far = " + props.count)}
-      ${List(props.items)}
-      ${Button("Click here", `App.clickBtn(${props.incrementBy})`)}
-    </div>`
-
-// or return the state itself (pure headless component)
-var dataOnlyView = props => props
-
-// Choose a view to render
-App.view = htmlView
-
-// render the component
-App.render()
-
-// ..other rendering options...
-
-// print it to the terminal
-console.log(App.render())
-```
-
-If rendering a component that has a `.view()` and `.style()` in NodeJS (or if calling `.toString()` directly), the output will be a string like this one:
-
-```
-"<style>
-#foo h1 {
-  color: red;
-}
-.btn {
-  padding: 6px;
-}
-</style>
-<div id=\"foo\">
-  <h1>Total so far = 101</h1>
-  <button class=\"btn\" onclick=\"App.clickBtn(1);\">Click here</button>
-</div>"
-```
-
-^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
-
-Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
 
 ## Making changes to `Component`
 
