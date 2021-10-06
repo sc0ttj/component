@@ -953,7 +953,7 @@ window.Ctx = function(origCtx, c) {
   let n = ctxMethods.length;
   let curProp;
   let chunks;
-  const supportedType = getVideoMimeType();
+  const supportedType = (!!window.MediaRecorder) ? getVideoMimeType() : false;
 
   /**
    * Reference to Canvas Rendering Context 2D.
@@ -1017,6 +1017,10 @@ window.Ctx = function(origCtx, c) {
 
     // record canvas to video data
     record: (fps, mimeType = supportedType, audioBitsPerSecond = 128000, videoBitsPerSecond = 2500000) => {
+      if (!window.MediaRecorder) {
+        throw Error('Video recording not supported');
+        return false;
+      }
       if (this.isRecording === true) return true;
       const framesPerSecond = (fps > 0 && fps <=60) ? fps : 60;
       chunks = [];
@@ -1056,7 +1060,7 @@ window.Ctx = function(origCtx, c) {
     },
     // stop recording canvas to video
     stop: () => {
-      if (!this.isRecording) throw Error('No video is recording');
+      if (!this.isRecording) throw Error('Nothing recording');
       return this.rec.stop();
     },
     // download the recorded video data as a video file
