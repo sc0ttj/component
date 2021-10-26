@@ -64,15 +64,18 @@
   App.clickBtn = (props) => App.setState({ count: App.state.count + props})
 
   // tween "count" back down to one
-  App.resetBtn = props => App.tweenState({ count: 1 },
-  {
-    ease: "outQuint",
-    duration: 1000,
-    // we want to show an integer on the page, so don't set state
-    // until we convert "count" to an integer
-    shouldSetState: () => false,
-    onUpdate: props => App.setState({ count: Number.parseInt(props.values[0], 10) })
-  })
+  App.resetBtn = props => {
+    const tween = App.tweenState({ count: 1 },
+    {
+      ease: "outQuint",
+      duration: 1000,
+      // we want to show an integer on the page, so don't set state on each frame...
+      shouldSetState: () => false,
+      // until we convert "count" to an integer
+      onUpdate: props => App.setState({ count: Number.parseInt(props.values[0], 10) })
+    });
+    console.log('tween', tween);
+  }
 
   //
   // OPTIONAL - Define some styles for the view

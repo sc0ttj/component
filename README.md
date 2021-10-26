@@ -196,6 +196,11 @@ const btn3 = new Button({ txt: "3", fn: e => alert("btn3") });
 // create the parent component
 const Menu = new Component({ txt: 'Click the buttons!' });
 
+// put the styles in the parent component
+Menu.style = props => `
+  button { border: 2px solid #999; }
+`
+
 // create a view with our buttons included
 Menu.view = props => htmel`
   <div>
@@ -285,7 +290,6 @@ These are the methods and properties attached to the components you create.
 - **.view(props)**: receives a state and sets the component view to (re)render (_optional_)
 - **.style(props)**: receives a state and sets the `<style>` to (re)render (_optional_)
 - **.actions(obj)**: chainable methods that simplify updating the state (_optional_)
-- **.tweenState(obj[, cfg])**: set state on each frame, supports various easings (_optional_)
 - **.middleware**: an array of functions that run at the end of `setState()` (_optional_)
 - ...and more
 
@@ -463,7 +467,11 @@ _This CSS "auto-scoping" will prevent a components styles affecting other parts 
 - You can disable automatic CSS "scoping"/prefixing by using `foo.scopedCss = false`.
 - When rendering your component in NodeJS, or using `foo.toString()`, your CSS will **not** be auto prefixed.
 
-To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html)
+How it works 
+- for each component rendered to the page (_not including the nested/child components_) a `<style>` tag is added the the page and updated each time the component is re-rendered.
+- in order to style nested/child components, you should put the styles in the parent components `style()` method.
+
+To see `style()` in use, see [examples/usage-in-browser.html](examples/usage-in-browser.html).
 
 ## Using JSON-LD (linked data)
 
@@ -480,6 +488,77 @@ Adding linked data to your components is easy - just define it as part of your v
 - add a JSON-LD script before your component HTML
 - use the `props` passed in to define/update whatever you need
 - your JSON-LD will be updated along with your view, whenever your component re-renders
+
+## Using "nested components"
+
+Components that are nested inside other components are called _child components_.
+
+All child components have the following in common:
+- you include the child component in the "view" of the parent component
+- child components do not trigger a re-render of the page
+- you should define the styles of the nested components in the parent component
+- to re-render a child component that has changed, you must re-render the parent component
+- nested components work with or without the `html`/`htmel` add-on(s)
+
+There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
+
+### 1. Using "stateless" child components:
+
+Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
+
+```js
+// a stateless child component
+const h2 = text => `<h2>${text}</h2>`;
+
+// ...used inside the view of another component
+Foo.view = props => `
+  <div>
+    ${h2(props.text)}
+    <p> ... </p>
+  </div>
+`;
+```
+
+### 2. Using "stateful" child components:
+
+Stateful components are _any components with a state_, usually created like so:
+
+```js
+// ...import some pre-defined button components, then..
+
+// create 2 buttons - the child components
+const btn1 = new Button({ txt: "1" });
+const btn2 = new Button({ txt: "2" });
+
+// create the parent component
+const Menu = new Component({});
+
+// put the styles in the parent component
+Menu.style = props => `
+  button { border: 2px solid #999; }
+`
+
+// create a view with our buttons included
+Menu.view = props => htmel`
+  <div>
+    ${btn1}
+    ${btn2}
+  </div>
+`;
+```
+
+NOTE: When nested inside another component, even stateful child components _do not_ run their own `setState()` & `render()` methods - they simply return their (newly updated) view.
+
+This has a number of implications:
+
+- better performance (fewer page re-renders)
+- enforces same behaviour as stateless child components
+  - only parent components trigger page re-renders
+- calling `setState()` of a stateful child component:
+  -  _will_ update its state and run its "middleware"
+  - but will _not_ re-render anything!
+
+For more code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
 ## Server side rendering
 
@@ -531,57 +610,6 @@ If rendering a component that has a `.view()` and `.style()` in NodeJS (or if ca
 ^ Any styles are wrapped in a `<style>` tag, and your view is rendered after that.
 
 Note: When using `.toString()`, your component CSS is not auto-prefixed or "scoped" with a containers class or id - you can only do this client-side (i.e, in a browser), using `.render('.container')`.
-
-## Using "nested components"
-
-Components that are nested inside other components are called _child components_.
-
-All child components have the following in common:
-- you include the child component in the "view" of the parent component
-- child components do not trigger a re-render of the page
-- to re-render a child component that has changed, you must re-render the parent component
-- nested components work with or without the `html`/`htmel` add-on(s)
-
-There are two kinds of child component - _stateless_ and _stateful_ - and while they behave the same in most ways, they have slightly difference syntax and features.
-
-### 1. Using "stateless" child components:
-
-Stateless components are just _regular functions_ that take `props` as input, and return a view - usually HTML as a string.
-
-```js
-// a stateless child component
-const h2 = text => `<h2>${text}</h2>`;
-
-// ...used inside the view of another component
-Foo.view = props => `
-  <div>
-    ${h2(props.text)}
-    <p> ... </p>
-  </div>
-`;
-```
-
-### 2. Using "stateful" child components:
-
-Stateful components are _any components with a state_, usually created like so:
-
-```js
-const Foo = new Component({ ...someData });
-```
-
-NOTE: When nested inside another component, even stateful child components _do not_ run their own `setState()` & `render()` methods - they simply return their (newly updated) view.
-
-This has a number of implications:
-
-- better performance (fewer page re-renders)
-- enforces similar behaviour to stateless child components:
-  - i.e, only parent components trigger page re-renders
-  - child components have no `.container` property
-- calling `setState()` of a stateful child component:
-  -  _will_ update its state and run its "middleware"
-  - will _not_ re-render anything!
-
-For code examples, see the nested component recipes in [examples/recipes.js](examples/recipes.js).
 
 ## Using "actions"
 
@@ -967,10 +995,14 @@ document.addEventListener('click', function(e) {
     {
       mass: 4.0,       // higher is slower/more drag         Default = 1.0
       stiffness: 0.5,  // higher is more "bouncy"            Default = 0.1
-      damping: 0.8,    // higher is more "friction"          Default = 0.8
+      damping: 0.9,    // higher is more "friction"          Default = 0.8
       precision: 0.01, // higher values finish anim sooner   Default = 0.01
-      onUpdate: props => Foo.setState({ x: props.x, y: props.y }),
-      onComplete: props => console.log("Moved to:", { x: props.x, y: props.y }),
+      //
+      // these callbacks are called on every frame:
+      shouldSetState: props => true,
+      onUpdate: props => {},
+      // this callback is called at the end:
+      onComplete: props => {},
     });
 });
 ```
@@ -981,8 +1013,9 @@ The spring config (2nd param) takes the following properties:
 - `stiffness`: higher is more "bouncy". Default = 0.1
 - `damping`: higher is more "friction". Default = 0.8
 - `precision`: higher values finish anim sooner. Default = 0.01
-- `onUpdate()`:  called on every frame, receives current animation values as `props`
-- `onComplete()`: called on the last frame, receives current animation values as `props`
+- `onUpdate(props)`:  called on every frame, receives current animation values as `props`
+- `onComplete(props)`: called on the last frame, receives current animation values as `props`
+- `shouldSetState(props)`:  called on every frame, if it returns true, `setState(props)` is run
 
 The `props` object returned to the callbacks contains:
 
@@ -1974,7 +2007,18 @@ Rebuild to `dist/` using the command `npm run build`
 ## Changelog
 
 **1.3.3**
-- added: support using `<canvas>` for component views:
+- fixed: more performant component styling:
+  - only create `<style>` tags if:
+    1. component styles are defined (using `.style()`)
+    2. component has a container element (was added to a page)
+  - don't create `<style>` tags for child components:
+    - put the styles in the parent components `.style()` instead
+- `springTo` add-on updated:
+  - removed useless code
+  - more consistent with `tweenState`:
+    - added `shouldSetState()` callback
+    - now no need to set the state yourself in `onUpdate()`
+- new: support using `<canvas>` for component views:
   - added simple canvas usage example to README 
   - added [examples/usage-canvas.html](examples/usage-canvas.html)
 - new optional add-ons:
@@ -1986,6 +2030,7 @@ Rebuild to `dist/` using the command `npm run build`
     - extends the `<canvas>` 2d context with lots of extra features
     - works in browser only, unless canvas is polyfilled in NodeJS
     - only 4.4kb minified & gzipped
+- updated README
 
 **1.3.2**
 - new optional add-ons:

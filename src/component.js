@@ -176,11 +176,6 @@ function Component(state, schema) {
     w = window
     d = document  // TODO: support shadow DOM - check the root, set accordingly
     raf = requestAnimationFrame
-    // the <style> elem into which we put our component CSS
-    // TODO: only do this if component styles are defined
-    c.css = d.createElement("style")
-    c.css.id = c.uid
-    d.head.appendChild(c.css)
   }
 
   /**
@@ -237,7 +232,7 @@ function Component(state, schema) {
    * Set the component state
    * @param {object} newState - the new state to update to
    */
-  c.setState = newState => {
+  c.setState = (newState, callback) => {
     const nextState = { ...c.state, ...newState };
     // get initial state from localStorage, if it's in there
     if (strg && !c.done) {
@@ -303,6 +298,8 @@ function Component(state, schema) {
         emitter.emit(`${c.action}`, { ...c.state })
       }
 
+      if (typeof callback === 'function') callback(c.state);
+
       // run any middlware functions that were defined by the user
       c.middleware.forEach(fn => fn({ ...c.state }))
 
@@ -320,10 +317,9 @@ function Component(state, schema) {
    *
    */
   c.tweenState = (props, cfg) => {
-    typeof tweenState !== "undefined"
+    return typeof tweenState !== "undefined"
       ? tweenState(c, props, cfg)
-      : c(props)
-    return c
+      : c
   }
 
   /**
@@ -334,10 +330,9 @@ function Component(state, schema) {
    *
    */
   c.springTo = (props, cfg) => {
-    typeof springTo !== "undefined"
+    return typeof springTo !== "undefined"
       ? springTo(c, props, cfg)
-      : c(props)
-    return c
+      : c
   }
 
   /**
@@ -347,12 +342,9 @@ function Component(state, schema) {
    *
    */
   c.useAudio = (props) => {
-    if (typeof useAudio !== "undefined") {
-      useAudio(props, c)
-    } else {
-      c(props)
-    }
-    return c
+    return typeof useAudio !== "undefined"
+      ? useAudio(props, c)
+      : c
   }
 
   /**
@@ -362,10 +354,9 @@ function Component(state, schema) {
    *
    */
   c.onScroll = fn => {
-    if (onScroll) {
-      onScroll(fn, c);
-    }
-    return c
+    return typeof onScroll !== "undefined"
+      ? onScroll(fn, c)
+      : c
   }
 
   /**
@@ -584,12 +575,26 @@ function Component(state, schema) {
     }
     c.html = c.container = el
 
-    // get the canvas context, if needed
-    if (c.html && c.html.getContext && !c.ctx) {
-      c.ctx = c.html.getContext(ctxType ? ctxType : '2d')
-      // extend canvas if Ctx addon available (adds methods, makes all methods chainable)
-      if (c.ctx && Ctx) {
-        c.ctx = new Ctx(c.ctx, c);
+    if (c.html) {
+      // create the <style> elem into which we put our component CSS:
+      if (c.style) {
+        if (!c.css) {
+          // create the style elem
+          c.css = d.createElement("style")
+          c.css.type = 'text/css';
+          c.css.id = c.uid
+          // append to page
+          d.head.appendChild(c.css)
+        }
+      }
+
+      // get the canvas context, if needed
+      if (c.html.getContext && !c.ctx) {
+        c.ctx = c.html.getContext(ctxType ? ctxType : '2d')
+        // extend canvas if Ctx addon available (adds methods, makes all methods chainable)
+        if (c.ctx && Ctx) {
+          c.ctx = new Ctx(c.ctx, c);
+        }
       }
     }
 
@@ -629,6 +634,10 @@ function Component(state, schema) {
         c.html.firstChild.setAttribute('data-uid', c.uid)
         devtools.populateUI(c.html)
       }
+      // we should (probably!) clear/reset the `html.funcs` array here,
+      // because once the view has rendered, we don't need to keep its
+      // list of the event handlers
+      if (typeof html == 'function' && Array.isArray(html.funcs)) html.funcs = [];
     })
 
     // return the container element

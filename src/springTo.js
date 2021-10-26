@@ -26,6 +26,7 @@ function createObjectSpring(start, {
   damping = config.damping,
   mass = config.mass,
   precision = config.precision,
+  shouldSetState = () => true,
   onUpdate = noop,
   onComplete = noop,
 } = config) {
@@ -46,7 +47,7 @@ function createObjectSpring(start, {
     spring.completed = false;
   }
 
-  function update(frame) { // pass in frame, so it can be receved by users callbacks (for convenience)
+  function update(frame, self) { // pass in frame, so it can be receved by users callbacks (for convenience)
     if (Object.keys(destination).length > 0) {
       let velocity;
       let acceleration;
@@ -72,15 +73,17 @@ function createObjectSpring(start, {
 
       if (isComplete && !spring.completed) {
         spring.completed = true;
-
         Object.keys(destination).forEach(key => {
             current[key] = destination[key];
         })
-
-        onUpdate(getValue());
-        onComplete(getValue());
+        const values = getValue();
+        onUpdate({ ...values, frame });
+        onComplete({ ...values, frame });
+        if (shouldSetState({ ...values, frame })) self.setState({ ...values });
       } else if (!spring.completed) {
-        onUpdate({ ...getValue(), velocity, acceleration, frame });
+        const values = getValue();
+        onUpdate({ ...values, velocity, acceleration, frame });
+        if (shouldSetState({ ...values, frame })) self.setState({ ...values });
       }
     }
   }
@@ -126,15 +129,7 @@ function createObjectSpring(start, {
   return spring;
 }
 
-function createSpring(start, options) {
-  return createObjectSpring(start, options);
-}
-
 // sc0ttj - component specific stuff below
-
-// dont export this, we create the spring for the user, below
-//export default createSpring;
-
 
 // for each property in newState, get the value from the given state
 const getStateToTween = function(state, newState) {
@@ -165,53 +160,20 @@ const springTo = function(self, newState, springCfg) {
   let spring;
   let timeout;
 
-  const defaults = {
-    onUpdate: noop,
-    onComplete: noop,
-  };
-
-  const cfg = {
-    ...defaults,
-    ...springCfg,
-    // wrap the users callbacks, so they receive the current tweened values as props
-    onStart: props => {
-      //console.log('onStart => props', props);
-      const tweenedState = setTweenedValues(newState, [...props.values])
-      return springCfg.onStart(tweenedState)
-    },
-    onUpdate: props => {
-      //console.log('onUpdate => props', props);
-      const tweenedState = setTweenedValues(newState, [...props.values])
-      //console.log('onUpdate => tweenedState', tweenedState);
-      if (frame === 1) cfg.onStart(props);
-      return springCfg.onUpdate(tweenedState)
-    },
-    onComplete: props => {
-      //console.log('onComplete => props', props);
-      const tweenedState = setTweenedValues(newState, [...props.values])
-      return springCfg.onComplete(tweenedState)
-    },
-  };
+  const defaults = { shouldSetState: noop, onUpdate: noop, onComplete: noop };
 
   // get a state matching the shape of newState, but with values from self.state
   const stateToTween = getStateToTween(self.state, newState)
 
   // define the spring
-  spring = createSpring(stateToTween, { ...defaults, ...springCfg });
-
-  // console.log({
-  //   stateToTween,
-  //   newState,
-  //   springConfig: { ...defaults, ...springCfg },
-  //   spring,
-  // });
+  spring = createObjectSpring(stateToTween, { ...defaults, ...springCfg });
 
   // pass the values to animate
   spring.target(newState);
 
   // define the animation loop
   function loop() {
-    spring.update(frame);
+    spring.update(frame, self);
     frame += 1;
     timeout = requestAnimationFrame(loop);
   }

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component demo - using SVGs</title>
+</head>
+
+<body>
+
+  <div class="main">
+    <p class="container" id="a-unique-string">You component will end up in here!</p>
+  </div>
+
+  <!-- required -->
+  <script src="../dist/component.min.js"></script>
+  <!-- optional -->
+  <script src="../dist/htmel.min.js"></script>
+  <script>
+
+  // Define a component
+  const mySvg = new Component({ borderRadius: 0 });
+
+  // Define a view
+  mySvg.view = props => htmel`
+    <svg id="my-svg" width="400" height="181">
+      ${Rect('blue', props.borderRadius)}
+      ${Rect('red',  props.borderRadius/10)}
+      Sorry, your browser does not support inline SVG.
+    </svg>
+  `;
+
+  // OPTIONAL - define some styles
+  mySvg.style = props => `
+    #my-svg rect {
+      stroke: black;
+      stroke-width: 3;
+      opacity: 0.5;
+    }
+  `;
+
+  // Define a stateless sub-component:
+  // (just a normal function that returns a string of HTML)
+  const Rect = (color, radius) => htmel`
+    <rect
+      x="${radius+50}" y="${radius+20}"
+      rx="${radius}" ry="${radius}"
+      width="150" height="150"
+      style="fill: ${color}"
+      onclick="${e => alert(e.target.outerHTML)}"
+    />
+  `;
+
+  // IMPORTANT: Add our app to the page
+  mySvg.render('.container')
+
+  // Using setState() to trigger a full re-render
+  mySvg.setState({ borderRadius: 100 })
+
+  </script>
+</body>

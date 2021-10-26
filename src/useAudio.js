@@ -10,7 +10,7 @@
     - https://github.com/mohayonao/adsr-envelope
     - https://github.com/rsimmons/fastidious-envelope-generator
     - https://github.com/Theodeus/tuna
-
+    - https://github.com/alexmargineanu/frere-jacques-audiocontext/
 */
 
 
