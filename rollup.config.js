@@ -133,6 +133,16 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
+    input: "src/geo.js",
+    output: {
+      file: "dist/geo.min.js",
+      sourcemap: true,
+      name: "Geo",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
     input: "src/render.js",
     output: {
       file: "dist/render.min.js",
