@@ -63,10 +63,6 @@
     right: 180,
   });
 
-  // store each location in the map, so we can compare their distances
-  // with map.getNearest(place)
-  places.forEach(place => map.addLocation(place));
-
   // define a "view", that draws to the components canvas
   Foo.view = (props, ctx) => {
     // setup the canvas
@@ -91,8 +87,8 @@
       places[9].lat, places[9].long,
     )} km`
   );
-  console.log('Places nearest to Bangkok:', map.getNearest(places[1]));
-  console.log('Places nearest to London:', map.getNearest(places[7]));
+  console.log('Places nearest to Bangkok:', map.getNearestTo(places[1], places));
+  console.log('Places nearest to London:', map.getNearestTo(places[7], places));
 
 </script>
 

@@ -30,12 +30,6 @@ function MercatorMap(mapScreenWidth, mapScreenHeight, topLatitude, bottomLatitud
   this.bottomLatitudeRelative = this.getScreenYRelative(bottomLatitude);
   this.leftLongitudeRadians = this.degToRadians(leftLongitude);
   this.rightLongitudeRadians = this.degToRadians(rightLongitude);
-
-  // An array of "locations" - each location should be an object containing
-  // at least the following properties:
-  //  { lat, long, id }
-  // ..any other props can be added like "name", "radius", "population", etc
-  this.locations = [];
 }
 
 /**
@@ -116,25 +110,16 @@ MercatorMap.prototype.milesToKm = function(mi) {
 
 // add some more...
 
-MercatorMap.prototype.addLocation = function(obj) {
-  if (has(obj.lat) && has(obj.long) && has(obj.id)) {
-    this.locations.push(obj);
-    return true;
-  }
-  return false;
-}
-
-MercatorMap.prototype.getNearest = function (obj) {
-  if (has(obj.lat) && has(obj.long) && has(obj.id)) {
-    const sortedLocations = [...this.locations].sort((a,b) => {
+MercatorMap.prototype.getNearestTo = function (obj, arr) {
+  if (has(obj.lat) && has(obj.long)) {
+    const sortedLocations = [...arr].sort((a,b) => {
       // get the distance between [a.lat,a.long] and [lat,long]
       const d1 = this.getDistance(obj.lat, obj.long, a.lat, a.long)
       // get the distance between [b.lat,b.long] and [lat,long]
       const d2 = this.getDistance(obj.lat, obj.long, b.lat, b.long)
       // return whichever is closest
       return d1 - d2;
-    })
-    sortedLocations.shift(); // remove first item as it's the place we're checking
+    });
     return sortedLocations;
   } else {
     throw Error ('Supply an object with "lat" and "long" properties');
