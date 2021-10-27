@@ -21,6 +21,7 @@
 var Component = require("./component.min.js")
 var render = require("./render.min.js")
 var tweenState = require("./tweenState.min.js")
+var springTo = require("./springTo.min.js")
 var emitter = require("./emitter.min.js")
 var html = require("./html.min.js")
 var htmel = require("./htmel.min.js")
@@ -33,4 +34,4 @@ var onLoop = require("./onLoop.min.js")
 // react-like hooks
 var { hooks } = require("./hooks.min.js")
 
-export { Component, render, tweenState, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, hooks }
+export { Component, render, tweenState, springTo, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, hooks }

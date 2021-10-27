@@ -15,6 +15,7 @@
 import Component from './component.js'
 import render from './render.js'
 import tweenState from './tweenState.js'
+import springTo from './springTo.js'
 import emitter from './emitter.js'
 import html from './html.js'
 import htmel from './htmel.js'
@@ -27,4 +28,4 @@ import onLoop from './onLoop.js'
 // react-like hooks
 import { hooks } from "./hooks.js"
 
-export { Component, render, tweenState, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, hooks }
+export { Component, render, tweenState, springTo, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, hooks }
