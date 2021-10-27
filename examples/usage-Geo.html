@@ -40,11 +40,11 @@
   // helper func
   function drawPlace(ctx, place) {
     // get pixel position from latLong
-    const [lat, long] = map.latLongToPixels(place.lat, place.long);
+    const [x, y] = map.latLongToPixels(place.lat, place.long);
     // draw it
-    ctx.fillText(place.id, lat-8, long-5);
+    ctx.fillText(place.id, x-8, y-5);
     ctx.beginPath();
-    ctx.arc(lat, long, 3, 0, 2*Math.PI);
+    ctx.arc(x, y, 3, 0, 2*Math.PI);
     ctx.stroke();
     ctx.closePath();
   }
