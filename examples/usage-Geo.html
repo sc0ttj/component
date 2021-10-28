@@ -21,7 +21,7 @@
     { id: 'bangkok', lat: 13.75398, long: 100.50144 },
     { id: 'brisbane', lat: -27.46794, long: 153.02809 },
     { id: 'capetown', lat: -33.92584, long: 18.42322 },
-    { id: 'dakkar', lat: 14.6937, long: -17.44406 },
+    { id: 'dakkar', lat: 14.716677, long: -15.067686 },
     { id: 'delhi', lat: 28.65381, long: 77.22897 },
     { id: 'lagos', lat: 6.45407, long: 3.39467 },
     { id: 'london', lat: 51.50853, long: -0.12574 },
@@ -37,16 +37,31 @@
     { id: 'tokyo', lat: 35.6895, long: 139.69171 },
   ];
 
-  // helper func
+  // helper funcs
+
   function drawPlace(ctx, place) {
     // get pixel position from latLong
     const [x, y] = map.latLongToPixels(place.lat, place.long);
     // draw it
     ctx.fillText(place.id, x-8, y-5);
     ctx.beginPath();
-    ctx.arc(x, y, 3, 0, 2*Math.PI);
+    ctx.arc(x, y, 2, 0, 2*Math.PI);
     ctx.stroke();
     ctx.closePath();
+  }
+
+  const drawMap = (ctx, url) => {
+      const image = new Image();
+      image.src = url;
+      image.onload = () => {
+        ctx.globalAlpha = 0.25;
+        ctx.drawImage(image, 0, 0, ctx.canvas.width, ctx.canvas.height)
+        // draw each place here, after the image has loaded
+        ctx.globalAlpha = 1;
+        places.forEach(place => {
+          drawPlace(ctx, place);
+        });
+      }
   }
 
   // define a new component
@@ -54,27 +69,24 @@
 
   const map = new Geo({
     // dimensions in pixels
-    width: 400,
-    height: 420,
+    width: 800,
+    height: 591,
     // map bounds, in latlongs
-    top: 85.05115,
-    bottom: -85.05115,
-    left: -180,
-    right: 180,
+    top: 83.65,
+    bottom: -76,
+    left: -187,
+    right: 189.75,
   });
 
   // define a "view", that draws to the components canvas
   Foo.view = (props, ctx) => {
     // setup the canvas
     ctx.font = "16px Arial";
-    ctx.canvas.width  = 420;
-    ctx.canvas.height = 420;
-    ctx.canvas.style.width  = '420px';
-    ctx.canvas.style.height = '420px';
-    // draw each place
-    places.forEach(place => {
-      drawPlace(ctx, place);
-    });
+    ctx.canvas.width  = 800;
+    ctx.canvas.height = 591;
+    ctx.canvas.style.width  = '800px';
+    ctx.canvas.style.height = '591px';
+    drawMap(ctx, 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Mercator_Projection.svg/800px-Mercator_Projection.svg.png');
   };
 
   // render to a canvas, and attach its context (`ctx`) to our component
