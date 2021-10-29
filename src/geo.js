@@ -8,25 +8,23 @@
 // - https://github.com/afar/robinson_projection
 //
 
-const has = foo => typeof foo !== 'undefined';
 
 
+// Ported to Javascript by Nathan Manousos (nathanm@gmail.com) for AFAR Media (http://afar.com)
 
- // Ported to Javascript by Nathan Manousos (nathanm@gmail.com) for AFAR Media (http://afar.com)
+// Original ActionScript Code written and owned by Chris Youderian
+// All code is licensed under the GPLv2.
+// This means that any derivate works that you create using this code must be released under the same license.
+// If you wish to use this code in a product you want to resell, you need to ask for permission.
+// Contact form available at:  http://www.flashworldmap.com/contactus.php
+// See original posting at: http://www.flashmap.org/robinson-projection-in-as3-gpl/
 
-  // Original ActionScript Code written and owned by Chris Youderian
-  // All code is licensed under the GPLv2.
-  // This means that any derivate works that you create using this code must be released under the same license.
-  // If you wish to use this code in a product you want to resell, you need to ask for permission.
-  // Contact form available at:  http://www.flashworldmap.com/contactus.php
-  // See original posting at: http://www.flashmap.org/robinson-projection-in-as3-gpl/
-
-  // Usage:
-  //
-  // map = new Robinson(map_width, map_height);
-  // map.latLongToPixels(lat, lng); // -> returns point object in the form {x:10, y:20}
-  //
-  // Or use map.projectToCSS() method in the same way to get a point which matches the CSS coordinate system.
+// Usage:
+//
+// map = new Robinson(map_width, map_height);
+// map.latLongToPixels(lat, lng); // -> returns point object in the form {x:10, y:20}
+//
+// Or use map.projectToCSS() method in the same way to get a point which matches the CSS coordinate system.
 
 function RobinsonMap(mapWidth, mapHeight, offsetX, offsetY) {
   // map width and height are asked for because they are what the
@@ -96,6 +94,7 @@ RobinsonMap.prototype.latLongToPixels = function(lat,lng){
 // };
 
 
+const degToRad = Math.PI / 180;
 
 /**
  * Mercator Map
@@ -144,7 +143,7 @@ MercatorMap.prototype.getScreenYRelative = function(latitudeInDegrees) {
 }
 
 MercatorMap.prototype.degToRadians = function(deg) {
-  return deg*Math.PI/180;
+  return deg * degToRad;
 }
 
 /*
@@ -180,7 +179,6 @@ MercatorMap.prototype.yToLat = function(y) {
 
 // get distance in Km between two lat longs (takes into account curvature of the earth)
 MercatorMap.prototype.getDistance = function(latA, lonA, latB, lonB) {
-    const degToRad = Math.PI / 180;
     const dLat = (latB - latA) * degToRad;
     const dLon = (lonB - lonA) * degToRad;
     const num = 12742 * Math.asin(Math.sqrt(0.5 - Math.cos(dLat)/2 + Math.cos(latA * degToRad) * Math.cos(latB * degToRad) * (1 - Math.cos(dLon))/2));
@@ -196,6 +194,8 @@ MercatorMap.prototype.milesToKm = function(mi) {
 }
 
 // add some more...
+
+const has = foo => typeof foo !== 'undefined';
 
 MercatorMap.prototype.getNearestTo = function (obj, arr) {
   if (has(obj.lat) && has(obj.long)) {
@@ -213,15 +213,13 @@ MercatorMap.prototype.getNearestTo = function (obj, arr) {
   }
 }
 
-// earths radius
-MercatorMap.rkm = 20000/Math.PI;
-MercatorMap.rmiles = 20000/(1.609344*Math.PI);
 
-
+// add all methods to Robinson map, so they have the same methods/API available
 RobinsonMap.prototype.getDistance  = MercatorMap.prototype.getDistance;
 RobinsonMap.prototype.getNearestTo = MercatorMap.prototype.getNearestTo
 RobinsonMap.prototype.kmToMiles    = MercatorMap.prototype.kmToMiles;
 RobinsonMap.prototype.milesToKm    = MercatorMap.prototype.milesToKm;
+
 
 /*
  * Geo() - the main function to export, returns a MercatorMap
@@ -241,8 +239,8 @@ RobinsonMap.prototype.milesToKm    = MercatorMap.prototype.milesToKm;
  *
 */
 const Geo = function (options) {
-  const ctxWidth = options.width || options.ctx.canvas.width || 300;
-  const ctxHeight = options.height || options.ctx.canvas.height || 150;
+  const width = options.width || 300;
+  const height = options.height || 150;
   const proj = options.projection.toLowerCase();
   let map;
 
@@ -253,8 +251,8 @@ const Geo = function (options) {
         lng: { min: -180, max: 180 },
     };
     map = new MercatorMap(
-      ctxWidth,
-      ctxHeight,
+      width,
+      height,
       options.top || worldBounds.lat.max,
       options.bottom || worldBounds.lat.min,
       options.left || worldBounds.lng.min,
@@ -262,14 +260,20 @@ const Geo = function (options) {
     );
   } else {
     map = new RobinsonMap(
-      ctxWidth,
-      ctxHeight,
+      width,
+      height,
       options.offsetX || 0,
       options.offsetY || 0,
     );
   }
 
+  // add projection
   map.projection = proj;
+  map.height = height;
+  map.width = width;
+  // earths radius
+  map.rKm = 20000/Math.PI;
+  map.rMiles = 20000/(1.609344*Math.PI);
 
   return map;
 }
