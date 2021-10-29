@@ -50,8 +50,12 @@
     ctx.closePath();
   }
 
-  const drawMap = (ctx, url) => {
+  const drawMap = (ctx) => {
       const image = new Image();
+      let url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Mercator_Projection.svg/800px-Mercator_Projection.svg.png';
+      if (map.projection === 'robinson') {
+        url = 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Blank_map_of_the_world_%28Robinson_projection%29_%2810E%29.svg';
+      }
       image.src = url;
       image.onload = () => {
         ctx.globalAlpha = 0.25;
@@ -68,14 +72,18 @@
   const Foo = new Component({ x: 0, y: 0 });
 
   const map = new Geo({
+    projection: 'robinson', // can be 'mercator' (default) or 'robinson'
     // dimensions in pixels
     width: 800,
-    height: 591,
-    // map bounds, in latlongs
+    height: 413, // (set to 591 for the mercator example)
+    // mercator map bounds in latlongs (only needed for mercator)
     top: 83.65,
     bottom: -76,
-    left: -187,
+    left: -187.5,
     right: 189.75,
+    // robinson offset X and Y in pixels (only needed for robinson)
+    offsetX: 380,
+    offsetY: 204,
   });
 
   // define a "view", that draws to the components canvas
@@ -83,10 +91,11 @@
     // setup the canvas
     ctx.font = "16px Arial";
     ctx.canvas.width  = 800;
-    ctx.canvas.height = 591;
+    ctx.canvas.height = 413; // set to 591 for the mercator example
     ctx.canvas.style.width  = '800px';
-    ctx.canvas.style.height = '591px';
-    drawMap(ctx, 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Mercator_Projection.svg/800px-Mercator_Projection.svg.png');
+    ctx.canvas.style.height = '413px'; // set to 591 for the mercator example
+    // draw mercator map
+    drawMap(ctx);
   };
 
   // render to a canvas, and attach its context (`ctx`) to our component
