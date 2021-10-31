@@ -1961,7 +1961,7 @@ map.rMiles  // earth radius in miles
 
 Here's an example map:
 
-[Robinson map](https://user-images.githubusercontent.com/2726610/139452315-f6cb21b2-cca4-4e88-b647-a69e50ce82ed.png)
+![Robinson map](https://user-images.githubusercontent.com/2726610/139452315-f6cb21b2-cca4-4e88-b647-a69e50ce82ed.png)
 
 For a full usage example, see [examples/usage-Geo.html](examples/usage-Geo.html).
 
