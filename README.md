@@ -60,6 +60,7 @@ A "state" is a snapshot of your application data at a specific time.
   - `onLoop`: a fixed-interval loop, suitable for games, animations, time-dependant stuff
   - `storage`: enables persistent states (between page refreshes, etc)
   - `syncTabs`: Synchronize state updates & page renders between browser tabs
+  - `geo`: an easy way to create Mercator or Robinson projected world maps
   - `devtools`: enables easier component debugging in the browser
 
 ---
@@ -1892,6 +1893,77 @@ Ctx will try to create videos using these MIME-types, in this order, if none was
 - video/mpeg
 
 See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
+
+## Using the `Geo` module
+
+The `Geo` add-on let's you make a simple world map, or draw to a canvas using latitude and longitude, rather than x, y pixel points.
+
+It supports both Mercator and Robinson projected maps, and is less than 2kb minified & gzipped.
+
+Usage:
+
+Create a [Robinson](https://en.wikipedia.org/wiki/Robinson_projection) projected map:
+
+```js
+const map = new Geo({
+    projection: 'robinson',
+    width: 400,
+    height: 420,
+    offsetX: 0,
+    offsetY: 0,
+});
+```
+
+..or create a [Mercator](https://en.wikipedia.org/wiki/Mercator_projection) projected map:
+
+```js
+const map = new Geo({
+    projection: 'mercator',
+    width: 400,
+    height: 420,
+    // map bounds, in lat longs (optional - defaults to whole world)
+    top: 85,
+    bottom: -85,
+    left: -180,
+    right: 180,
+});
+```
+
+Whichever map projection you use, you get these methods:
+
+```js
+// get x,y pixel values from lat longs
+map.latLongToPixels(lat, long)
+
+// get lat longs from pixels (mercator only for now..)
+map.pixelsToLatLong(x, y)
+
+// calculate distances (in km)
+map.getDistance(lat1, long1, lat2, long2)
+
+// convert distances
+map.milesToKm(num)
+map.kmToMiles(num)
+
+places = [ 
+  { lat: 31.9873, long: 3.343252 }, 
+  { lat: 24.2584, long: 1.334548 }, 
+  // etc..
+];
+
+// list all places in the given array, nearest to furthest, from the given lat long
+map.getNearestTo({ lat: -51.34298, long: 2.379234 }, places)
+
+// helpers
+map.rKm     // earth radius in km
+map.rMiles  // earth radius in miles
+```
+
+Here's an example map:
+
+[Robinson map](https://user-images.githubusercontent.com/2726610/139452315-f6cb21b2-cca4-4e88-b647-a69e50ce82ed.png)
+
+For a full usage example, see [examples/usage-Geo.html](examples/usage-Geo.html).
 
 ## Using a the "React hooks" module
 
