@@ -1933,17 +1933,17 @@ Whichever map projection you use, you get these methods:
 
 ```js
 // get x,y pixel values from lat longs
-map.latLongToPixels(lat, long)
+const [x, y] = map.latLongToPixels(lat, long)
 
 // get lat longs from pixels (mercator only for now..)
-map.pixelsToLatLong(x, y)
+const [lat, long] = map.pixelsToLatLong(x, y)
 
 // calculate distances (in km)
-map.getDistance(lat1, long1, lat2, long2)
+const distance = map.getDistance(lat1, long1, lat2, long2)
 
 // convert distances
-map.milesToKm(num)
-map.kmToMiles(num)
+const km = map.milesToKm(num)
+const miles = map.kmToMiles(num)
 
 places = [ 
   { lat: 31.9873, long: 3.343252 }, 
@@ -1952,7 +1952,7 @@ places = [
 ];
 
 // list all places in the given array, nearest to furthest, from the given lat long
-map.getNearestTo({ lat: -51.34298, long: 2.379234 }, places)
+const list = map.getNearestTo({ lat: -51.34298, long: 2.379234 }, places)
 
 // helpers
 map.rKm     // earth radius in km
