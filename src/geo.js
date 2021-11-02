@@ -7,6 +7,9 @@
 // - https://blog.cppse.nl/x-y-to-lat-lon-for-google-maps
 // - https://github.com/afar/robinson_projection
 //
+// NOT USED YET:
+//
+// - https://www.johndcook.com/blog/2009/04/27/converting-miles-to-degrees-longitude-or-latitude/
 
 
 
@@ -22,7 +25,7 @@
 // Usage:
 //
 // map = new Robinson(map_width, map_height);
-// map.latLongToPixels(lat, lng); // -> returns point object in the form {x:10, y:20}
+// map.latLongToPx(lat, lng); // -> returns array containing x,y like [10,20]
 //
 // Or use map.projectToCSS() method in the same way to get a point which matches the CSS coordinate system.
 
@@ -46,7 +49,7 @@ function RobinsonMap(mapWidth, mapHeight, offsetX, offsetY) {
   this.BB = [0,0.0838426,0.1676852,0.2515278,0.3353704,0.419213,0.5030556,0.5868982,0.67182264,0.75336633,0.83518048,0.91537187,0.99339958,1.06872269,1.14066505,1.20841528,1.27035062,1.31998003,1.3523];
 };
 
-RobinsonMap.prototype.latLongToPixels = function(lat,lng){
+RobinsonMap.prototype.latLongToPx = function(lat,lng){
   // returns the robinson projected point for a given lat/lng based on
   // the earth radius value determined in the contructor
 
@@ -59,7 +62,7 @@ RobinsonMap.prototype.latLongToPixels = function(lat,lng){
 
   const radian = 0.017453293; //pi/180
 	const lngSign = getSign(lng);
-	const latSign = 0-getSign(lat); //deals with negatives
+	const latSign = 0-getSign(lat); // sc0ttj: needed to prepend `0-` to the value, in order to flip vertical points
 	lng = Math.abs(lng);
 	lat = Math.abs(lat); //all calculations positive
   let low = roundToNearest(5, lat-0.0000000001); //want exact numbers to round down
@@ -93,6 +96,10 @@ RobinsonMap.prototype.latLongToPixels = function(lat,lng){
   // return point;
 // };
 
+RobinsonMap.prototype.pxToLatLong = function(x,y) {
+  // TODO
+}
+
 
 const degToRad = Math.PI / 180;
 
@@ -125,7 +132,7 @@ function MercatorMap(mapWidth, mapHeight, topLatitude, bottomLatitude, leftLongi
  * @param longitudeInDegrees: longitude in degrees.
  * @returns The screen coordinates with [x, y].
  */
-MercatorMap.prototype.latLongToPixels = function(latitudeInDegrees, longitudeInDegrees) {
+MercatorMap.prototype.latLongToPx = function(latitudeInDegrees, longitudeInDegrees) {
   return [this.getScreenX(longitudeInDegrees), this.getScreenY(latitudeInDegrees)];
 }
 
@@ -150,7 +157,7 @@ MercatorMap.prototype.degToRadians = function(deg) {
  * Add new methods here, based on https://blog.cppse.nl/x-y-to-lat-lon-for-google-maps
  */
 
-MercatorMap.prototype.pixelsToLatLong = function (x, y){
+MercatorMap.prototype.pxToLatLong = function (x, y){
   return [ this.yToLat(y), this.xToLon(x) ];
 }
 
@@ -178,11 +185,19 @@ MercatorMap.prototype.yToLat = function(y) {
 
 
 // get distance in Km between two lat longs (takes into account curvature of the earth)
-MercatorMap.prototype.getDistance = function(latA, lonA, latB, lonB) {
+MercatorMap.prototype.getDistanceInKm = function(latA, lonA, latB, lonB) {
     const dLat = (latB - latA) * degToRad;
     const dLon = (lonB - lonA) * degToRad;
     const num = 12742 * Math.asin(Math.sqrt(0.5 - Math.cos(dLat)/2 + Math.cos(latA * degToRad) * Math.cos(latB * degToRad) * (1 - Math.cos(dLon))/2));
     return Math.round(num * 100) / 100;
+}
+
+MercatorMap.prototype.getDistanceInPx = function (latA, lonA, latB, lonB) {
+  const [x1, y1] = this.latLongToPx(latA, lonA);
+  const [x2, y2] = this.latLongToPx(latB, lonB);
+  const dx = x1 - x2;
+  const dy = y2 - y2;
+  return Math.round((Math.sqrt(dx * dx + dy * dy)) * 100) / 100;
 }
 
 MercatorMap.prototype.kmToMiles = function(km) {
@@ -198,12 +213,13 @@ MercatorMap.prototype.milesToKm = function(mi) {
 const has = foo => typeof foo !== 'undefined';
 
 MercatorMap.prototype.getNearestTo = function (obj, arr) {
+  const fn = this.getDistanceInKm;
   if (has(obj.lat) && has(obj.long)) {
     const sortedLocations = [...arr].sort((a,b) => {
       // get the distance between [a.lat,a.long] and [lat,long]
-      const d1 = this.getDistance(obj.lat, obj.long, a.lat, a.long)
+      const d1 = fn(obj.lat, obj.long, a.lat, a.long)
       // get the distance between [b.lat,b.long] and [lat,long]
-      const d2 = this.getDistance(obj.lat, obj.long, b.lat, b.long)
+      const d2 = fn(obj.lat, obj.long, b.lat, b.long)
       // return whichever is closest
       return d1 - d2;
     });
@@ -215,7 +231,8 @@ MercatorMap.prototype.getNearestTo = function (obj, arr) {
 
 
 // add all methods to Robinson map, so they have the same methods/API available
-RobinsonMap.prototype.getDistance  = MercatorMap.prototype.getDistance;
+RobinsonMap.prototype.getDistanceInKm  = MercatorMap.prototype.getDistanceInKm;
+RobinsonMap.prototype.getDistanceInPx  = MercatorMap.prototype.getDistanceInPx;
 RobinsonMap.prototype.getNearestTo = MercatorMap.prototype.getNearestTo
 RobinsonMap.prototype.kmToMiles    = MercatorMap.prototype.kmToMiles;
 RobinsonMap.prototype.milesToKm    = MercatorMap.prototype.milesToKm;

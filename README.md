@@ -1933,13 +1933,16 @@ Whichever map projection you use, you get these methods:
 
 ```js
 // get x,y pixel values from lat longs
-const [x, y] = map.latLongToPixels(lat, long)
+const [x, y] = map.latLongToPx(lat, long)
 
 // get lat longs from pixels (mercator only for now..)
-const [lat, long] = map.pixelsToLatLong(x, y)
+const [lat, long] = map.pxToLatLong(x, y)
 
 // calculate distances (in km)
-const distance = map.getDistance(lat1, long1, lat2, long2)
+const distance = map.getDistanceInKm(lat1, long1, lat2, long2)
+
+// calculate distances (in pixels)
+const distance = map.getDistanceInPx(x1, y1, x2, y2)
 
 // convert distances
 const km = map.milesToKm(num)

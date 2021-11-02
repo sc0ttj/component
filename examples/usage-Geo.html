@@ -21,7 +21,7 @@
     { id: 'bangkok', lat: 13.75398, long: 100.50144 },
     { id: 'brisbane', lat: -27.46794, long: 153.02809 },
     { id: 'capetown', lat: -33.92584, long: 18.42322 },
-    { id: 'dakkar', lat: 14.716677, long: -15.067686 },
+    { id: 'dakkar', lat: 14.716677, long: -16.067686 },
     { id: 'delhi', lat: 28.65381, long: 77.22897 },
     { id: 'lagos', lat: 6.45407, long: 3.39467 },
     { id: 'london', lat: 51.50853, long: -0.12574 },
@@ -41,7 +41,7 @@
 
   function drawPlace(ctx, place) {
     // get pixel position from latLong
-    const [x, y] = map.latLongToPixels(place.lat, place.long);
+    const [x, y] = map.latLongToPx(place.lat, place.long);
     // draw it
     ctx.fillText(place.id, x-8, y-5);
     ctx.beginPath();
@@ -102,11 +102,18 @@
   Foo.render('.container', '2d');
 
   console.log(
-    'Distance between London and Oslo:',
-    `${map.getDistance(
+    'Distance between London and Oslo (km):',
+    `${map.getDistanceInKm(
       places[7].lat, places[7].long,
       places[9].lat, places[9].long,
     )} km`
+  );
+  console.log(
+    'Distance between London and Oslo (pixels):',
+    `${map.getDistanceInPx(
+      places[7].lat, places[7].long,
+      places[9].lat, places[9].long,
+    )} pixels`
   );
   console.log('Places nearest to Bangkok:', map.getNearestTo(places[1], places));
   console.log('Places nearest to London:', map.getNearestTo(places[7], places));
