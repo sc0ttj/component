@@ -1942,7 +1942,7 @@ const [lat, long] = map.pxToLatLong(x, y)
 const distance = map.getDistanceInKm(lat1, long1, lat2, long2)
 
 // calculate distances (in pixels)
-const distance = map.getDistanceInPx(x1, y1, x2, y2)
+const distance = map.getDistanceInPx(lat1, long1, lat2, long2)
 
 // convert distances
 const km = map.milesToKm(num)
