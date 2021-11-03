@@ -1,0 +1,124 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - Geo add-on</title>
+  <script src="../dist/component.min.js"></script>
+  <script src="../dist/geo.min.js"></script>
+  <style>
+    canvas {
+      border: 1px solid #222;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas class="container"></canvas>
+
+<script>
+  // list of plces and their latLongs
+  const places = [
+    { id: 'anchorage', lat: 61.217381, long: -149.863129 },
+    { id: 'bangkok', lat: 13.75398, long: 100.50144 },
+    { id: 'brisbane', lat: -27.46794, long: 153.02809 },
+    { id: 'capetown', lat: -33.92584, long: 18.42322 },
+    { id: 'dakkar', lat: 14.716677, long: -16.067686 },
+    { id: 'delhi', lat: 28.65381, long: 77.22897 },
+    { id: 'lagos', lat: 6.45407, long: 3.39467 },
+    { id: 'london', lat: 51.50853, long: -0.12574 },
+    { id: 'NYC', lat: 40.71427, long: -74.00597 },
+    { id: 'oslo', lat: 59.91273, long: 10.74609 },
+    { id: 'salvador', lat: -12.97111, long: -38.51083 },
+    { id: 'mecca', lat: 21.42664, long: 39.82563 },
+    { id: 'moscow', lat: 55.75222, long: 37.61556 },
+    { id: 'panama', lat: 8.9936, long: -79.51973 },
+    { id: 'perth', lat: -31.95224, long: 115.8614 },
+    { id: 'sanfran', lat: 37.77493, long: -122.41942 },
+    { id: 'santiago', lat: -33.45694, long: -70.64827 },
+    { id: 'tokyo', lat: 35.6895, long: 139.69171 },
+  ];
+
+  // helper funcs
+
+  function drawPlace(ctx, place) {
+    // get pixel position from latLong
+    const [x, y] = map.latLongToPx(place.lat, place.long);
+    // draw it
+    ctx.fillText(place.id, x-8, y-5);
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, 2*Math.PI);
+    ctx.stroke();
+    ctx.closePath();
+  }
+
+  const drawMap = (ctx) => {
+      const image = new Image();
+      let url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Mercator_Projection.svg/800px-Mercator_Projection.svg.png';
+      if (map.projection === 'robinson') {
+        url = 'https://upload.wikimedia.org/wikipedia/commons/f/fd/Blank_map_of_the_world_%28Robinson_projection%29_%2810E%29.svg';
+      }
+      image.src = url;
+      image.onload = () => {
+        ctx.globalAlpha = 0.25;
+        ctx.drawImage(image, 0, 0, ctx.canvas.width, ctx.canvas.height)
+        // draw each place here, after the image has loaded
+        ctx.globalAlpha = 1;
+        places.forEach(place => {
+          drawPlace(ctx, place);
+        });
+      }
+  }
+
+  // define a new component
+  const Foo = new Component({});
+
+  const map = new Geo({
+    projection: 'robinson', // can be 'mercator' (default) or 'robinson'
+    // dimensions in pixels
+    width: 800,
+    height: 413, // (set to 591 for the mercator example)
+    // mercator map bounds in latlongs (only needed for mercator)
+    top: 83.65,
+    bottom: -76,
+    left: -187.5,
+    right: 189.75,
+    // robinson offset X and Y in pixels (only needed for robinson)
+    offsetX: 380,
+    offsetY: 204,
+  });
+
+  // define a "view", that draws to the components canvas
+  Foo.view = (props, ctx) => {
+    // setup the canvas
+    ctx.font = "16px Arial";
+    ctx.canvas.width  = 800;
+    ctx.canvas.height = 413; // set to 591 for the mercator example
+    ctx.canvas.style.width  = '800px';
+    ctx.canvas.style.height = '413px'; // set to 591 for the mercator example
+    // draw mercator map
+    drawMap(ctx);
+  };
+
+  // render to a canvas, and attach its context (`ctx`) to our component
+  Foo.render('.container', '2d');
+
+  console.log(
+    'Distance between London and Oslo (km):',
+    `${map.getDistanceInKm(
+      places[7].lat, places[7].long,
+      places[9].lat, places[9].long,
+    )} km`
+  );
+  console.log(
+    'Distance between London and Oslo (pixels):',
+    `${map.getDistanceInPx(
+      places[7].lat, places[7].long,
+      places[9].lat, places[9].long,
+    )} pixels`
+  );
+  console.log('Places nearest to Bangkok:', map.getNearestTo(places[1], places));
+  console.log('Places nearest to London:', map.getNearestTo(places[7], places));
+
+</script>
+
+</body>
+</html>

@@ -31,7 +31,8 @@ var syncTabs = require("./syncTabs.min.js")
 var useAudio = require("./useAudio.min.js")
 var onScroll = require("./onScroll.min.js")
 var onLoop = require("./onLoop.min.js")
+var Geo = require("./geo.min.js")
 // react-like hooks
 var { hooks } = require("./hooks.min.js")
 
-export { Component, render, tweenState, springTo, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, hooks }
+export { Component, render, tweenState, springTo, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, Geo, hooks }
