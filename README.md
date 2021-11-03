@@ -18,7 +18,7 @@ A "state" is a snapshot of your application data at a specific time.
 
 - Easy setup, **zero dependencies**:
   - no compilation or build tools needed
-- Simple syntax, quick to learn, **easy to use**:
+- Simple syntax, [quick to learn](#quickstart), **easy to use**:
   - plain, vanilla JavaScript only!
   - plain HTML & CSS, no virtual DOM or JSX
   - should work with any test suite
@@ -31,37 +31,38 @@ A "state" is a snapshot of your application data at a specific time.
   - good (re)rendering/animation performance at 60fps, using `requestAnimationFrame`
   - DOM diffing uses real DOM Nodes (not VDOM)
   - or use an HTML5 `<canvas>` instead of a DOM-based view
-- Works **server-side**, in Node:
+- Works **[server-side](#server-side-rendering)**, in Node:
   - render your components as strings (HTML, or stringified JSON)
   - render your components as data (JS objects, Arrays, etc)
 - Easy **state management**:
   - immutable states, can only be updated through `setState()` (_optional_)
-  - define "actions" to easily update the state in specific ways
-  - log all states in a history, for debugging (_optional_):
+  - define ["actions"](#using-actions) to easily update the state in specific ways
+  - keep all states in a [state history](#using-the-state-history), for debugging (_optional_):
     - rewind or fast-forward to any point in the state history
     - save/load current or any previous state as "snapshots"
-- Easy CSS **component styling**:
+- Easy CSS **[component styling](#using-component-css)**:
   - Automatic "scoping"/prefixing of your component CSS (_optional_)
   - Re-render styles on component CSS change (_optional_)
-- Supports **"middleware"** functions:
+- Supports **"[middleware](#using-middleware)"** functions:
   - easily customise a components setState and re-render behaviour
 - Supports **nested components**:
   - embed components in the "views" of other components
   - supports various methods and syntaxes
 - Works with these **optional add-ons**:
   - [`validator`](#using-state-validation): validate states against a schema (_like a simple PropTypes_)
-  - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
-  - `ctx`: an enhanced 2d &lt;canvas&gt; with extra shapes, methods, and a chainable API
-  - `emitter`: an event emitter - share updates between components
-  - `tweenState`: animate nicely from one state to the next (tweened)
-  - `springTo`: animate nicely from one state to the next (using spring physics)
-  - `onScroll`:  enables easy scroll-based animations (using debounced scroll event)
-  - `useAudio`: add dynamic audio to your components (uses Web Audio API)
-  - `onLoop`: a fixed-interval loop, suitable for games, animations, time-dependant stuff
-  - `storage`: enables persistent states (between page refreshes, etc)
-  - `syncTabs`: Synchronize state updates & page renders between browser tabs
-  - `geo`: an easy way to create Mercator or Robinson projected world maps
-  - `devtools`: enables easier component debugging in the browser
+  - [`html`/`htmel`](#using-html-and-htmel-modules): simpler, more powerful Template Literals (_like a simple JSX_)
+  - [`ctx`](#using-the-ctx-module): an enhanced 2d &lt;canvas&gt; with extra shapes, methods, and a chainable API
+  - [`emitter`](#using-the-emitter-module): an event emitter - share updates between components
+  - [`storage`](#using-the-storage-module): enables persistent states (between page refreshes, etc)
+  - [`syncTabs`](#using-the-synctabs-module): Synchronize state updates & page renders between browser tabs
+  - [`tweenState`](#using-the-tweenstate-module): animate nicely from one state to the next (tweened)
+  - [`springTo`](#using-the-springto-module): animate nicely from one state to the next (using spring physics)
+  - [`onScroll`](#using-the-onscroll-module):  enables easy scroll-based animations (using debounced scroll event)
+  - [`useAudio`](#using-the-useaudio-module): add dynamic audio to your components (uses Web Audio API)
+  - [`onLoop`](#using-the-onloop-module): a fixed-interval loop, suitable for games, animations, time-dependant stuff
+  - [`geo`](#using-the-geo-module): an easy way to create Mercator or Robinson projected world maps
+  - [`react-hooks`](#using-the-react-hooks-module): an easy way to create Mercator or Robinson projected world maps
+  - [`devtools`](#using-the-devtools-module): enables easier component debugging in the browser
 
 ---
 
@@ -1998,7 +1999,7 @@ Here's an example map:
 
 For a full usage example, see [examples/usage-Geo.html](examples/usage-Geo.html).
 
-## Using a the "React hooks" module
+## Using the "React hooks" module
 
 For more "React-like" patterns, you can import a standalone `render` method (~800 bytes) that's supposed to be used with some *optional* React-like "hooks" (~1.5kb), but _without_ `Component` itself.
 
