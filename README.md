@@ -61,7 +61,7 @@ A "state" is a snapshot of your application data at a specific time.
   - [`useAudio`](#using-the-useaudio-module): add dynamic audio to your components (uses Web Audio API)
   - [`onLoop`](#using-the-onloop-module): a fixed-interval loop, suitable for games, animations, time-dependant stuff
   - [`geo`](#using-the-geo-module): an easy way to create Mercator or Robinson projected world maps
-  - [`react-hooks`](#using-the-react-hooks-module): an easy way to create Mercator or Robinson projected world maps
+  - [`react-hooks`](#using-the-react-hooks-module): an alternative, more React-like API add-on
   - [`devtools`](#using-the-devtools-module): enables easier component debugging in the browser
 
 ---
