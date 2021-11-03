@@ -1898,9 +1898,39 @@ See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more inf
 
 The `Geo` add-on let's you make a simple world map, or draw to a canvas using latitude and longitude, rather than x, y pixel points.
 
-It supports both Mercator and Robinson projected maps, and is less than 2kb minified & gzipped.
+It supports both Mercator and Robinson projected maps, and is only 1.6kb minified & gzipped.
 
-Usage:
+It can work standalone, without `Component` being installed.
+
+### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component/dist/geo.min.js"></script>
+<script>
+// use it here
+</script>
+```
+
+### In ES6:
+
+```js
+import { Geo } from '@scottjarvis/component';
+
+// use it here
+```
+
+### In NodeJS:
+
+```js
+const { Geo } = require('@scottjarvis/component');
+
+// use it here
+
+```
+
+To use `Geo` with `Component`, see [examples/usage-Geo.html](examples/usage-Geo.html).
+
+### Usage:
 
 Create a [Robinson](https://en.wikipedia.org/wiki/Robinson_projection) projected map:
 

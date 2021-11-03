@@ -1,34 +1,34 @@
 // geo - a mapping addon
 //
-// adapted from the following sources:
-//
+// Adapted from the following sources:
 // - https://github.com/nunobaldaia/mercatormap/
 // - https://github.com/wbrickner/NanoGeoUtil.js
 // - https://blog.cppse.nl/x-y-to-lat-lon-for-google-maps
 // - https://github.com/afar/robinson_projection
-//
-// NOT USED YET:
-//
-// - https://www.johndcook.com/blog/2009/04/27/converting-miles-to-degrees-longitude-or-latitude/
 
 
+// some helpers
+const degToRad = Math.PI/180;
+//const radToDeg = 180/Math.PI;
+const has = foo => typeof foo !== 'undefined';
 
-// Ported to Javascript by Nathan Manousos (nathanm@gmail.com) for AFAR Media (http://afar.com)
-
-// Original ActionScript Code written and owned by Chris Youderian
-// All code is licensed under the GPLv2.
-// This means that any derivate works that you create using this code must be released under the same license.
-// If you wish to use this code in a product you want to resell, you need to ask for permission.
-// Contact form available at:  http://www.flashworldmap.com/contactus.php
-// See original posting at: http://www.flashmap.org/robinson-projection-in-as3-gpl/
-
-// Usage:
-//
-// map = new Robinson(map_width, map_height);
-// map.latLongToPx(lat, lng); // -> returns array containing x,y like [10,20]
-//
-// Or use map.projectToCSS() method in the same way to get a point which matches the CSS coordinate system.
-
+/**
+ * RobinsonMap
+ *
+ * Ported to Javascript by Nathan Manousos (nathanm@gmail.com) for AFAR Media (http://afar.com)
+ *
+ * Original ActionScript Code written and owned by Chris Youderian
+ * All code is licensed under the GPLv2.
+ * This means that any derivate works that you create using this code must be released under the same license.
+ * If you wish to use this code in a product you want to resell, you need to ask for permission.
+ * Contact form available at:  www.flashworldmap.com/contactus.php
+ * See original posting at:    www.flashmap.org/robinson-projection-in-as3-gpl/
+ *
+ * Usage:
+ *
+ *    map = new Robinson(map_width, map_height);
+ *    const [x,y] = map.latLongToPx(lat, lng);
+ */
 function RobinsonMap(mapWidth, mapHeight, offsetX, offsetY) {
   // map width and height are asked for because they are what the
   // earthRadius value relies upon. You can use either, as long as
@@ -88,20 +88,10 @@ RobinsonMap.prototype.latLongToPx = function(lat,lng){
 
 };
 
-// RobinsonMap.prototype.latLongToCSS = function(lat,lng){
-  // // changes the coordinate system of a projected point to the one CSS uses
-  // const point = this.project(lat,lng);
-  // point.x = (point.x + (this.mapWidth/2));
-  // point.y = ((this.mapHeight/2) - point.y);
-  // return point;
-// };
-
 RobinsonMap.prototype.pxToLatLong = function(x,y) {
-  // TODO
+  return 'TODO';
 }
 
-
-const degToRad = Math.PI / 180;
 
 /**
  * Mercator Map
@@ -109,12 +99,12 @@ const degToRad = Math.PI / 180;
  *
  * Creates a new MercatorMap with dimensions and bounding box to convert between geo-locations and screen coordinates.
  *
- * @param mapWidth Horizontal dimension of this map, in pixels.
- * @param mapHeight Vertical dimension of this map, in pixels.
- * @param topLatitude Northern border of this map, in degrees.
- * @param bottomLatitude Southern border of this map, in degrees.
- * @param leftLongitude Western border of this map, in degrees.
- * @param rightLongitude Eastern border of this map, in degrees.
+ * @param mapWidth        Horizontal dimension of this map, in pixels.
+ * @param mapHeight       Vertical dimension of this map, in pixels.
+ * @param topLatitude     Northern border of this map, in degrees.
+ * @param bottomLatitude  Southern border of this map, in degrees.
+ * @param leftLongitude   Western border of this map, in degrees.
+ * @param rightLongitude  Eastern border of this map, in degrees.
  */
 function MercatorMap(mapWidth, mapHeight, topLatitude, bottomLatitude, leftLongitude, rightLongitude) {
   this.mapWidth = mapWidth;
@@ -125,13 +115,6 @@ function MercatorMap(mapWidth, mapHeight, topLatitude, bottomLatitude, leftLongi
   this.rightLongitudeRadians = this.degToRadians(rightLongitude);
 }
 
-/**
- * Projects the geo location to Cartesian coordinates, using the Mercator projection.
- *
- * @param latitudeInDegrees: latitude in degrees.
- * @param longitudeInDegrees: longitude in degrees.
- * @returns The screen coordinates with [x, y].
- */
 MercatorMap.prototype.latLongToPx = function(latitudeInDegrees, longitudeInDegrees) {
   return [this.getScreenX(longitudeInDegrees), this.getScreenY(latitudeInDegrees)];
 }
@@ -154,7 +137,7 @@ MercatorMap.prototype.degToRadians = function(deg) {
 }
 
 /*
- * Add new methods here, based on https://blog.cppse.nl/x-y-to-lat-lon-for-google-maps
+ * add additional methods, based on https://blog.cppse.nl/x-y-to-lat-lon-for-google-maps
  */
 
 MercatorMap.prototype.pxToLatLong = function (x, y){
@@ -173,26 +156,20 @@ MercatorMap.prototype.yToLat = function(y) {
     return Math.asin(Math.pow(e,(2*a/b-2*y/b))/(Math.pow(e,(2*a/b-2*y/b))+1)-1/(Math.pow(e,(2*a/b-2*y/b))+1))/c;
 }
 
+
 /*
- * Add new methods here, based on NanoGeoUtil.js
+ * define more methods, used by BOTH maps, based on NanoGeoUtil.js
  */
 
-//MercatorMap.prototype.euclidDistance = function (xA, yA, xB, yB) {
-//    const dx = xB - xA;
-//    const dy = yB - yA;
-//    return Math.sqrt(dx*dx + dy*dy);
-//},
-
-
-// get distance in Km between two lat longs (takes into account curvature of the earth)
-MercatorMap.prototype.getDistanceInKm = function(latA, lonA, latB, lonB) {
+const getDistanceInKm = function(latA, lonA, latB, lonB) {
+    // return  distance in Km between two lat longs (takes into account curvature of the earth)
     const dLat = (latB - latA) * degToRad;
     const dLon = (lonB - lonA) * degToRad;
     const num = 12742 * Math.asin(Math.sqrt(0.5 - Math.cos(dLat)/2 + Math.cos(latA * degToRad) * Math.cos(latB * degToRad) * (1 - Math.cos(dLon))/2));
     return Math.round(num * 100) / 100;
 }
 
-MercatorMap.prototype.getDistanceInPx = function (latA, lonA, latB, lonB) {
+const getDistanceInPx = function (latA, lonA, latB, lonB) {
   const [x1, y1] = this.latLongToPx(latA, lonA);
   const [x2, y2] = this.latLongToPx(latB, lonB);
   const dx = x1 - x2;
@@ -200,19 +177,7 @@ MercatorMap.prototype.getDistanceInPx = function (latA, lonA, latB, lonB) {
   return Math.round((Math.sqrt(dx * dx + dy * dy)) * 100) / 100;
 }
 
-MercatorMap.prototype.kmToMiles = function(km) {
-    return km * 0.621371192;
-}
-
-MercatorMap.prototype.milesToKm = function(mi) {
-    return mi * 1.609344;
-}
-
-// add some more...
-
-const has = foo => typeof foo !== 'undefined';
-
-MercatorMap.prototype.getNearestTo = function (obj, arr) {
+const getNearestTo = function (obj, arr) {
   const fn = this.getDistanceInKm;
   if (has(obj.lat) && has(obj.long)) {
     const sortedLocations = [...arr].sort((a,b) => {
@@ -229,30 +194,29 @@ MercatorMap.prototype.getNearestTo = function (obj, arr) {
   }
 }
 
+const kmToMiles = function(km) {
+    return km * 0.621371192;
+}
 
-// add all methods to Robinson map, so they have the same methods/API available
-RobinsonMap.prototype.getDistanceInKm  = MercatorMap.prototype.getDistanceInKm;
-RobinsonMap.prototype.getDistanceInPx  = MercatorMap.prototype.getDistanceInPx;
-RobinsonMap.prototype.getNearestTo = MercatorMap.prototype.getNearestTo
-RobinsonMap.prototype.kmToMiles    = MercatorMap.prototype.kmToMiles;
-RobinsonMap.prototype.milesToKm    = MercatorMap.prototype.milesToKm;
+const milesToKm = function(mi) {
+    return mi * 1.609344;
+}
+
+
+const arr = [RobinsonMap, MercatorMap];
+// add methods defined above to BOTH map prototypes
+arr.forEach(map => {
+  const m = map.prototype;
+  m.getDistanceInKm  = getDistanceInKm;
+  m.getDistanceInPx  = getDistanceInPx;
+  m.getNearestTo = getNearestTo
+  m.kmToMiles    = kmToMiles;
+  m.milesToKm    = milesToKm;
+});
 
 
 /*
- * Geo() - the main function to export, returns a MercatorMap
- *
- * Usage:
- *
- *   const map = new Geo({
- *     // dimensions (size in pixels)
- *     height:  800,
- *     width:   600,
- *     // bounds (in lat/long)
- *     top:    -85,
- *     bottom:  85,
- *     left:   -180,
- *     right:   180,
- *  });
+ * Geo() - the main function to export, returns a RobinsonMap or MercatorMap
  *
 */
 const Geo = function (options) {
@@ -289,8 +253,8 @@ const Geo = function (options) {
   map.height = height;
   map.width = width;
   // earths radius
-  map.rKm = 20000/Math.PI;
-  map.rMiles = 20000/(1.609344*Math.PI);
+  map.rKm = 6366.197723675814    // 20000/Math.PI;
+  map.rMiles = 3955.771869579042 // 20000/(1.609344*Math.PI);
 
   return map;
 }

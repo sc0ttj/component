@@ -25,7 +25,8 @@ import syncTabs from './syncTabs.js'
 import useAudio from './useAudio.js'
 import onScroll from './onScroll.js'
 import onLoop from './onLoop.js'
+import Geo from './geo.js'
 // react-like hooks
 import { hooks } from "./hooks.js"
 
-export { Component, render, tweenState, springTo, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, hooks }
+export { Component, render, tweenState, springTo, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, Geo, hooks }
