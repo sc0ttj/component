@@ -49,7 +49,7 @@ A "state" is a snapshot of your application data at a specific time.
   - embed components in the "views" of other components
   - supports various methods and syntaxes
 - Works with these **optional add-ons**:
-  - `validator`: validate states against a schema (_like a simple PropTypes_)
+  - [`validator`](#using-state-validation): validate states against a schema (_like a simple PropTypes_)
   - `html`/`htmel`: simpler, more powerful Template Literals (_like a simple JSX_)
   - `ctx`: an enhanced 2d &lt;canvas&gt; with extra shapes, methods, and a chainable API
   - `emitter`: an event emitter - share updates between components
