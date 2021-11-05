@@ -19,7 +19,7 @@ import springTo from './springTo.js'
 import emitter from './emitter.js'
 import html from './html.js'
 import htmel from './htmel.js'
-import ctx from './ctx.js'
+import Ctx from './ctx.js'
 import storage from './storage.js'
 import syncTabs from './syncTabs.js'
 import useAudio from './useAudio.js'
@@ -29,4 +29,4 @@ import Geo from './geo.js'
 // react-like hooks
 import { hooks } from "./hooks.js"
 
-export { Component, render, tweenState, springTo, emitter, html, htmel, ctx, storage, syncTabs, useAudio, onScroll, onLoop, Geo, hooks }
+export { Component, render, tweenState, springTo, emitter, html, htmel, Ctx, storage, syncTabs, useAudio, onScroll, onLoop, Geo, hooks }

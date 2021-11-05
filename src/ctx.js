@@ -58,7 +58,9 @@ function chainProperty(propName, scope, chainReturn) {
 }
 
 const PIXEL_RATIO = (function () {
-  return (window && window.devicePixelRatio) || 1;
+  return typeof window !== 'undefined'
+    ? (window && window.devicePixelRatio) || 1
+    : 1;
 })();
 
 // calculate maths constants only once
@@ -949,7 +951,7 @@ const extraMethodNames = Object.keys(extraMethods);
 * @param {CanvasRenderingContext2D} origCtx	Canvas Context2D that will be wrapped.
 * @param {Component} c	the @scottjarvis/component to which the ctx is attached (optional)
 */
-window.Ctx = function(origCtx, c) {
+const Ctx = function(origCtx, c) {
   let n = ctxMethods.length;
   let curProp;
   let chunks;
