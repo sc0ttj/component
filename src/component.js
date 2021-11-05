@@ -151,15 +151,13 @@ function Component(state, schema) {
   c.debug = devtools ? true : false   //  if true, maintain a history of state changes in `.log`
   c.scopedCss = true                  // auto prefix component css with a unique id
   c.state = state                     // component state
-  c.schema = schema                   // component schema (optional)
+  if (schema) c.schema = schema       // component schema (optional)
 
   // on init, add our initial state to the state history
   c.log = [{ id: 0, state: state, action: "init" }]
   c.i = c.log.length
 
   c.view = props => props // the default view (just return the props)
-
-  c.middleware = []
 
   // a unique ID, used for scoping component CSS and by devtools to register them
   c.uid = Math.random()
@@ -301,7 +299,7 @@ function Component(state, schema) {
       if (typeof callback === 'function') callback(c.state);
 
       // run any middlware functions that were defined by the user
-      c.middleware.forEach(fn => fn({ ...c.state }))
+      if (c.middleware) c.middleware.forEach(fn => fn({ ...c.state }))
 
       c.action = undefined
 
@@ -316,11 +314,7 @@ function Component(state, schema) {
    * @param {object} cfg - the settings used for the tweening
    *
    */
-  c.tweenState = (props, cfg) => {
-    return typeof tweenState !== "undefined"
-      ? tweenState(c, props, cfg)
-      : c
-  }
+  if (tweenState) c.tweenState = (props, cfg) => tweenState(c, props, cfg)
 
   /**
    * Animate from the current state to the given state, then set the given
@@ -329,11 +323,7 @@ function Component(state, schema) {
    * @param {object} cfg - the settings used for the spring
    *
    */
-  c.springTo = (props, cfg) => {
-    return typeof springTo !== "undefined"
-      ? springTo(c, props, cfg)
-      : c
-  }
+  if (springTo) c.springTo = (props, cfg) => springTo(c, props, cfg)
 
   /**
    * Audio for components
@@ -341,11 +331,7 @@ function Component(state, schema) {
    * @param {object} audio library - the audio files and their settings
    *
    */
-  c.useAudio = (props) => {
-    return typeof useAudio !== "undefined"
-      ? useAudio(props, c)
-      : c
-  }
+  if (useAudio) c.useAudio = (props) => useAudio(props, c)
 
   /**
    * Scroll-based animations for components
@@ -353,11 +339,7 @@ function Component(state, schema) {
    * @param {object}
    *
    */
-  c.onScroll = fn => {
-    return typeof onScroll !== "undefined"
-      ? onScroll(fn, c)
-      : c
-  }
+  if (onScroll) c.onScroll = fn => onScroll(fn, c)
 
   /**
    * Game loop (fixed interval loop, variable interval rendering)
