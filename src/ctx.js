@@ -343,6 +343,54 @@ const autoMargins = (obj) => {
   });
 }
 
+function getAxisDimensions(obj) {
+  const w = obj.canvas.width-obj.margin.right-obj.margin.left;
+  const h = obj.canvas.height-obj.margin.top-obj.margin.bottom;
+  const x = 0+obj.margin.left;
+  const y = obj.margin.top+h;
+  return { w, h, x, y }  ;
+}
+
+function drawAxisLine(ctx, dimensions, whichAxis = 'x', lineWidth = 0.5, strokeStyle = '#222') {
+  const { w, h, x, y } = dimensions;
+  ctx.save();
+  ctx.lineWidth = lineWidth;
+  ctx.strokeStyle = strokeStyle;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  whichAxis === 'x'
+    ? ctx.lineTo(x,y-h)
+    : ctx.lineTo(x+w,y);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore()
+}
+
+function drawAxisTicks(ctx, dimensions, whichAxis = 'x', tickLength, distanceBetweenTicks, scale, lineWidth = 0.5, strokeStyle = '#555') {
+  const { w, h, x, y } = dimensions;
+  const max = whichAxis === 'x' ? w : h;
+
+  if (tickLength !== 0) {
+    ctx.save();
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = strokeStyle;
+
+    for (let i=0, p=0; i<=max; i+=distanceBetweenTicks*scale){
+      ctx.beginPath();
+      if (whichAxis === 'x'){
+        ctx.moveTo(x+i,y);
+        ctx.lineTo(x+i,y-tickLength)
+      } else {
+        ctx.moveTo(x,y-i);
+        ctx.lineTo(x-5,y-i);
+      }
+      ctx.stroke();
+      ctx.closePath();
+    }
+    ctx.restore()
+  }
+}
+
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
 
@@ -868,34 +916,14 @@ const extraMethods = {
   },
 
   xAxis: function(range, scale = 1, tickLength = 5, label = false) {
-    autoMargins(this);
-    const w = this.canvas.width-this.margin.right-this.margin.left;
-    const h = this.canvas.height-this.margin.top-this.margin.bottom;
-    const x = 0+this.margin.left;
-    const y = this.margin.top+h;
-    this.save();
-    this.lineWidth = 0.5;
-    this.strokeStyle = '#00c';
-    this.beginPath();
-    this.moveTo(x,y);
-    this.lineTo(x+w,y);
-    this.stroke();
-    this.closePath();
-
+    const { w, h, x, y } = getAxisDimensions(this);
     const distanceBetweenTicks = w / (range[1]-range[0]);
-    const numOfTicks = w / distanceBetweenTicks;
 
-    if (tickLength !== 0) {
-      for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
-        this.beginPath();
-        this.moveTo(x+i,y);
-        this.lineTo(x+i,y-tickLength);
-        this.stroke();
-        this.closePath();
-      }
-    }
+    autoMargins(this);
+    drawAxisLine(this, { w, h, x, y }, 'x');
+    drawAxisTicks(this, { w, h, x, y }, 'x', tickLength, distanceBetweenTicks, scale, 0.5, 'red');
 
-    if (tickLength !== 0) {
+    if (label) {
       for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
         let name = typeof this.d[p] !== 'undefined'
           ? this.d[p][label.toLowerCase()]*scale
@@ -903,54 +931,25 @@ const extraMethods = {
         if (this.d.length-1 !== range[1]-range[0]) {
           name=range[0]+p*scale;
         }
-        this.beginPath();
         this.moveTo(x+i,y);
-        this.lineTo(x+i,y-tickLength);
         this.fillText(name, x+i, y+16+8, label.length*6);
-        this.stroke();
-        this.closePath();
         p++;
       }
-    }
-
-    if (label) {
       this.fillText(label, (x+w/2)-(label.length*6/2), y+(16*2)+8, label.length*6);
     }
-
-    this.restore();
   },
 
   yAxis: function(range, scale = 1, tickLength = 5, label = false) {
-    autoMargins(this);
-    const w = this.canvas.width-this.margin.right-this.margin.left;
-    const h = this.canvas.height-this.margin.top-this.margin.bottom;
-    const x = 0+this.margin.left;
-    const y = this.margin.top+h;
-    this.save();
-    this.lineWidth = 0.5;
-    this.strokeStyle = '#c00';
-    this.beginPath();
-    this.moveTo(x,y);
-    this.lineTo(x,y-h);
-    this.stroke();
-    this.closePath();
-
+    const { w, h, x, y } = getAxisDimensions(this);
     const distanceBetweenTicks = h / (range[1]-range[0]);
-    const numOfTicks = h / distanceBetweenTicks;
 
-    if (tickLength !== 0) {
-      for (let i=0; i<=h; i+=distanceBetweenTicks*scale){
-        this.beginPath();
-        this.moveTo(x,y-i);
-        this.lineTo(x-5,y-i);
-        this.stroke();
-        this.closePath();
-      }
-    }
+    autoMargins(this);
+    drawAxisLine(this, { w, h, x, y }, 'y');
+    drawAxisTicks(this, { w, h, x, y }, 'y', tickLength, distanceBetweenTicks, scale, 0.5, 'blue');
 
     let nameWidth;
     let maxNameWidth = 0;
-    if (tickLength !== 0) {
+    if (label) {
       for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
         let name = typeof this.d[p] !== 'undefined'
           ? this.d[p][label.toLowerCase()]*scale
@@ -960,20 +959,12 @@ const extraMethods = {
         }
         nameWidth = `${name}`.length;
         if (nameWidth >= maxNameWidth) maxNameWidth = nameWidth;
-        this.beginPath();
         this.moveTo(x,y-i);
         this.fillText(name, x-(nameWidth*6)-16, y-i+4);
-        this.stroke();
-        this.closePath();
         p++;
       }
-    }
-
-    if (label) {
       this.fillText(label, x-(`${label}`.length*6)-32-(maxNameWidth*6), y+4-(h/2));
     }
-
-    this.restore();
   },
 
   // helper function - creates an img element, caches it, then sets the
