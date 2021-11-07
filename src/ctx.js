@@ -318,6 +318,31 @@ const drawHead = function(ctx,x0,y0,x1,y1,x2,y2,style) {
 };
 
 
+// returns the scaled value of the given position in the given range
+const scale = ({ range, scale, position }) => {
+  const [min, max] = range;
+  return min + (position - min) * scale;
+};
+
+
+const autoMargins = (obj) => {
+  ['top','bottom','left','right'].forEach(area => {
+    const needsFix = obj.margin[area] < 1;
+    switch (area) {
+      case 'top':
+      case 'right':
+        if (needsFix) obj.margin[area] = 40;
+        break;
+      case 'bottom':
+        if (needsFix) obj.margin[area] = 60;
+        break;
+      case 'left':
+        if (needsFix) obj.margin[area] = 120;
+        break;
+    }
+  });
+}
+
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
 
@@ -828,6 +853,129 @@ const extraMethods = {
     this.restore();
   },
 
+  data: function(data) {
+    this.prevData = this.d;
+    this.d = data;
+  },
+
+  margin: function(t,b,l,r){
+    this.margin = {
+      top: t,
+      bottom: b,
+      left: l,
+      right: r,
+    }
+  },
+
+  xAxis: function(range, scale = 1, tickLength = 5, label = false) {
+    autoMargins(this);
+    const w = this.canvas.width-this.margin.right-this.margin.left;
+    const h = this.canvas.height-this.margin.top-this.margin.bottom;
+    const x = 0+this.margin.left;
+    const y = this.margin.top+h;
+    this.save();
+    this.lineWidth = 0.5;
+    this.strokeStyle = '#00c';
+    this.beginPath();
+    this.moveTo(x,y);
+    this.lineTo(x+w,y);
+    this.stroke();
+    this.closePath();
+
+    const distanceBetweenTicks = w / (range[1]-range[0]);
+    const numOfTicks = w / distanceBetweenTicks;
+
+    if (tickLength !== 0) {
+      for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
+        this.beginPath();
+        this.moveTo(x+i,y);
+        this.lineTo(x+i,y-tickLength);
+        this.stroke();
+        this.closePath();
+      }
+    }
+
+    if (tickLength !== 0) {
+      for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
+        let name = typeof this.d[p] !== 'undefined'
+          ? this.d[p][label.toLowerCase()]*scale
+          : 'NULL';
+        if (this.d.length-1 !== range[1]-range[0]) {
+          name=range[0]+p*scale;
+        }
+        this.beginPath();
+        this.moveTo(x+i,y);
+        this.lineTo(x+i,y-tickLength);
+        this.fillText(name, x+i, y+16+8, label.length*6);
+        this.stroke();
+        this.closePath();
+        p++;
+      }
+    }
+
+    if (label) {
+      this.fillText(label, (x+w/2)-(label.length*6/2), y+(16*2)+8, label.length*6);
+    }
+
+    this.restore();
+  },
+
+  yAxis: function(range, scale = 1, tickLength = 5, label = false) {
+    autoMargins(this);
+    const w = this.canvas.width-this.margin.right-this.margin.left;
+    const h = this.canvas.height-this.margin.top-this.margin.bottom;
+    const x = 0+this.margin.left;
+    const y = this.margin.top+h;
+    this.save();
+    this.lineWidth = 0.5;
+    this.strokeStyle = '#c00';
+    this.beginPath();
+    this.moveTo(x,y);
+    this.lineTo(x,y-h);
+    this.stroke();
+    this.closePath();
+
+    const distanceBetweenTicks = h / (range[1]-range[0]);
+    const numOfTicks = h / distanceBetweenTicks;
+
+    if (tickLength !== 0) {
+      for (let i=0; i<=h; i+=distanceBetweenTicks*scale){
+        this.beginPath();
+        this.moveTo(x,y-i);
+        this.lineTo(x-5,y-i);
+        this.stroke();
+        this.closePath();
+      }
+    }
+
+    let nameWidth;
+    let maxNameWidth = 0;
+    if (tickLength !== 0) {
+      for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
+        let name = typeof this.d[p] !== 'undefined'
+          ? this.d[p][label.toLowerCase()]*scale
+          : 'NULL';
+        if (this.d.length-1 !== range[1]-range[0]) {
+          name=range[0]+p*scale;
+        }
+        nameWidth = `${name}`.length;
+        if (nameWidth >= maxNameWidth) maxNameWidth = nameWidth;
+        this.beginPath();
+        this.moveTo(x,y-i);
+        this.fillText(name, x-(nameWidth*6)-16, y-i+4);
+        this.stroke();
+        this.closePath();
+        p++;
+      }
+    }
+
+    if (label) {
+      this.fillText(label, x-(`${label}`.length*6)-32-(maxNameWidth*6), y+4-(h/2));
+    }
+
+    this.restore();
+  },
+
   // helper function - creates an img element, caches it, then sets the
   // onload method up to draw the image, and returns the image element - all
   // that is left to do to it is set the src elsewhere
@@ -991,6 +1139,39 @@ const Ctx = function(origCtx, c) {
   // add more methods to the extended context - they're added here cos they're
   // nested/namespaced under ctx.image.* and ctx.video.* and the above
   // loops that make methods chainable don't handle nested objects
+
+  // @TODO  add one of these
+  // - https://github.com/si-mikey/cartesian
+  // - https://github.com/phenax/graph-plotting
+  // - https://github.com/frago12/graph.js
+
+  this.context.margin = {
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  };
+
+  // this.chart = {
+    // position: function(x,y){},
+    // title: function(text){},
+    // height: function(num){},
+    // width: function(num){},
+    // margins: function({ top, bottom, left, right }){},
+    // scale: function({ range, scale, position }) {
+      // const [min, max] = range;
+      // // returns the scaled value of the given position in the given range
+      // return min + (position - min) * scale;
+    // },
+    // xAxis: function(x, y, range, title) {},
+    // yAxis: function(x, y, range, title) {},
+    // ticks: function(x, y, length) {},
+    // label: function(x, y, text, size) {},
+    // draw:  function() {},
+//
+    // // draw a plottable x,y graph, with the given axes
+    // plot: function(w, h, xAxis, yAxis) {},
+  // };
 
   this.image = {
     // download canvas as an image file, called ${name}
