@@ -85,7 +85,7 @@ function drawAxisLine(ctx, dimensions, whichAxis = 'x', lineWidth = 0.5, strokeS
 }
 
 // draws the ticks along the axis, used by xAxis and yAxis
-function drawAxisTicks(ctx, dimensions, whichAxis = 'x', tickLength, distanceBetweenTicks, scale, lineWidth = 0.5, strokeStyle = '#555') {
+function drawAxisTicks(ctx, dimensions, whichAxis = 'x', tickLength, distanceBetweenTicks, scale, lineWidth = 0.5, strokeStyle = '#bbb') {
   const { w, h, x, y } = dimensions;
   const max = whichAxis === 'x' ? w : h;
 
@@ -98,10 +98,10 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', tickLength, distanceBet
       ctx.beginPath();
       if (whichAxis === 'x'){
         ctx.moveTo(x+i,y);
-        ctx.lineTo(x+i,y-tickLength)
+        ctx.lineTo(x+i,y-(tickLength/100*h))
       } else {
         ctx.moveTo(x,y-i);
-        ctx.lineTo(x-5,y-i);
+        ctx.lineTo(x+(tickLength/100*w),y-i);
       }
       ctx.stroke();
       ctx.closePath();
@@ -256,7 +256,7 @@ const extraMethods = {
     }
   },
 
-  xAxis: function(range, scale = 1, tickLength = 5, label = false, centered = false) {
+  xAxis: function(range, scale = 1, tickLength = 5, label = false, centered = false, below = true) {
     const { w, h, x, y } = getAxisDimensions(this);
     const distanceBetweenTicks = w / (range[1]-range[0]);
 
@@ -264,8 +264,8 @@ const extraMethods = {
     this._d.xScale = scale;
     this._d.xTickDistance = distanceBetweenTicks;
 
-    drawAxisLine(this, { w, h, x, y }, 'x');
-    drawAxisTicks(this, { w, h, x, y }, 'x', tickLength, distanceBetweenTicks, scale, 0.5, 'red');
+    drawAxisLine(this,  { w, h, x, y }, 'x');
+    drawAxisTicks(this, { w, h, x, y }, 'x', tickLength, distanceBetweenTicks, scale);
 
     if (label) {
       for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
@@ -279,11 +279,11 @@ const extraMethods = {
         this.fillText(name, centered ? x+i-(label.length*6/2) : x+i, y+16+8, label.length*6);
         p++;
       }
-      this.fillText(label, (x+w/2)-(label.length*6/2), y+(16*2)+8, label.length*6);
+      this.fillText(label, (x+w/2)-(label.length*6/2), below ? y+(16*2)+8 : y-16, label.length*6);
     }
   },
 
-  yAxis: function(range, scale = 1, tickLength = 5, label = false) {
+  yAxis: function(range, scale = 1, tickLength = 5, label = false, leftLabel = true) {
     const { w, h, x, y } = getAxisDimensions(this);
     const distanceBetweenTicks = h / (range[1]-range[0]);
 
@@ -291,8 +291,8 @@ const extraMethods = {
     this._d.yScale = scale;
     this._d.yTickDistance = distanceBetweenTicks;
 
-    drawAxisLine(this, { w, h, x, y }, 'y');
-    drawAxisTicks(this, { w, h, x, y }, 'y', tickLength, distanceBetweenTicks, scale, 0.5, 'blue');
+    drawAxisLine(this,  { w, h, x, y }, 'y');
+    drawAxisTicks(this, { w, h, x, y }, 'y', tickLength, distanceBetweenTicks, scale);
 
     let nameWidth;
     let maxNameWidth = 0;
@@ -310,7 +310,7 @@ const extraMethods = {
         this.fillText(name, x-(nameWidth*6)-16, y-i+4);
         p++;
       }
-      this.fillText(label, x-(`${label}`.length*6)-32-(maxNameWidth*6), y+4-(h/2));
+      this.fillText(label, leftLabel ? x-(`${label}`.length*6)-32-(maxNameWidth*6) : x+16, y+4-(h/2));
     }
   },
 };

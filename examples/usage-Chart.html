@@ -73,41 +73,34 @@
         ]
       })
       .margin(50,60,120,40)  // top, bottom, left, right
-      .xAxis([1999,2007], 1, -6, 'Year', true)  // range, scale, tickSize, label, centeredLabels
-      .yAxis([0,50],      5, -6, 'Gold Medals') // range, scale, tickSize, label
+      .xAxis([1999,2007], 1, -1.5, 'Year', true, true)  // range, scale, tickSize (%), labelText, labelAlignCenter, labelAlignBelow
+      .yAxis([0,50],      5, -1.5, 'Gold Medals', true) // range, scale, tickSize (%), labelText, labelAlignLeft
       .each((country, key, i) => {
         // Now we can work with our "decorated" chart data, ${country}.
-        // Work with your top-level data here, like draw a legend..
+        // Use your top-level data here - to draw a legend, for example..
 
         // Now lets go over each bit of data for this country
         country.forEach(data => {
+          if (!data.medals && data.medals !== 0) return;
           // Note, ${data} has .bar(), .rect(), and .line() methods added,
           // which try to draw "ready-made" shapes, in the right place.
-
-          if (!data.medals && data.medals !== 0) return;
-
+          //
           // You should only define the attrs you want "joined" to your
           // data - and don't override any others.
-
           data.bar({
-            height: data.medals,
-            //width: data.medals,
+            height: data.medals, // (swap xAxis and yAxis above, then use "width")
             fill: colors[i]
           });
-
           data.circle({
-            cy: data.medals,
-            //cx: data.medals,
+            cy: data.medals,    // (swap xAxis and yAxis above, then use "cx")
             cr: 5,
             fill: colors[i]
           });
-
           data.line({
-            py: data.medals,
-            //px: data.medals,
-            stroke: colors[i]
+            py: data.medals,    // (swap xAxis and yAxis above, then use "py")
+            stroke: colors[i],
+            lineWidth: 3,
           });
-
         });
 
       });
