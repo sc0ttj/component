@@ -17,15 +17,14 @@
 <body>
 
   <canvas class="container"></canvas>
-  <!--
-    <br>
-    <video crossorigin="*" controls></video>
-  -->
+  <br>
+  <video crossorigin="*" controls></video>
 
 <script>
   let context; // will be a reference to Foo.ctx, so we can access it outside the components view
   let frame = 1; // frame count
   const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
+
 
 
   // Enable the enhanced canvas 2dContext API (optional).
@@ -52,31 +51,9 @@
       //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
     }
 
+
     ctx
       .clear()  // using `clear(true)` will clear transforms too
-
-      .beginPath()
-      .data([
-        { year: 1996, gold: 11 },
-        { year: 1997, gold: 15 },
-        { year: 1998, gold: 13 },
-        { year: 1999, gold: 18 },
-        { year: 2000, gold: 18 },
-        { year: 2001, gold: 14 },
-        { year: 2002, gold: 25 },
-        { year: 2003, gold: 42 },
-        { year: 2004, gold: 47 },
-        { year: 2005, gold: 25 },
-        { year: 2006, gold: 24 },
-      ])
-      .margin(50,70,120,100)                 // top, bottom, left, right
-      .xAxis([1996,2006], 1, -6, 'Year')        // range, scale, tickSize, label
-      .yAxis([0,50],      5, -6, 'Gold Medals') // range, scale, tickSize, label
-      // map elem x,y to numbs adhusted for scale/marins/etc
-      //.lines('gold')
-
-
-
 
       // uncomment one of the lines below to try out the "camera":
       // usage: camera(xCenter, yCenter, scale, rotation); // rotation is in degrees
@@ -86,110 +63,110 @@
       //.camera(640, 480, 2, 0)
       //.camera(320, 240, 4-(1+frame/400), 0)
 
-//      .beginPath()
-//      .drawGrid(12)
+      .beginPath()
+      .drawGrid(12)
 
-//      .beginPath()
-//      .drawGridBox(400,280, 200,100, 25, 0.5, '#c00')
+      .beginPath()
+      .drawGridBox(400,280, 200,100, 25, 0.5, '#c00')
 
-//      .beginPath()
-//      .checkerboard(30, 300-frame, 100, 100, 15, '#222', '#efefef')
+      .beginPath()
+      .checkerboard(30, 300-frame, 100, 100, 15, '#222', '#efefef')
 
-//      .beginPath()
-//      .fillStyle('purple')
-//      .polygon([
-//          [10 + props.y, 10],
-//          [200- + props.y / 2,10 + props.y],
-//          [200,200],
-//          [100 + props.y, 220],
-//        ],
-//        [],  // line dash pattern [dash,gap,dash,gap,..]
-//        true // fill or not
-//      )
-//      .fill()
+      .beginPath()
+      .fillStyle('purple')
+      .polygon([
+          [10 + props.y, 10],
+          [200- + props.y / 2,10 + props.y],
+          [200,200],
+          [100 + props.y, 220],
+        ],
+        [],  // line dash pattern [dash,gap,dash,gap,..]
+        true // fill or not
+      )
+      .fill()
 
-//      .beginPath()
-//      .moveTo(0, 0)
-//      .lineWidth(2)
-//      .strokeStyle('blue')
-//      .lineTo(props.x, props.y)
-//      .stroke()
+      .beginPath()
+      .moveTo(0, 0)
+      .lineWidth(2)
+      .strokeStyle('blue')
+      .lineTo(props.x, props.y)
+      .stroke()
 
-//      .beginPath()
-//      .strokeStyle('black')
-//      .rect(props.x / 2, props.y / 2, 50, 50)
-//      .stroke()
+      .beginPath()
+      .strokeStyle('black')
+      .rect(props.x / 2, props.y / 2, 50, 50)
+      .stroke()
 
-//      .beginPath()
-//      .fillStyle('yellow')
-//      .strokeStyle('green')
-//      .fillRoundedRect(10, 70, 50, 75, 10)
-//      .stroke()
+      .beginPath()
+      .fillStyle('yellow')
+      .strokeStyle('green')
+      .fillRoundedRect(10, 70, 50, 75, 10)
+      .stroke()
 
-//      .beginPath()
-//      .strokeStyle('pink')
-//      .lineWidth(4)
-//      .strokeTriangle(220, 60, 50, 45)
+      .beginPath()
+      .strokeStyle('pink')
+      .lineWidth(4)
+      .strokeTriangle(220, 60, 50, 45)
 
-//      .beginPath()
-//      .fillStyle('orange')
-//      .fillCircle(320, 240, 20, 0 + frame)
+      .beginPath()
+      .fillStyle('orange')
+      .fillCircle(320, 240, 20, 0 + frame)
 
-//      .beginPath()
-//      .fillStyle('green')
-//      .fillRing(80, 100, (props.y / 8) + 10, (props.y / 8) + 20, 100)
+      .beginPath()
+      .fillStyle('green')
+      .fillRing(80, 100, (props.y / 8) + 10, (props.y / 8) + 20, 100)
 
-//      .beginPath()
-//      .gradientRect(props.y, props.y, 200, 80,
-//        // fill gradient settings
-//        [
-//          [ 0.0, "red"   ],
-//          [ 0.5, "blue"  ],
-//          [ 1.0, "rgb(0,255,0)" ],
-//        ],
-//        true // horizontal (optional), defaults to true (false is vertical)
-//      )
+      .beginPath()
+      .gradientRect(props.y, props.y, 200, 80,
+        // fill gradient settings
+        [
+          [ 0.0, "red"   ],
+          [ 0.5, "blue"  ],
+          [ 1.0, "rgb(0,255,0)" ],
+        ],
+        true // horizontal (optional), defaults to true (false is vertical)
+      )
 
-//      .beginPath()
-//      .gradientCircle(
-//        (props.y+10)*2, props.y-100,   // position x, y
-//        5, 50,                         // innerRadius, outerRadius
-//        50-props.y/5, 50-props.y/5,    // radius offset (from center of circle) x, y
-//        // fill gradient settings
-//        [
-//          [ 0, "red"   ],
-//          [ 1, "yellow" ],
-//        ],
-//      )
+      .beginPath()
+      .gradientCircle(
+        (props.y+10)*2, props.y-100,   // position x, y
+        5, 50,                         // innerRadius, outerRadius
+        50-props.y/5, 50-props.y/5,    // radius offset (from center of circle) x, y
+        // fill gradient settings
+        [
+          [ 0, "red"   ],
+          [ 1, "yellow" ],
+        ],
+      )
 
-//      .beginPath()
-//      .strokeStyle('gold')
- //     .fillStyle('yellow')
- //     .strokeStar(200, 200, 50, 5, 0)
- //     .fill()
+      .beginPath()
+      .strokeStyle('gold')
+      .fillStyle('yellow')
+      .strokeStar(200, 200, 50, 5, 0)
+      .fill()
 
-//      .drawImg(`<svg xmlns="http://www.w3.org/2000/svg" stroke="#000" stroke-width="1">
-//       <rect x="80" y="60" width="150" height="150" rx="20" fill="#F00"/>
-//       <rect x="100" y="80" width="150" height="150" rx="40" fill="#00F" fill-opacity=".7"/>
-//      </svg>`, 100 + props.y, 200 - props.y / 2, 250, 150) // urlOrElemOrCode, x, y, w, h
+      .drawImg(`<svg xmlns="http://www.w3.org/2000/svg" stroke="#000" stroke-width="1">
+       <rect x="80" y="60" width="150" height="150" rx="20" fill="#F00"/>
+       <rect x="100" y="80" width="150" height="150" rx="40" fill="#00F" fill-opacity=".7"/>
+      </svg>`, 100 + props.y, 200 - props.y / 2, 250, 150) // urlOrElemOrCode, x, y, w, h
 
-//      .drawImg('https://i.imgur.com/yL240c7.png', 100+frame, 300, 150, 150)
+      .drawImg('https://i.imgur.com/yL240c7.png', 100+frame, 300, 150, 150)
 
       // pacman
-//      ctx.circle(320, 360, 50, 0+frame, false) // x, y, radius, degrees, antiClockwise
-//      ctx.fillStyle("yellow");
-//      ctx.fill()
+      ctx.circle(320, 360, 50, 0+frame, false) // x, y, radius, degrees, antiClockwise
+      ctx.fillStyle("yellow");
+      ctx.fill()
 
-//      .strokeStyle('black')
-//      .fillStyle('black')
-//      .lineWidth(1)
+      .strokeStyle('black')
+      .fillStyle('black')
+      .lineWidth(1)
 
       //      x1,  y1, x2, y2, style, size, whichEnd,  headAngle
-//      .arrow(150, 360, 50, 60,     0,   10,        3,     33)
+      .arrow(150, 360, 50, 60,     0,   10,        3,     33)
       //         x1,  y1,  r, start,  end, antiClockwise, style, size,  whichEnd    headAngle
-//      .arcArrow(150, 360, 50,     0,  180,         false,     0,   10,         3,   33)
+      .arcArrow(150, 360, 50,     0,  180,         false,     0,   10,         3,   33)
 
-//      .spiral(500, 100,  80, 300,  frame, 2, '#c44')
+      .spiral(500, 100,  80, 300,  frame, 2, '#c44')
 
       // uncomment one of the lines below to try the "chroma key" filtering
 
@@ -212,28 +189,28 @@
 
   // ..after the first frame renders (takes about 16 milliseconds)
   // we can access `ctx` outside this components view, as `context`
-//  setTimeout(() => {
-//    context.video.record(60); // start recording a video @60fps
-//  }, 20);
+  setTimeout(() => {
+    context.video.record(60); // start recording a video @60fps
+  }, 20);
 
 
   // move stuff around a bit in an animated loop
-  //const loop = setInterval(() => {
-  //  Foo.setState({
-  //    x: 300,
-  //    y: Foo.state.y += 1
-  //  });
-  //}, 1000 / 60);
+  const loop = setInterval(() => {
+    Foo.setState({
+      x: 300,
+      y: Foo.state.y += 1
+    });
+  }, 1000 / 60);
 
 
   // after 5 seconds, stop loop, stop recording the canvas to video,
   // and offer to download it
-  //setTimeout(() => {
-    //clearInterval(loop);
-//    context.video.stop();
-//    context.video.toElement(el => document.querySelector('video').src = el.src);
+  setTimeout(() => {
+    clearInterval(loop);
+    context.video.stop();
+    context.video.toElement(el => document.querySelector('video').src = el.src);
     //context.video.saveAs('canvas-as-video.webm');
-  //}, 5500);
+  }, 5500);
 
 </script>
 </body>
