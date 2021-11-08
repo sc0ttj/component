@@ -19,7 +19,7 @@
 
 <script>
   let frame = 1; // frame count
-  const colors = [ 'red', 'blue' ];
+  const colors = [ 'rgba(255,0,0, 0.5)', 'rgba(0,0,255, 0.5)' ];
 
   // Enable our Chart addon, it'll create an extended 2dContext,
   // with a chainable API, and these extra methods:
@@ -32,27 +32,26 @@
   //
   Component.Ctx = Chart;
 
-
   // define a new component
-  const Foo = new Component({ x: 280, y: 100 });
-  // define a "view", that draws to the components canvas
-  Foo.view = (props, ctx) => {
+  const myChart = new Component({ x: 280, y: 100 });
+
+  // define the "view", that draws to the components canvas
+  myChart.view = (props, ctx) => {
+
     if (frame === 1) {
-      context = ctx;
       // set the canvas size (w, h, aspectRatio)
-      ctx.size(600, 480)           // set width and height, ignore aspect ratio
+      ctx.size(640,480)           // set width and height, ignore aspect ratio
       //ctx.size(640, 480, null)   // same as above
-      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 480
+      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 4.0
       //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
       //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
       //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
-      console.clear();
+      //console.clear();
     }
 
 
-    ctx.clear()  // using `clear(true)` will clear transforms too
+      ctx.beginPath()
 
-      .beginPath()
       .data({
         'USA': [{},
           { year: 2000, medals: 25 },
@@ -73,49 +72,52 @@
           { year: 2006, medals: 21 },
         ]
       })
-      .margin(40,80,120,60)  // top, bottom, left, right
-      .yAxis([1999,2007], 1, -6, 'Year', true)        // range, scale, tickSize, label
-      .xAxis([0,50],      5, -6, 'Gold Medals', false) // range, scale, tickSize, label, centerLabels
+      .margin(50,60,120,40)  // top, bottom, left, right
+      .xAxis([1999,2007], 1, -6, 'Year', true)  // range, scale, tickSize, label, centeredLabels
+      .yAxis([0,50],      5, -6, 'Gold Medals') // range, scale, tickSize, label
       .each((country, key, i) => {
-        // here you can draw a legend, or whatever..
-        //
+        // Now we can work with our "decorated" chart data, ${country}.
+        // Work with your top-level data here, like draw a legend..
 
+        // Now lets go over each bit of data for this country
         country.forEach(data => {
+          // Note, ${data} has .bar(), .rect(), and .line() methods added,
+          // which try to draw "ready-made" shapes, in the right place.
+
           if (!data.medals && data.medals !== 0) return;
 
-          // here you can draw your data:
-          // define only the attributes you need
+          // You should only define the attrs you want "joined" to your
+          // data - and don't override any others.
 
           data.bar({
-            //height: data.medals,
-            width: data.medals,
+            height: data.medals,
+            //width: data.medals,
             fill: colors[i]
-          })
+          });
 
           data.circle({
-            //cy: data.medals,
-            cx: data.medals,
-            cr: 3,
+            cy: data.medals,
+            //cx: data.medals,
+            cr: 5,
             fill: colors[i]
-          })
+          });
 
-          data.lines({
-            //px: data.medals,
+          data.line({
             py: data.medals,
+            //px: data.medals,
             stroke: colors[i]
-          })
+          });
 
-          // ..etc
         });
 
-      })
+      });
 
       frame++;
   };
 
 
   // render to a canvas, and attach its context (`ctx`) to our component
-  Foo.render('.container', '2d');
+  myChart.render('.container', '2d');
 
 </script>
 </body>

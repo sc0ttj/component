@@ -49,12 +49,6 @@ const PIXEL_RATIO = (function () {
     : 1;
 })();
 
-// calculate maths constants only once
-const PI = Math.PI;
-const PIx2 = PI * 2;
-const PIo2 = PI / 2
-const RAD2DEG = 180 / PI;
-const DEG2RAD = PI / 180;
 
 // helper funcs
 
@@ -64,25 +58,6 @@ const scale = ({ range, scale, position }) => {
   return min + (position - min) * scale;
 };
 
-
-// used by xAxis and yAxis, to setup nicer default margins, if none set
-const autoMargins = (obj) => {
-  ['top','bottom','left','right'].forEach(area => {
-    const needsFix = obj.margin[area] < 1;
-    switch (area) {
-      case 'top':
-      case 'right':
-        if (needsFix) obj.margin[area] = 40;
-        break;
-      case 'bottom':
-        if (needsFix) obj.margin[area] = 60;
-        break;
-      case 'left':
-        if (needsFix) obj.margin[area] = 120;
-        break;
-    }
-  });
-}
 
 // returns the dimensions of the chart/graph axes, taking margins into account
 function getAxisDimensions(obj) {
@@ -175,34 +150,32 @@ const extraMethods = {
     this._d = this._d || {};
   },
 
+
+  // This function is super important - it maps over the data give in data(),
+  // then "decorates" it, so it's easier to draw that data to the chart area.
+  //
   each: function(fn) {
     const { w, h, x, y } = getAxisDimensions(this);
     if (this.d) {
       const data = { ...this.d };
+      let lineCache = {};
+      let drawLines = () => {};
+
       Object.keys(data).forEach((key, i) => {
         data[key].forEach((item, n) => {
           // decorate the data with pre-defined x, y, w, h, r (etc) values,
           // to make drawing the data easier
           // scales
-          item.w = w/Object.keys(this.d).length-8*this._d.xScale // 8 is padding
-          item.h = h/Object.keys(this.d).length-8*this._d.yScale // 8 is padding
+          item.w = w/Object.keys(data).length-8*this._d.xScale // 8 is padding
+          item.h = h/Object.keys(data).length-8*this._d.yScale // 8 is padding
           item.r = 5
           // positions
           item.x = x+((this._d.xTickDistance*n)*this._d.xScale);
           item.y = y-((this._d.yTickDistance*n)*this._d.yScale);
 
-          const drawLine = ({ px, py, stroke }) => {
-            this.beginPath();
-            this.lineTo(
-              px ? x+this._d.xTickDistance*px : item.x,
-              py ? y-this._d.yTickDistance*py : item.y,
-            );
-            this.save();
-            this.lineWidth = 2;
-            this.strokeStyle = stroke;
-            this.stroke();
-            this.restore();
-            this.closePath();
+          const drawLine = (opts) => {
+            lineCache[key] = lineCache[key] || [];
+            lineCache[key].push(opts);
           }
 
           const drawCircle = ({ cx, cy, cr, fill }) => {
@@ -237,17 +210,40 @@ const extraMethods = {
             this.closePath();
           }
 
-
           // add drawing methods to `this.d[key][datum][method]`
           item['circle'] = drawCircle;
           item['bar'] = drawBar;
-          item['lines'] = drawLine;
-
-
+          item['line'] = drawLine;
         });
         // now run the given func on the decorated data
-        fn(this.d[key], key, i);
+        fn(data[key], key, i);
       });
+
+      drawLines = () => {
+        if (Object.keys(lineCache).length < 1) return;
+        this.save();
+        Object.keys(lineCache).forEach(key => {
+          if (lineCache[key][0].lineWidth) this.lineWidth = lineCache[key][0].lineWidth;
+          if (lineCache[key][0].stroke) this.strokeStyle = lineCache[key][0].stroke;
+          this.beginPath();
+          this.moveTo(
+            lineCache[key][0].px ? x+this._d.xTickDistance*lineCache[key][0].px : x+((this._d.xTickDistance*1)*this._d.xScale),
+            lineCache[key][0].py ? y-this._d.yTickDistance*lineCache[key][0].py : y-((this._d.yTickDistance*1)*this._d.yScale),
+          );
+          lineCache[key].forEach((line, i) => {
+            this.lineTo(
+              line.px ? x+this._d.xTickDistance*line.px : x+((this._d.xTickDistance*(i+1))*this._d.xScale),
+              line.py ? y-this._d.yTickDistance*line.py : y-((this._d.yTickDistance*(i+1))*this._d.yScale),
+            );
+            this.stroke();
+          });
+          this.closePath();
+        });
+        this.restore();
+        lineCache = {};
+      }
+
+      drawLines();
     }
   },
 
@@ -268,7 +264,6 @@ const extraMethods = {
     this._d.xScale = scale;
     this._d.xTickDistance = distanceBetweenTicks;
 
-    autoMargins(this);
     drawAxisLine(this, { w, h, x, y }, 'x');
     drawAxisTicks(this, { w, h, x, y }, 'x', tickLength, distanceBetweenTicks, scale, 0.5, 'red');
 
@@ -276,7 +271,7 @@ const extraMethods = {
       for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
         let name = typeof this.d[p] !== 'undefined'
           ? this.d[p][label.toLowerCase()]*scale
-          : 'NULL';
+          : '';
         if (this.d.length-1 !== range[1]-range[0]) {
           name=range[0]+p*scale;
         }
@@ -296,7 +291,6 @@ const extraMethods = {
     this._d.yScale = scale;
     this._d.yTickDistance = distanceBetweenTicks;
 
-    autoMargins(this);
     drawAxisLine(this, { w, h, x, y }, 'y');
     drawAxisTicks(this, { w, h, x, y }, 'y', tickLength, distanceBetweenTicks, scale, 0.5, 'blue');
 
@@ -306,7 +300,7 @@ const extraMethods = {
       for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
         let name = typeof this.d[p] !== 'undefined'
           ? this.d[p][label.toLowerCase()]*scale
-          : 'NULL';
+          : '';
         if (this.d.length-1 !== range[1]-range[0]) {
           name=range[0]+p*scale;
         }

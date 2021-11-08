@@ -123,6 +123,16 @@ export default [
     plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
   },
   {
+    input: "src/chart.js",
+    output: {
+      file: "dist/chart.min.js",
+      sourcemap: true,
+      name: "Chart",
+      format: "umd"
+    },
+    plugins: [resolve({ modulesOnly: true }), commonjs(), terser(), sourcemaps()]
+  },
+  {
     input: "src/ctx.js",
     output: {
       file: "dist/ctx.min.js",
