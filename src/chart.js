@@ -110,6 +110,9 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', tickLength, distanceBet
   }
 }
 
+const isAxisFlipped = range => range[0] > range[1];
+const axisMin = range => isAxisFlipped(range) ? range[1] : range[0];
+const getRange = range => isAxisFlipped(range) ? range[0]-range[1] : range[1]-range[0];
 
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
@@ -157,10 +160,8 @@ const extraMethods = {
   each: function(fn) {
     const { w, h, x, y } = getAxisDimensions(this);
     if (this.d) {
-      const isXFlipped = this._d.xRange[0] > this._d.xRange[1];
-      const isYFlipped = this._d.yRange[0] > this._d.yRange[1];
-      const minXRange = isXFlipped ? this._d.xRange[1] : this._d.xRange[0];
-      const minYRange = isYFlipped ? this._d.yRange[1] : this._d.yRange[0];
+      const minXRange = axisMin(this._d.xRange);
+      const minYRange = axisMin(this._d.yRange);
       const data = { ...this.d };
       const dataKeys = Object.keys(data);
       let lineCache = {};
@@ -271,8 +272,8 @@ const extraMethods = {
 
   xAxis: function(range, scale = 1, tickLength = 5, label = false, centered = false, below = true) {
     const { w, h, x, y } = getAxisDimensions(this);
-    const isFlipped = range[0] > range[1];
-    const theRange = isFlipped ? range[0]-range[1] : range[1]-range[0];
+    const flippedAxis = range[0] > range[1];
+    const theRange = getRange(range);
     const distanceBetweenTicks = Math.abs(w / theRange);
 
     this._d.xRange = range;
@@ -289,9 +290,9 @@ const extraMethods = {
           ? this.d[p][label.toLowerCase()]*scale
           : '';
         if (this.d.length-1 !== theRange) {
-          name = isFlipped ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
+          name = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
         }
-        if (!isFlipped) {
+        if (!flippedAxis) {
           this.moveTo(x+i,y);
           this.fillText(name, centered ? x+i-(labelLength/2) : x+i, y+16+8, labelLength);
         } else {
@@ -306,8 +307,8 @@ const extraMethods = {
 
   yAxis: function(range, scale = 1, tickLength = 5, label = false, leftLabel = true) {
     const { w, h, x, y } = getAxisDimensions(this);
-    const isFlipped = range[0] > range[1];
-    const theRange = isFlipped ? range[0]-range[1] : range[1]-range[0];
+    const flippedAxis = range[0] > range[1];
+    const theRange = getRange(range);
     const distanceBetweenTicks = Math.abs(h / theRange);
 
     this._d.yRange = range;
@@ -325,12 +326,12 @@ const extraMethods = {
           ? this.d[p][label.toLowerCase()]*scale
           : '';
         if (this.d.length-1 !== theRange) {
-          name = isFlipped ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
+          name = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
         }
         nameWidth = `${name}`.length;
         if (nameWidth >= maxNameWidth) maxNameWidth = nameWidth;
         const xPos = x-(nameWidth*6)-16;
-        if (!isFlipped) {
+        if (!flippedAxis) {
           this.moveTo(x,y-i);
           this.fillText(name, xPos, y-i+4);
         } else {
