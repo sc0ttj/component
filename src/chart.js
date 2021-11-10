@@ -172,7 +172,7 @@ const extraMethods = {
           yDistance = this._d.yTickDistance,
           xScale = this._d.xScale,
           yScale = this._d.yScale,
-          data = { ...this.d },
+          data = Array.isArray(this.d) ? { data: [ ...this.d ] } : { ...this.d },
           dataKeys = Object.keys(data),
           dataLength = dataKeys.length;
       let lineCache = {},
@@ -180,7 +180,6 @@ const extraMethods = {
 
       dataKeys.forEach((key, i) => {
         data[key].forEach((d, n) => {
-
           // Create our drawing methods here:
           //
           // NOTE: if scaling by 2 props, scale the circles, squares, etc,
