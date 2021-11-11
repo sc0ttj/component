@@ -167,7 +167,7 @@ const extraMethods = {
     this.prevData = this.d;
     // If `data` if a func, run it, passing in the previous data (which
     // might be useful), else, just set the given data.
-    this.d = typeof data === 'function' ? data(this.prevData) : { ...data };
+    this.d = typeof data === 'function' ? data(this.prevData) : data;
     // internal chart data, used to calculate positions, sizes, etc
     this._d = this._d || {};
   },
@@ -385,10 +385,7 @@ const extraMethods = {
           // x
           centered ? x+i-(labelLength/2) : x+i,
           // y
-          py,
-          // max width
-          labelLength
-        );
+          py);
       } else {
         this.fillText(
           // text
@@ -396,9 +393,7 @@ const extraMethods = {
           // x
           centered ? x+w-i-(labelLength/2) : x+w-i,
           // y
-          py,
-          // max width
-          labelLength
+          py
         );
       }
       p++;
@@ -451,17 +446,9 @@ const extraMethods = {
         : x+(w/100*xPos)+16;
 
       if (!flippedAxis) {
-        this.fillText(
-          tickLabel,
-          px,
-          y-i+4
-        );
+        this.fillText(tickLabel, px, y-i+4);
       } else {
-        this.fillText(
-          tickLabel,
-          px,
-          (y-h)+i+2
-        );
+        this.fillText(tickLabel, px, (y-h)+i+2);
       }
       p++;
     }
