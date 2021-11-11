@@ -61,13 +61,14 @@ const PIXEL_RATIO = (function () {
 //};
 
 
-// returns the dimensions of the chart/graph axes, taking margins into account
-function getDimensions(obj) {
-  const w = obj.canvas.width-obj.margin.right-obj.margin.left;
-  const h = obj.canvas.height-obj.margin.top-obj.margin.bottom;
-  const x = 0+obj.margin.left;
-  const y = obj.margin.top+h;
-  return { x, y, w, h };
+// returns the dimensions and sizings used by the chart/graph
+function getDimensions(ctx) {
+  const w = ctx.canvas.width-ctx.margin.right-ctx.margin.left;
+  const h = ctx.canvas.height-ctx.margin.top-ctx.margin.bottom;
+  const x = 0+ctx.margin.left;
+  const y = ctx.margin.top+h;
+  const { xRange, yRange, xScale, yScale, xLabels, yLabels, xTickDistance, yTickDistance } = ctx._d;
+  return { x, y, w, h, margin: ctx.margin, xRange, yRange, xScale, yScale, xLabels, yLabels, xDistance: xTickDistance, yDistance: yTickDistance };
 }
 
 // draws the main line of the axis, used by xAxis and yAxis
@@ -141,6 +142,10 @@ const extraMethods = {
     if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
       this.scale(PIXEL_RATIO, PIXEL_RATIO);
     }
+  },
+
+  dimensions: function() {
+    return getDimensions(this);
   },
 
   // charts and graphs
@@ -309,25 +314,16 @@ const extraMethods = {
             if (lineWidth) this.lineWidth = lineWidth;
             if (stroke) this.strokeStyle = stroke;
 
-            if (i === 0){
-              this.moveTo(
-                xFlipped
-                  ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
-                  : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale),
-                yFlipped
-                  ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
-                  : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale)
-              );
-            }
-            console.log('drawing line', i);
-            this.lineTo(
-              xFlipped
-                ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
-                : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale),
-              yFlipped
-                ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
-                : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale),
-            );
+            const paramsX = xFlipped
+              ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
+              : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale);
+
+            const paramsY = yFlipped
+              ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
+              : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale)
+
+            if (i === 0) this.moveTo(paramsX, paramsY);
+            this.lineTo(paramsX, paramsY);
             this.stroke();
           });
           this.closePath();
@@ -353,47 +349,44 @@ const extraMethods = {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
-          distanceBetweenTicks = Math.abs(w / theRange);
+          distanceBetweenTicks = Math.abs(w / theRange),
+          labelLength = label.length*6;
 
     this._d.xRange = range;
     this._d.xScale = scale;
     this._d.xTickDistance = distanceBetweenTicks;
+    this._d.xLabels = [];
 
     drawAxisLine(this,  { w, h, x, y }, 'x');
     drawAxisTicks(this, { w, h, x, y }, 'x', tickLength, distanceBetweenTicks, scale);
 
-    if (label) {
-      const labelLength = label.length*6;
-      for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
-        let name = typeof this.d[p] !== 'undefined'
-          ? this.d[p][label.toLowerCase()]*scale
-          : '';
-        if (this.d.length-1 !== theRange) {
-          name = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
-        }
-        if (!flippedAxis) {
-          this.moveTo(x+i,y);
-          this.fillText(
-            // text
-            name,
-            // x
-            centered ? x+i-(labelLength/2) : x+i,
-            // y
-            y+16+8,
-            // maxWidth
-            labelLength
-          );
-        } else {
-          this.moveTo(x+w-i,y);
-          this.fillText(
-            name,
-            centered ? x+w-i-(labelLength/2) : x+w-i,
-            y+16+8,
-            labelLength
-          );
-        }
-        p++;
+    for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
+      const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
+      this._d.xLabels.push(tickLabel)
+      if (!flippedAxis) {
+        this.moveTo(x+i,y);
+        this.fillText(
+          // text
+          tickLabel,
+          // x
+          centered ? x+i-(labelLength/2) : x+i,
+          // y
+          y+16+8,
+          // maxWidth
+          labelLength
+        );
+      } else {
+        this.moveTo(x+w-i,y);
+        this.fillText(
+          tickLabel,
+          centered ? x+w-i-(labelLength/2) : x+w-i,
+          y+16+8,
+          labelLength
+        );
       }
+      p++;
+    }
+    if (label) {
       this.fillText(label, (x+w/2)-(labelLength/2), below ? y+(16*3) : y-16, labelLength);
     }
   },
@@ -404,36 +397,34 @@ const extraMethods = {
           theRange = getRange(range),
           distanceBetweenTicks = Math.abs(h / theRange);
 
+      let tickLabelWidth,
+          maxLabelWidth = 0;
+
     this._d.yRange = range;
     this._d.yScale = scale;
     this._d.yTickDistance = distanceBetweenTicks;
+    this._d.yLabels = [];
 
     drawAxisLine(this,  { w, h, x, y }, 'y');
     drawAxisTicks(this, { w, h, x, y }, 'y', tickLength, distanceBetweenTicks, scale);
 
-    let nameWidth;
-    let maxNameWidth = 0;
-    if (label) {
-      for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
-        let name = typeof this.d[p] !== 'undefined'
-          ? this.d[p][label.toLowerCase()]*scale
-          : '';
-        if (this.d.length-1 !== theRange) {
-          name = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
-        }
-        nameWidth = `${name}`.length;
-        if (nameWidth >= maxNameWidth) maxNameWidth = nameWidth;
-        const xPos = x-(nameWidth*6)-16;
-        if (!flippedAxis) {
-          this.moveTo(x,y-i);
-          this.fillText(name, xPos, y-i+4);
-        } else {
-          this.moveTo(x,y-h-i);
-          this.fillText(name, xPos, (y-h)+i+2);
-        }
-        p++;
+    for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
+      const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
+      this._d.yLabels.push(tickLabel);
+      tickLabelWidth = `${tickLabel}`.length;
+      if (tickLabelWidth >= maxLabelWidth) maxLabelWidth = tickLabelWidth;
+      const xPos = x-(tickLabelWidth*6)-16;
+      if (!flippedAxis) {
+        this.moveTo(x,y-i);
+        this.fillText(tickLabel, xPos, y-i+4);
+      } else {
+        this.moveTo(x,y-h-i);
+        this.fillText(tickLabel, xPos, (y-h)+i+2);
       }
-      this.fillText(label, leftLabel ? x-(`${label}`.length*6)-32-(maxNameWidth*6) : x+16, y+4-(h/2));
+      p++;
+    }
+    if (label) {
+      this.fillText(label, leftLabel ? x-(`${label}`.length*6)-32-(maxLabelWidth*6) : x+16, y+4-(h/2));
     }
   },
 };
