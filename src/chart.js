@@ -191,157 +191,153 @@ const extraMethods = {
       let lineCache = {},
           drawLines = () => {};
 
-      // Delay rendering by 1 millisecond, to make the API more flexible -
-      // the axes, margins, etc, can be set in any order.
-      setTimeout(() => {
-        dataKeys.forEach((key, i) => {
-          data[key].forEach((d, n) => {
-            // Create our drawing methods here:
-            //
-            // NOTE: if scaling by 2 props, scale the circles, squares, etc,
-            // by the __square root__ of the value passed in.
-            // That makes the area scale linearly with the given value.
+      dataKeys.forEach((key, i) => {
+        data[key].forEach((d, n) => {
+          // Create our drawing methods here:
+          //
+          // NOTE: if scaling by 2 props, scale the circles, squares, etc,
+          // by the __square root__ of the value passed in.
+          // That makes the area scale linearly with the given value.
 
-            const drawLine = (opts) => {
-              lineCache[key] = lineCache[key] || [];
-              lineCache[key].push(opts);
-            }
+          const drawLine = (opts) => {
+            lineCache[key] = lineCache[key] || [];
+            lineCache[key].push(opts);
+          }
 
-            const drawCircle = ({ cx, cy, cr, fill }) => {
-              const useCx = (cx||cx===0),
-                    useCy = (cy||cy===0);
+          const drawCircle = ({ cx, cy, cr, fill }) => {
+            const useCx = (cx||cx===0),
+                  useCy = (cy||cy===0);
 
-              if (!useCx && !useCy) return;
+            if (!useCx && !useCy) return;
 
-              this.beginPath();
-              this.arc(
-                // x
-                xFlipped
-                  ? useCx
-                    // if user passed in cx
-                    ? (x+w)-((xDistance*cx)-(xDistance*minXRange))
-                    // if user didn't pass in cx
-                    : x+w-(xDistance*n)*xScale
-                  : useCx
-                    ? x+(xDistance*cx)-(xDistance*minXRange)
-                    : x+(xDistance*n)*xScale,
-                // y
-                yFlipped
-                  ? useCy
-                    // if user passed in cy
-                    ? ((y-h)+(yDistance*cy))-(yDistance*minYRange)
-                    // if user didn't pass in cy
-                    : y-h+(yDistance*n)*yScale
-                  : useCy
-                    // if user passed in cy
-                    ? y-(yDistance*cy)+(yDistance*minYRange)
-                    // if user didn't pass in cy
-                    : y-(yDistance*n)*yScale,
-                // radius
-                cr||5,
-                // start angle, end angle (in radians)
-                0, Math.PI*2
-              );
-              this.stroke();
-              if (fill) {
-                this.fillStyle = fill;
-                this.fill();
-              }
-              this.closePath();
-            }
-
-            const drawBar = ({ height, width, fill }) => {
-              const useHeight = (height||height===0),
-                    useWidth = (width||width===0);
-
-              if (!useWidth && !useHeight) return;
-
-              this.beginPath();
-              this.rect(
-                // x
-                xFlipped
-                  ? useHeight
-                    ? x+w-(xDistance*n)-xDistance/4
-                    : x+w
-                  : useHeight
-                    ? x+(xDistance*n)-xDistance/4
-                    : x,
-                // y
-                yFlipped
-                  ? useHeight
-                    ? y-h
-                    : (y-h)+(yDistance*n)+yDistance/2-yDistance/4
-                  : useHeight
-                    ? y
-                    : y-(yDistance*n)+yDistance/2-yDistance/4,
-                // w
-                xFlipped
-                  ? useWidth
-                    ? -(xDistance*width)+(xDistance*minXRange)
-                    : xDistance/2
-                  : useWidth
-                    ? (xDistance*width)-(xDistance*minXRange)
-                    : xDistance/2,
-                // h
-                yFlipped
-                  ? useHeight
-                    ? yDistance*height-(yDistance*minYRange)
-                    : -yDistance/2
-                  : useHeight
-                    ? -yDistance*height+(yDistance*minYRange)
-                    : -yDistance/2
-              );
-              this.stroke();
-              if (fill) {
-                this.fillStyle = fill;
-                this.fill();
-              }
-              this.closePath();
-            }
-
-            // add drawing methods to `data[key][n][shape]`
-            d['circle'] = drawCircle;
-            d['bar'] = drawBar;
-            d['line'] = drawLine;
-          });
-          // now run the given func on the decorated data
-          fn(data[key], key, i);
-        });
-
-        drawLines = () => {
-          const cachedLines = Object.keys(lineCache);
-          if (cachedLines.length < 1) return;
-          this.save();
-          cachedLines.forEach(key => {
             this.beginPath();
-            lineCache[key].forEach((line, i) => {
-              const { px, py, lineWidth, stroke } = lineCache[key][i],
-                    usePx = (px||px===0),
-                    usePy = (py||py===0);
-
-              if (!usePx && !usePy) return;
-              if (lineWidth) this.lineWidth = lineWidth;
-              if (stroke) this.strokeStyle = stroke;
-
-              const paramsX = xFlipped
-                ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
-                : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale);
-
-              const paramsY = yFlipped
-                ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
-                : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale)
-
-              if (i === 0) this.moveTo(paramsX, paramsY);
-              this.lineTo(paramsX, paramsY);
-              this.stroke();
-            });
+            this.arc(
+              // x
+              xFlipped
+                ? useCx
+                  // if user passed in cx
+                  ? (x+w)-((xDistance*cx)-(xDistance*minXRange))
+                  // if user didn't pass in cx
+                  : x+w-(xDistance*n)*xScale
+                : useCx
+                  ? x+(xDistance*cx)-(xDistance*minXRange)
+                  : x+(xDistance*n)*xScale,
+              // y
+              yFlipped
+                ? useCy
+                  // if user passed in cy
+                  ? ((y-h)+(yDistance*cy))-(yDistance*minYRange)
+                  // if user didn't pass in cy
+                  : y-h+(yDistance*n)*yScale
+                : useCy
+                  // if user passed in cy
+                  ? y-(yDistance*cy)+(yDistance*minYRange)
+                  // if user didn't pass in cy
+                  : y-(yDistance*n)*yScale,
+              // radius
+              cr||5,
+              // start angle, end angle (in radians)
+              0, Math.PI*2
+            );
+            this.stroke();
+            if (fill) {
+              this.fillStyle = fill;
+              this.fill();
+            }
             this.closePath();
+          }
+
+          const drawBar = ({ height, width, fill }) => {
+            const useHeight = (height||height===0),
+                  useWidth = (width||width===0);
+
+            if (!useWidth && !useHeight) return;
+
+            this.beginPath();
+            this.rect(
+              // x
+              xFlipped
+                ? useHeight
+                  ? x+w-(xDistance*n)-xDistance/4
+                  : x+w
+                : useHeight
+                  ? x+(xDistance*n)-xDistance/4
+                  : x,
+              // y
+              yFlipped
+                ? useHeight
+                  ? y-h
+                  : (y-h)+(yDistance*n)+yDistance/2-yDistance/4
+                : useHeight
+                  ? y
+                  : y-(yDistance*n)+yDistance/2-yDistance/4,
+              // w
+              xFlipped
+                ? useWidth
+                  ? -(xDistance*width)+(xDistance*minXRange)
+                  : xDistance/2
+                : useWidth
+                  ? (xDistance*width)-(xDistance*minXRange)
+                  : xDistance/2,
+              // h
+              yFlipped
+                ? useHeight
+                  ? yDistance*height-(yDistance*minYRange)
+                  : -yDistance/2
+                : useHeight
+                  ? -yDistance*height+(yDistance*minYRange)
+                  : -yDistance/2
+            );
+            this.stroke();
+            if (fill) {
+              this.fillStyle = fill;
+              this.fill();
+            }
+            this.closePath();
+          }
+
+          // add drawing methods to `data[key][n][shape]`
+          d['circle'] = drawCircle;
+          d['bar'] = drawBar;
+          d['line'] = drawLine;
+        });
+        // now run the given func on the decorated data
+        fn(data[key], key, i);
+      });
+
+      drawLines = () => {
+        const cachedLines = Object.keys(lineCache);
+        if (cachedLines.length < 1) return;
+        this.save();
+        cachedLines.forEach(key => {
+          this.beginPath();
+          lineCache[key].forEach((line, i) => {
+            const { px, py, lineWidth, stroke } = lineCache[key][i],
+                  usePx = (px||px===0),
+                  usePy = (py||py===0);
+
+            if (!usePx && !usePy) return;
+            if (lineWidth) this.lineWidth = lineWidth;
+            if (stroke) this.strokeStyle = stroke;
+
+            const paramsX = xFlipped
+              ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
+              : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale);
+
+            const paramsY = yFlipped
+              ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
+              : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale)
+
+            if (i === 0) this.moveTo(paramsX, paramsY);
+            this.lineTo(paramsX, paramsY);
+            this.stroke();
           });
-          this.restore();
-          lineCache = {};
-        }
-        drawLines();
-      }, 0);
+          this.closePath();
+        });
+        this.restore();
+        lineCache = {};
+      }
+      drawLines();
     }
   },
 
@@ -366,44 +362,39 @@ const extraMethods = {
     this._d.xTickDistance = distanceBetweenTicks;
     this._d.xLabels = [];
 
-    // Do the actual drawing of axes after a 1 millisecond timeout, so that
-    // each axis can access the props set above of the other, before trying to
-    // render - so users don't need to define the axes in a particular order.
-    setTimeout(() => {
-      drawAxisTicks(this, { w, h, x, y }, 'x', yPos, tickLength, distanceBetweenTicks, scale);
-      drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
-      for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
-        const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
-        this._d.xLabels.push(tickLabel)
-        const py = (y+16+8)-(h/100*yPos);
-        if (!flippedAxis) {
-          this.moveTo(x+i,y);
-          this.fillText(
-            // text
-            tickLabel,
-            // x
-            centered ? x+i-(labelLength/2) : x+i,
-            // y
-            py,
-            // max width
-            labelLength
-          );
-        } else {
-          this.moveTo(x+w-i,y);
-          this.fillText(
-            // text
-            tickLabel,
-            // x
-            centered ? x+w-i-(labelLength/2) : x+w-i,
-            // y
-            py,
-            // max width
-            labelLength
-          );
-        }
-        p++;
+    drawAxisTicks(this, { w, h, x, y }, 'x', yPos, tickLength, distanceBetweenTicks, scale);
+    drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
+    for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
+      const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
+      this._d.xLabels.push(tickLabel)
+      const py = (y+16+8)-(h/100*yPos);
+      if (!flippedAxis) {
+        this.moveTo(x+i,y);
+        this.fillText(
+          // text
+          tickLabel,
+          // x
+          centered ? x+i-(labelLength/2) : x+i,
+          // y
+          py,
+          // max width
+          labelLength
+        );
+      } else {
+        this.moveTo(x+w-i,y);
+        this.fillText(
+          // text
+          tickLabel,
+          // x
+          centered ? x+w-i-(labelLength/2) : x+w-i,
+          // y
+          py,
+          // max width
+          labelLength
+        );
       }
-    }, 0);
+      p++;
+    }
 
     if (label) {
       this.fillText(label, (x+w/2)-(labelLength/2), below ? y+(16*3) : y-16, labelLength);
@@ -416,36 +407,32 @@ const extraMethods = {
           theRange = getRange(range),
           distanceBetweenTicks = Math.abs(h / theRange);
 
-      let tickLabelWidth,
-          maxLabelWidth = 0;
+    let maxLabelWidth = 0;
 
     this._d.yRange = range;
     this._d.yScale = scale;
     this._d.yTickDistance = distanceBetweenTicks;
     this._d.yLabels = [];
 
-    // Do the actual drawing of axes after a 1 millisecond timeout, so that
-    // each axis can access the props set above of the other, before trying to
-    // render - so users don't need to define the axes in a particular order.
-    setTimeout(() => {
-      drawAxisTicks(this, { w, h, x, y }, 'y', xPos, tickLength, distanceBetweenTicks, scale);
-      drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
-      for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
-        const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
-        this._d.yLabels.push(tickLabel);
-        tickLabelWidth = `${tickLabel}`.length;
-        if (tickLabelWidth >= maxLabelWidth) maxLabelWidth = tickLabelWidth;
-        const px = x+(w/100*xPos)-(tickLabelWidth*6+16);
-        if (!flippedAxis) {
-          this.moveTo(x,y-i);
-          this.fillText(tickLabel, px, y-i+4);
-        } else {
-          this.moveTo(x,y-h-i);
-          this.fillText(tickLabel, px, (y-h)+i+2);
-        }
-        p++;
+    drawAxisTicks(this, { w, h, x, y }, 'y', xPos, tickLength, distanceBetweenTicks, scale);
+    drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
+
+    for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
+      const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale),
+            tickLabelWidth = `${tickLabel}`.length;
+
+      if (tickLabelWidth >= maxLabelWidth) maxLabelWidth = tickLabelWidth;
+      this._d.yLabels.push(tickLabel);
+      const px = x+(w/100*xPos)-(tickLabelWidth*6+16);
+      if (!flippedAxis) {
+        this.moveTo(x,y-i);
+        this.fillText(tickLabel, px, y-i+4);
+      } else {
+        this.moveTo(x,y-h-i);
+        this.fillText(tickLabel, px, (y-h)+i+2);
       }
-    }, 0);
+      p++;
+    }
 
     if (label) {
       this.fillText(label, leftLabel ? x-(`${label}`.length*6)-32-(maxLabelWidth*6) : x+16, y+4-(h/2));
