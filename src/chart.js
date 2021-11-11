@@ -177,17 +177,19 @@ const extraMethods = {
   drawEach: function(fn) {
     if (this.d) {
       const { w, h, x, y } = getDimensions(this),
-          minXRange = axisMin(this._d.xRange),
-          minYRange = axisMin(this._d.yRange),
-          xFlipped = isAxisFlipped(this._d.xRange),
-          yFlipped = isAxisFlipped(this._d.yRange),
-          xDistance = this._d.xTickDistance,
-          yDistance = this._d.yTickDistance,
-          xScale = this._d.xScale,
-          yScale = this._d.yScale,
+          _d = this._d,
+          minXRange = axisMin(_d.xRange),
+          minYRange = axisMin(_d.yRange),
+          xFlipped = isAxisFlipped(_d.xRange),
+          yFlipped = isAxisFlipped(_d.yRange),
+          xDistance = _d.xTickDistance,
+          yDistance = _d.yTickDistance,
+          xScale = _d.xScale,
+          yScale = _d.yScale,
           data = Array.isArray(this.d) ? { data: [ ...this.d ] } : { ...this.d },
           dataKeys = Object.keys(data),
           dataLength = dataKeys.length;
+
       let lineCache = {},
           drawLines = () => {};
 
