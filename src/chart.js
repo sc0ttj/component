@@ -354,7 +354,7 @@ const extraMethods = {
     }
   },
 
-  xAxis: function(range, scale = 1, yPos = 0, tickLength = 5, label = false, centered = false, below = true) {
+  xAxis: function(range, scale = 1, yPos = 0, tickLength = 5, label = false, below = true, centered = false, tickLabels) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
@@ -369,7 +369,13 @@ const extraMethods = {
     drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
     for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
-      const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
+
+      const tickLabel = (typeof tickLabels[p]!=='undefined')
+        ? tickLabels[p]
+        : flippedAxis
+          ? range[1]+Math.abs(p*scale)
+          : range[0]+Math.abs(p*scale);
+
       this._d.xLabels.push(tickLabel)
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
       if (!flippedAxis) {
@@ -412,7 +418,7 @@ const extraMethods = {
     }
   },
 
-  yAxis: function(range, scale = 1, xPos = 0, tickLength = 5, label = false, leftLabel = true) {
+  yAxis: function(range, scale = 1, xPos = 0, tickLength = 5, label = false, leftLabel = true, tickLabels) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
@@ -429,8 +435,13 @@ const extraMethods = {
     drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
 
     for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
-      const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale),
-            tickLabelWidth = `${tickLabel}`.length;
+      const tickLabel = (typeof tickLabels[p]==='undefined')
+        ? flippedAxis
+          ? range[1]+Math.abs(p*scale)
+          : range[0]+Math.abs(p*scale)
+        : tickLabels[p];
+
+      const tickLabelWidth = `${tickLabel}`.length;
 
       if (tickLabelWidth >= maxLabelWidth) maxLabelWidth = tickLabelWidth;
       this._d.yLabels.push(tickLabel);
