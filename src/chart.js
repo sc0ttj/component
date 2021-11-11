@@ -366,14 +366,13 @@ const extraMethods = {
     this._d.xTickDistance = distanceBetweenTicks;
     this._d.xLabels = [];
 
-    drawAxisTicks(this, { w, h, x, y }, 'x', yPos, tickLength, distanceBetweenTicks, scale);
+    drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
     for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
       const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
       this._d.xLabels.push(tickLabel)
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
       if (!flippedAxis) {
-        this.moveTo(x+i,y);
         this.fillText(
           // text
           tickLabel,
@@ -385,7 +384,6 @@ const extraMethods = {
           labelLength
         );
       } else {
-        this.moveTo(x+w-i,y);
         this.fillText(
           // text
           tickLabel,
@@ -427,7 +425,7 @@ const extraMethods = {
     this._d.yTickDistance = distanceBetweenTicks;
     this._d.yLabels = [];
 
-    drawAxisTicks(this, { w, h, x, y }, 'y', xPos, tickLength, distanceBetweenTicks, scale);
+    drawAxisTicks(this, { w, h, x, y }, 'y', xPos, xPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
 
     for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
@@ -442,20 +440,12 @@ const extraMethods = {
         : x+(w/100*xPos)+16;
 
       if (!flippedAxis) {
-        this.moveTo(
-          x,
-          y-i
-        );
         this.fillText(
           tickLabel,
           px,
           y-i+4
         );
       } else {
-        this.moveTo(
-          x,
-          y-h-i
-        );
         this.fillText(
           tickLabel,
           px,
