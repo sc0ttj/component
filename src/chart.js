@@ -52,11 +52,13 @@ const PIXEL_RATIO = (function () {
 
 // helper funcs
 
-// used by xAxis and yAxis, returns the scaled value of the given position in the given range
-const scale = ({ range, scale, position }) => {
-  const [min, max] = range;
-  return min + (position - min) * scale;
-};
+//const isFn = v => typeof v ==='function';
+
+// returns the scaled value of the given position in the given range
+//const scale = ({ range, scale, position }) => {
+//  const [min, max] = range;
+//  return min + (position - min) * scale;
+//};
 
 
 // returns the dimensions of the chart/graph axes, taking margins into account
@@ -192,41 +194,35 @@ const extraMethods = {
           }
 
           const drawCircle = ({ cx, cy, cr, fill }) => {
-            const setCx = (cx||cx===0),
-                  setCy = (cy||cy===0),
-                  circleX = (cx) => {
-                    return xFlipped
-                      ? setCx
-                        // if user passed in cx
-                        ? (x+w)-((xDistance*cx)-(xDistance*minXRange))
-                        // if user didn't pass in cx
-                        : x+w-(xDistance*n)*xScale
+            const useCx = (cx||cx===0),
+                  useCy = (cy||cy===0);
 
-                      : setCx
-                        ? x+(xDistance*cx)-(xDistance*minXRange)
-                        : x+(xDistance*n)*xScale
-                  },
-                  circleY = cy => {
-                    return yFlipped
-                      ? setCy
-                        // if user passed in cy
-                        ? ((y-h)+(yDistance*cy))-(yDistance*minYRange)
-                        // if user didn't pass in cy
-                        : y-h+(yDistance*n)*yScale
-
-                      : setCy
-                        // if user passed in cy
-                        ? y-(yDistance*cy)+(yDistance*minYRange)
-                        // if user didn't pass in cy
-                        : y-(yDistance*n)*yScale
-                  };
+            if (!useCx && !useCy) return;
 
             this.beginPath();
             this.arc(
               // x
-              circleX(cx),
+              xFlipped
+                ? useCx
+                  // if user passed in cx
+                  ? (x+w)-((xDistance*cx)-(xDistance*minXRange))
+                  // if user didn't pass in cx
+                  : x+w-(xDistance*n)*xScale
+                : useCx
+                  ? x+(xDistance*cx)-(xDistance*minXRange)
+                  : x+(xDistance*n)*xScale,
               // y
-              circleY(cy),
+              yFlipped
+                ? useCy
+                  // if user passed in cy
+                  ? ((y-h)+(yDistance*cy))-(yDistance*minYRange)
+                  // if user didn't pass in cy
+                  : y-h+(yDistance*n)*yScale
+                : useCy
+                  // if user passed in cy
+                  ? y-(yDistance*cy)+(yDistance*minYRange)
+                  // if user didn't pass in cy
+                  : y-(yDistance*n)*yScale,
               // radius
               cr||5,
               // start angle, end angle (in radians)
@@ -244,12 +240,14 @@ const extraMethods = {
             const useHeight = (height||height===0),
                   useWidth = (width||width===0);
 
+            if (!useWidth && !useHeight) return;
+
             this.beginPath();
             this.rect(
               // x
               xFlipped
                 ? useHeight
-                  ? this.margin.left+w-(xDistance*n)-xDistance/4
+                  ? x+w-(xDistance*n)-xDistance/4
                   : x+w
                 : useHeight
                   ? x+(xDistance*n)-xDistance/4
@@ -301,31 +299,34 @@ const extraMethods = {
         if (cachedLines.length < 1) return;
         this.save();
         cachedLines.forEach(key => {
-          const { px, py, lineWidth, stroke } = lineCache[key][0];
-          if (lineWidth) this.lineWidth = lineWidth;
-          if (stroke) this.strokeStyle = stroke;
-
           this.beginPath();
           lineCache[key].forEach((line, i) => {
-            const usePx = (line.px||line.px===0),
-                  usePy = (line.py||line.py===0);
+            const { px, py, lineWidth, stroke } = lineCache[key][i],
+                  usePx = (px||px===0),
+                  usePy = (py||py===0);
+
+            if (!usePx && !usePy) return;
+            if (lineWidth) this.lineWidth = lineWidth;
+            if (stroke) this.strokeStyle = stroke;
+
             if (i === 0){
               this.moveTo(
                 xFlipped
-                  ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*1)*xScale)
-                  : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*1)*xScale),
+                  ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
+                  : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale),
                 yFlipped
-                  ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*1)*yScale)
-                  : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*1)*yScale)
+                  ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
+                  : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale)
               );
             }
+            console.log('drawing line', i);
             this.lineTo(
               xFlipped
-                ? usePx ? x+w-xDistance*line.px+(xDistance*minXRange) : (x+w)-((xDistance*(i+1))*xScale)
-                : usePx ? x+xDistance*line.px-(xDistance*minXRange) : x+((xDistance*(i+1))*xScale),
+                ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
+                : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale),
               yFlipped
-                ? usePy ? (y-h)+(yDistance*line.py)-(yDistance*minYRange) : (y-h)+((yDistance*(i+1))*yScale)
-                : usePy ? y-yDistance*line.py+(yDistance*minYRange) : y-((yDistance*(i+1))*yScale),
+                ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
+                : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale),
             );
             this.stroke();
           });
