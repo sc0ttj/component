@@ -105,11 +105,13 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, distan
     for (let i=0, p=0; i<=max; i+=distanceBetweenTicks*scale){
       ctx.beginPath();
       if (whichAxis === 'x'){
-        ctx.moveTo(x+i,y);
-        ctx.lineTo(x+i,y-(tickLength/100*h))
+        const py = pos < 50 ? y : y-h;
+        ctx.moveTo(x+i,py);
+        ctx.lineTo(x+i,py-(tickLength/100*h))
       } else {
-        ctx.moveTo(x,y-i);
-        ctx.lineTo(x+(tickLength/100*w),y-i);
+        const px = pos < 50 ? x : x+w;
+        ctx.moveTo(px,y-i);
+        ctx.lineTo(px+(tickLength/100*w),y-i);
       }
       ctx.stroke();
       ctx.closePath();
@@ -165,7 +167,7 @@ const extraMethods = {
     this.prevData = this.d;
     // If `data` if a func, run it, passing in the previous data (which
     // might be useful), else, just set the given data.
-    this.d = typeof data === 'function' ? data(this.prevData) : data;
+    this.d = typeof data === 'function' ? data(this.prevData) : { ...data };
     // internal chart data, used to calculate positions, sizes, etc
     this._d = this._d || {};
   },
@@ -369,7 +371,7 @@ const extraMethods = {
     for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
       const tickLabel = flippedAxis ? range[1]+Math.abs(p*scale) : range[0]+Math.abs(p*scale);
       this._d.xLabels.push(tickLabel)
-      const py = (y+16+8)-(h/100*yPos);
+      const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
       if (!flippedAxis) {
         this.moveTo(x+i,y);
         this.fillText(
@@ -399,7 +401,16 @@ const extraMethods = {
     }
 
     if (label) {
-      this.fillText(label, (x+w/2)-(labelLength/2), below ? y+(16*3) : y-16, labelLength);
+      this.fillText(
+      //text
+      label,
+      //x
+      (x+w/2)-(labelLength/2),
+      //y
+      below
+        ? y+(16*3)
+        : y-h-(16*2)-8
+      );
     }
   },
 
@@ -425,19 +436,46 @@ const extraMethods = {
 
       if (tickLabelWidth >= maxLabelWidth) maxLabelWidth = tickLabelWidth;
       this._d.yLabels.push(tickLabel);
-      const px = x+(w/100*xPos)-(tickLabelWidth*6+16);
+
+      const px = (xPos <= 50)
+        ? x-16-(tickLabelWidth*6)+(w/100*xPos)
+        : x+(w/100*xPos)+16;
+
       if (!flippedAxis) {
-        this.moveTo(x,y-i);
-        this.fillText(tickLabel, px, y-i+4);
+        this.moveTo(
+          x,
+          y-i
+        );
+        this.fillText(
+          tickLabel,
+          px,
+          y-i+4
+        );
       } else {
-        this.moveTo(x,y-h-i);
-        this.fillText(tickLabel, px, (y-h)+i+2);
+        this.moveTo(
+          x,
+          y-h-i
+        );
+        this.fillText(
+          tickLabel,
+          px,
+          (y-h)+i+2
+        );
       }
       p++;
     }
 
     if (label) {
-      this.fillText(label, leftLabel ? x-(`${label}`.length*6)-32-(maxLabelWidth*6) : x+16, y+4-(h/2));
+      this.fillText(
+        // text
+        label,
+        // x
+        leftLabel
+          ? x-(`${label}`.length*6)-32-(maxLabelWidth*6)
+          : xPos <= 50 ? x+w+16 : x+w+32+(maxLabelWidth*6),
+        // y
+        y+4-(h/2)
+      );
     }
   },
 };
