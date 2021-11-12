@@ -120,6 +120,25 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, distan
   }
 }
 
+// returns either a default tick label, generated from the given range, or
+// taken `labels` if an array, or the default is passed in `labels` if it's
+// a function, and whatever is returned is used
+const getTickLabel = (range, flippedAxis, pos, scale, labels) => {
+  const autoLabel = flippedAxis
+    ? range[1]+Math.abs(pos*scale)
+    : range[0]+Math.abs(pos*scale);
+
+  let tickLabel = (typeof labels[pos]!=='undefined')
+    ? labels[pos]
+    : autoLabel;
+
+  if (typeof labels==='function') {
+    tickLabel = labels(autoLabel, pos)
+  }
+
+  return tickLabel;
+}
+
 const isArray = v => Array.isArray(v),
       isAxisFlipped = range => isArray(range) ? range[0] > range[1] : false,
       axisMin  = range => isArray(range) ? isAxisFlipped(range)?range[1]:range[0] : 0,
@@ -368,14 +387,9 @@ const extraMethods = {
 
     drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
-    for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale){
 
-      const tickLabel = (typeof tickLabels[p]!=='undefined')
-        ? tickLabels[p]
-        : flippedAxis
-          ? range[1]+Math.abs(p*scale)
-          : range[0]+Math.abs(p*scale);
-
+    for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale) {
+      const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
       this._d.xLabels.push(tickLabel)
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
       if (!flippedAxis) {
@@ -430,11 +444,8 @@ const extraMethods = {
     drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
 
     for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
-      const tickLabel = (typeof tickLabels[p]==='undefined')
-        ? flippedAxis
-          ? range[1]+Math.abs(p*scale)
-          : range[0]+Math.abs(p*scale)
-        : tickLabels[p];
+
+      const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
 
       const tickLabelWidth = `${tickLabel}`.length;
 
