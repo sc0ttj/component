@@ -52,7 +52,12 @@ const PIXEL_RATIO = (function () {
 
 // helper funcs
 
-//const isFn = v => typeof v ==='function';
+const isFn = v => typeof v ==='function',
+      isArray = v => Array.isArray(v),
+      isAxisFlipped = range => isArray(range) ? range[0] > range[1] : false,
+      axisMin  = range => isArray(range) ? isAxisFlipped(range)?range[1]:range[0] : 0,
+      getRange = range => isArray(range) ? isAxisFlipped(range)?range[0]-range[1]:range[1]-range[0]: 0;
+
 
 // returns the scaled value of the given position in the given range
 //const scale = ({ range, scale, position }) => {
@@ -132,17 +137,13 @@ const getTickLabel = (range, flippedAxis, pos, scale, labels) => {
     ? labels[pos]
     : autoLabel;
 
-  if (typeof labels==='function') {
+  if (isFn(labels)) {
     tickLabel = labels(autoLabel, pos)
   }
 
   return tickLabel;
 }
 
-const isArray = v => Array.isArray(v),
-      isAxisFlipped = range => isArray(range) ? range[0] > range[1] : false,
-      axisMin  = range => isArray(range) ? isAxisFlipped(range)?range[1]:range[0] : 0,
-      getRange = range => isArray(range) ? isAxisFlipped(range)?range[0]-range[1]:range[1]-range[0]: 0;
 
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
@@ -186,7 +187,7 @@ const extraMethods = {
     this.prevData = this.d;
     // If `data` if a func, run it, passing in the previous data (which
     // might be useful), else, just set the given data.
-    this.d = typeof data === 'function' ? data(this.prevData) : data;
+    this.d = isFn(data) ? data(this.prevData) : data;
     // internal chart data, used to calculate positions, sizes, etc
     this._d = this._d || {};
   },
@@ -207,7 +208,7 @@ const extraMethods = {
           yDistance = _d.yTickDistance,
           xScale = _d.xScale,
           yScale = _d.yScale,
-          data = Array.isArray(this.d) ? { data: [ ...this.d ] } : { ...this.d },
+          data = isArray(this.d) ? { data: [ ...this.d ] } : { ...this.d },
           dataKeys = Object.keys(data),
           dataLength = dataKeys.length;
 
