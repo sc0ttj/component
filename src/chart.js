@@ -51,13 +51,13 @@ const PIXEL_RATIO = (function () {
 
 
 // helper funcs
-
 const isFn = v => typeof v ==='function',
       isArray = v => Array.isArray(v),
       isAxisFlipped = range => isArray(range) ? range[0] > range[1] : false,
       axisMin  = range => isArray(range) ? isAxisFlipped(range)?range[1]:range[0] : 0,
       getRange = range => isArray(range) ? isAxisFlipped(range)?range[0]-range[1]:range[1]-range[0]: 0,
-      deg2rad = deg => +deg*Math.PI/180;
+      deg2rad = deg => +deg*Math.PI/180,
+      getSumTotal = (array, prop) => array.reduce((prev, cur) => prev + cur[prop], 0);
 
 
 // returns the scaled value of the given position in the given range
@@ -65,7 +65,6 @@ const isFn = v => typeof v ==='function',
 //  const [min, max] = range;
 //  return min + (position - min) * scale;
 //};
-
 
 // returns the dimensions and sizings used by the chart/graph
 function getDimensions(ctx) {
@@ -229,6 +228,8 @@ const extraMethods = {
           drawLines = () => {};
 
       dataKeys.forEach((key, i) => {
+        let currentPieDeg = -90;
+
         data[key].forEach((d, n) => {
           // Create our drawing methods here:
           //
@@ -242,23 +243,24 @@ const extraMethods = {
             lineCache[key].push(opts);
           }
 
-          const drawCircle = ({ cx, cy, cr, start, end, rotation = 0, fill }) => {
-            if (!cx && !cy) return;
 
-            const paramX = getX(cx, n);
-            const paramY = getY(cy, n)
+          const drawCircle = ({ cx, cy, radius, start, end, rotate = 0, fill }) => {
+            if (!cx && !cy) return;
+            const paramX = getX(cx, n),  paramY = getY(cy, n);
 
             this.beginPath();
             this.arc(
               paramX,
               paramY,
               // radius
-              cr||5,
-              // start angle, end angle (in radians)
-              deg2rad(start+rotation)||0, deg2rad(end+rotation)||Math.PI*2
+              radius||5,
+              // start angle (in radians)
+              deg2rad(start+rotate)||0,
+              // end angle (in radians)
+              deg2rad(end+rotate)||Math.PI*2
             );
-            // go to center of circle, and _then_ close the path (creates a "pie"
-            // or "pacman" shape, if degrees < 360)
+            // go to center of circle, and _then_ close the path (creates
+            // a "pie" or "pacman" shape, if degrees < 360)
             this.lineTo(paramX, paramY);
             this.closePath();
             this.stroke();
@@ -267,7 +269,48 @@ const extraMethods = {
               this.fill();
             }
             this.closePath();
+          };
+
+
+          const drawPieSlice = ({ px, py, radius = w-(w/100*50), slice = 0, fill }) => {
+            // dont draw anything if blank data
+            if (Object.keys(d).length < 4) return;
+
+            const paramX = px||x+w/2,
+                  paramY = py||y-h/2,
+                  // get name of key/prop that "slice" represents:
+                  // dumb method - just find a prop in `d` with a matching value
+                  // @TODO fix: this breaks if data is "padded" (first object in data[key] is empty)
+                  prop = Object.keys(d).find(k=>d[k]===slice),
+                  // get the sum total in our dataset for that prop
+                  sumTotal = getSumTotal(data[key], prop),
+                  sliceAsPercOfTotal = slice/sumTotal*100,
+                  sliceInDeg = ((sliceAsPercOfTotal)*360/100);
+
+            this.beginPath();
+            this.arc(
+              paramX,
+              paramY,
+              // radius
+              radius,
+              // start angle (in radians)
+              deg2rad(currentPieDeg),
+              // end angle (in radians)
+              deg2rad(currentPieDeg+sliceInDeg)
+            );
+            // go to center of circle, and _then_ close the path (creates a "pie"
+            // or "pacman" shape, if degrees < 360)
+            this.lineTo(paramX, paramY);
+            this.closePath();
+            if (fill) {
+              this.fillStyle = fill;
+              this.fill();
+            }
+            this.stroke();
+            this.closePath();
+            currentPieDeg += sliceInDeg;
           }
+
 
           const drawBar = ({ height, width, fill, padding = 12 }) => {
             const useHeight = (height||height===0),
@@ -325,6 +368,7 @@ const extraMethods = {
           // add drawing methods to `data[key][n][shape]`
           d['circle'] = drawCircle;
           d['bar'] = drawBar;
+          d['pie'] = drawPieSlice;
           d['line'] = drawLine;
         });
         // now run the given func on the decorated data
