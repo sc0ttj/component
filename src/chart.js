@@ -56,7 +56,8 @@ const isFn = v => typeof v ==='function',
       isArray = v => Array.isArray(v),
       isAxisFlipped = range => isArray(range) ? range[0] > range[1] : false,
       axisMin  = range => isArray(range) ? isAxisFlipped(range)?range[1]:range[0] : 0,
-      getRange = range => isArray(range) ? isAxisFlipped(range)?range[0]-range[1]:range[1]-range[0]: 0;
+      getRange = range => isArray(range) ? isAxisFlipped(range)?range[0]-range[1]:range[1]-range[0]: 0,
+      deg2rad = deg => +deg*Math.PI/180;
 
 
 // returns the scaled value of the given position in the given range
@@ -213,6 +214,17 @@ const extraMethods = {
           dataKeys = Object.keys(data),
           dataLength = dataKeys.length;
 
+      // two helper funcs to get X,Y position of circle and line shapes,
+      // used by drawCircle() and drawLines()
+      const getX = (px, n) => xFlipped
+        ? (px||px===0) ? x+w-(xDistance*px)-(xDistance*minXRange) : x+w-(xDistance*n)*xScale
+        : (px||px===0) ? x+(xDistance*px)-(xDistance*minXRange) : x+(xDistance*n)*xScale;
+
+      const getY = (py, n) => yFlipped
+        ? (py||py===0) ? y-h+(yDistance*py)-(yDistance*minYRange) : y-h+(yDistance*n)*yScale
+        : (py||py===0) ? y-(yDistance*py)+(yDistance*minYRange) : y-(yDistance*n)*yScale
+
+
       let lineCache = {},
           drawLines = () => {};
 
@@ -224,46 +236,31 @@ const extraMethods = {
           // by the __square root__ of the value passed in.
           // That makes the area scale linearly with the given value.
 
+
           const drawLine = (opts) => {
             lineCache[key] = lineCache[key] || [];
             lineCache[key].push(opts);
           }
 
-          const drawCircle = ({ cx, cy, cr, fill }) => {
-            const useCx = (cx||cx===0),
-                  useCy = (cy||cy===0);
+          const drawCircle = ({ cx, cy, cr, start, end, rotation = 0, fill }) => {
+            if (!cx && !cy) return;
 
-            if (!useCx && !useCy) return;
+            const paramX = getX(cx, n);
+            const paramY = getY(cy, n)
 
             this.beginPath();
             this.arc(
-              // x
-              xFlipped
-                ? useCx
-                  // if user passed in cx
-                  ? (x+w)-((xDistance*cx)-(xDistance*minXRange))
-                  // if user didn't pass in cx
-                  : x+w-(xDistance*n)*xScale
-                : useCx
-                  ? x+(xDistance*cx)-(xDistance*minXRange)
-                  : x+(xDistance*n)*xScale,
-              // y
-              yFlipped
-                ? useCy
-                  // if user passed in cy
-                  ? ((y-h)+(yDistance*cy))-(yDistance*minYRange)
-                  // if user didn't pass in cy
-                  : y-h+(yDistance*n)*yScale
-                : useCy
-                  // if user passed in cy
-                  ? y-(yDistance*cy)+(yDistance*minYRange)
-                  // if user didn't pass in cy
-                  : y-(yDistance*n)*yScale,
+              paramX,
+              paramY,
               // radius
               cr||5,
               // start angle, end angle (in radians)
-              0, Math.PI*2
+              deg2rad(start+rotation)||0, deg2rad(end+rotation)||Math.PI*2
             );
+            // go to center of circle, and _then_ close the path (creates a "pie"
+            // or "pacman" shape, if degrees < 360)
+            this.lineTo(paramX, paramY);
+            this.closePath();
             this.stroke();
             if (fill) {
               this.fillStyle = fill;
@@ -340,25 +337,15 @@ const extraMethods = {
         this.save();
         cachedLines.forEach(key => {
           this.beginPath();
-          lineCache[key].forEach((line, i) => {
-            const { px, py, lineWidth, stroke } = lineCache[key][i],
-                  usePx = (px||px===0),
-                  usePy = (py||py===0);
-
-            if (!usePx && !usePy) return;
+          lineCache[key].forEach((line, l) => {
+            const { px, py, lineWidth, stroke } = lineCache[key][l];
+            if (!px && !py) return;
             if (lineWidth) this.lineWidth = lineWidth;
             if (stroke) this.strokeStyle = stroke;
-
-            const paramsX = xFlipped
-              ? usePx ? x+w-xDistance*px+(xDistance*minXRange) : (x+w)-((xDistance*(i))*xScale)
-              : usePx ? x+xDistance*px-(xDistance*minXRange) : x+((xDistance*(i))*xScale);
-
-            const paramsY = yFlipped
-              ? usePy ? (y-h)+(yDistance*py)-(yDistance*minYRange) : (y-h)+((yDistance*(i))*yScale)
-              : usePy ? y-yDistance*py+(yDistance*minYRange) : y-((yDistance*(i))*yScale)
-
-            if (i === 0) this.moveTo(paramsX, paramsY);
-            this.lineTo(paramsX, paramsY);
+            const paramX = getX(px, l);
+            const paramY = getY(py, l)
+            if (l === 0) this.moveTo(paramX, paramY);
+            this.lineTo(paramX, paramY);
             this.stroke();
           });
           this.closePath();
