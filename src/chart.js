@@ -72,8 +72,8 @@ function getDimensions(ctx) {
   const h = ctx.canvas.height-ctx.margin.top-ctx.margin.bottom;
   const x = 0+ctx.margin.left;
   const y = ctx.margin.top+h;
-  const { xRange, yRange, xScale, yScale, xLabels, yLabels, xTickDistance, yTickDistance } = ctx._d;
-  return { x, y, w, h, margin: ctx.margin, xRange, yRange, xScale, yScale, xLabels, yLabels, xDistance: xTickDistance, yDistance: yTickDistance };
+  const { xRange, yRange, xScale, yScale, xLabels, yLabels, xDistance, yDistance } = ctx._d;
+  return { x, y, w, h, margin: ctx.margin, xRange, yRange, xScale, yScale, xLabels, yLabels, xDistance, yDistance };
 }
 
 // draws the main line of the axis, used by xAxis and yAxis
@@ -129,11 +129,12 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, distan
 // taken `labels` if an array, or the default is passed in `labels` if it's
 // a function, and whatever is returned is used
 const getTickLabel = (range, flippedAxis, pos, scale, labels) => {
-  const autoLabel = flippedAxis
-    ? range[1]+Math.abs(pos*scale)
-    : range[0]+Math.abs(pos*scale);
+  const abs = Math.abs,
+        autoLabel = flippedAxis
+          ? range[1]+abs(pos*scale)
+          : range[0]+abs(pos*scale);
 
-  let tickLabel = (typeof labels[pos]!=='undefined')
+  let tickLabel = (Array.isArray(labels) && typeof labels[pos]!=='undefined')
     ? labels[pos]
     : autoLabel;
 
@@ -204,8 +205,8 @@ const extraMethods = {
           minYRange = axisMin(_d.yRange),
           xFlipped = isAxisFlipped(_d.xRange),
           yFlipped = isAxisFlipped(_d.yRange),
-          xDistance = _d.xTickDistance,
-          yDistance = _d.yTickDistance,
+          xDistance = _d.xDistance,
+          yDistance = _d.yDistance,
           xScale = _d.xScale,
           yScale = _d.yScale,
           data = isArray(this.d) ? { data: [ ...this.d ] } : { ...this.d },
@@ -271,46 +272,50 @@ const extraMethods = {
             this.closePath();
           }
 
-          const drawBar = ({ height, width, fill }) => {
+          const drawBar = ({ height, width, fill, padding = 12 }) => {
             const useHeight = (height||height===0),
-                  useWidth = (width||width===0);
+                  useWidth  = (width||width===0);
 
             if (!useWidth && !useHeight) return;
+
+            const barPadding = useHeight ? xDistance/100*padding : yDistance/100*padding,
+                  barWidth   = (useHeight ? xDistance : yDistance)/dataLength-(barPadding/2),
+                  centered   = barWidth*dataLength/2;
 
             this.beginPath();
             this.rect(
               // x
               xFlipped
                 ? useHeight
-                  ? x+w-(xDistance*n)-xDistance/4
+                  ? x+w-(barWidth*i)-(xDistance*n)+centered
                   : x+w
                 : useHeight
-                  ? x+(xDistance*n)-xDistance/4
+                  ? x+(barWidth*i)+(xDistance*n)-centered
                   : x,
               // y
               yFlipped
                 ? useHeight
                   ? y-h
-                  : (y-h)+(yDistance*n)+yDistance/2-yDistance/4
+                  : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
                 : useHeight
                   ? y
-                  : y-(yDistance*n)+yDistance/2-yDistance/4,
+                  : y-(barWidth*i)-(yDistance*n)+centered,
               // w
               xFlipped
                 ? useWidth
                   ? -(xDistance*width)+(xDistance*minXRange)
-                  : xDistance/2
+                  : barWidth
                 : useWidth
                   ? (xDistance*width)-(xDistance*minXRange)
-                  : xDistance/2,
+                  : barWidth,
               // h
               yFlipped
                 ? useHeight
                   ? yDistance*height-(yDistance*minYRange)
-                  : -yDistance/2
+                  : -barWidth
                 : useHeight
                   ? -yDistance*height+(yDistance*minYRange)
-                  : -yDistance/2
+                  : -barWidth
             );
             this.stroke();
             if (fill) {
@@ -383,7 +388,7 @@ const extraMethods = {
 
     this._d.xRange = range;
     this._d.xScale = scale;
-    this._d.xTickDistance = distanceBetweenTicks;
+    this._d.xDistance = distanceBetweenTicks;
     this._d.xLabels = [];
 
     drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
@@ -438,7 +443,7 @@ const extraMethods = {
 
     this._d.yRange = range;
     this._d.yScale = scale;
-    this._d.yTickDistance = distanceBetweenTicks;
+    this._d.yDistance = distanceBetweenTicks;
     this._d.yLabels = [];
 
     drawAxisTicks(this, { w, h, x, y }, 'y', xPos, xPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
