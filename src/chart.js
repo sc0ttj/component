@@ -177,13 +177,6 @@ const extraMethods = {
     return getDimensions(this);
   },
 
-  // charts and graphs
-  //
-  // @TODO  add one of these
-  // - https://github.com/si-mikey/cartesian
-  // - https://github.com/phenax/graph-plotting
-  // - https://github.com/frago12/graph.js
-
   data: function(data) {
     this.prevData = this.d;
     // If `data` if a func, run it, passing in the previous data (which
@@ -233,16 +226,13 @@ const extraMethods = {
         data[key].forEach((d, n) => {
           // Create our drawing methods here:
           //
-          // NOTE: if scaling by 2 props, scale the circles, squares, etc,
-          // by the __square root__ of the value passed in.
-          // That makes the area scale linearly with the given value.
-
+          // @TODO - don't use `fill` etc, pass in `styles` object,
+          //         each drawing method should use setStyle()
 
           const drawLine = (opts) => {
             lineCache[key] = lineCache[key] || [];
             lineCache[key].push(opts);
           }
-
 
           const drawCircle = ({ cx, cy, radius, start, end, rotate = 0, fill }) => {
             if (!cx && !cy) return;
@@ -271,11 +261,9 @@ const extraMethods = {
             this.closePath();
           };
 
-
           const drawPieSlice = ({ px, py, radius = w-(w/100*50), slice = 0, fill }) => {
             // dont draw anything if blank data
             if (Object.keys(d).length < 4) return;
-
             const paramX = px||x+w/2,
                   paramY = py||y-h/2,
                   // get name of key/prop that "slice" represents:
@@ -285,7 +273,7 @@ const extraMethods = {
                   // get the sum total in our dataset for that prop
                   sumTotal = getSumTotal(data[key], prop),
                   sliceAsPercOfTotal = slice/sumTotal*100,
-                  sliceInDeg = ((sliceAsPercOfTotal)*360/100);
+                  sliceInDeg = sliceAsPercOfTotal*360/100;
 
             this.beginPath();
             this.arc(
@@ -310,7 +298,6 @@ const extraMethods = {
             this.closePath();
             currentPieDeg += sliceInDeg;
           }
-
 
           const drawBar = ({ height, width, fill, padding = 12 }) => {
             const useHeight = (height||height===0),
@@ -365,6 +352,16 @@ const extraMethods = {
             this.closePath();
           }
 
+          // @TODO - add more drawing methods:
+          //
+          // - candlesticks:                      .candle({ start, end, min, max, green, red, axis })
+          // - svg file:                          .svg({ svg, x, y, h, w })
+          // - rescaled svg:                      .svg({ svg, sx, sy, sh, sw, dx, dy, dh, dh })
+          // - lines/polygons, drawn manually:    .poly({ x1,y1,x2,y2 })
+          // - stacked lines (area chart)         .area({})
+          // -
+
+
           // add drawing methods to `data[key][n][shape]`
           d['circle'] = drawCircle;
           d['bar'] = drawBar;
@@ -408,6 +405,12 @@ const extraMethods = {
       left: l,
       right: r,
     }
+  },
+
+  setStyle: function(obj) {
+    for(i in obj) {
+      this[i] = obj[i];
+    };
   },
 
   xAxis: function(range, scale = 1, yPos = 0, tickLength = 5, label = false, below = true, centered = false, tickLabels) {
