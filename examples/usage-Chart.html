@@ -62,13 +62,11 @@ const objToKeyValuePairs = obj => Object.keys(obj).map((key) => ({ key, value: o
 //
 // Functions for working with Arrays of Objects:
 //
-// Converts array of object in array of objects containing key/value pairs
+// Converts an array of objects into an array of objects containing key/value pairs
 const toKeyValuePairs = array => array.map(obj => objToKeyValuePairs(obj));
 // Given an array of objects, returns an object "keyed" by the given `prop` value
 const toKeyedObject = (array, key, obj = {}) => { array.forEach(item => obj[item[key]] = item); return obj; };
 // Sort an array of objects by the given object `prop` - returns an array,
-// - if asc=true,  the object with the _lowest_ `prop` value comes first
-// - if asc=false, the object with the _highest_ `prop` value comes first
 const sortByKey = (array, prop, order = 'asc') => [...array].sort((a, b) => order === 'asc' ? a[prop]-b[prop] : b[prop]-a[prop]);
 const sortByKeyAsc = (array, prop) => sortByKey(array, prop, 'asc');
 const sortByKeyDesc = (array, prop) => sortByKey(array, prop, 'desc');
