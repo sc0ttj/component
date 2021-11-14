@@ -60,6 +60,15 @@ const isFn = v => typeof v ==='function',
       getSumTotal = (array, prop) => array.reduce((prev, cur) => prev + cur[prop], 0);
 
 
+// clears a circular area on canvas, like clearRect, for circles
+//const clearCircle = (ctx, x, y, r) => {
+//    for(let i = 0; i < Math.round( Math.PI * r ); i++ ) {
+//        let angle = ( i / Math.round( Math.PI * r )) * 360;
+//        ctx.clearRect( x , y , Math.sin( angle * ( Math.PI / 180 )) * r , Math.cos( angle * ( Math.PI / 180 )) * r );
+//    }
+//}
+
+
 // returns the scaled value of the given position in the given range
 //const scale = ({ range, scale, position }) => {
 //  const [min, max] = range;
@@ -261,7 +270,7 @@ const extraMethods = {
             this.closePath();
           };
 
-          const drawPieSlice = ({ px, py, radius = w-(w/100*50), slice = 0, fill }) => {
+          const drawPieSlice = ({ px, py, radius = w-(w/100*50), innerRadius = 0, slice = 0, fill }) => {
             // dont draw anything if blank data
             if (Object.keys(d).length < 4) return;
             const paramX = px||x+w/2,
@@ -279,7 +288,6 @@ const extraMethods = {
             this.arc(
               paramX,
               paramY,
-              // radius
               radius,
               // start angle (in radians)
               deg2rad(currentPieDeg),
@@ -295,6 +303,17 @@ const extraMethods = {
               this.fill();
             }
             this.stroke();
+            if (innerRadius) {
+              this.save();
+              this.globalCompositeOperation = "destination-out";
+              this.beginPath();
+              this.arc(paramX, paramY, innerRadius, 0, Math.PI*2, false);
+              this.moveTo(radius, 0);
+              this.fill();
+              this.globalCompositeOperation = "source-over";
+              this.stroke();
+              this.restore();
+            }
             this.closePath();
             currentPieDeg += sliceInDeg;
           }
