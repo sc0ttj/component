@@ -413,21 +413,50 @@ const extraMethods = {
 
       drawLines = () => {
         const cachedLines = Object.keys(lineCache);
+
+        let paramX, paramY, areaFill;
+
         if (cachedLines.length < 1) return;
+
         this.save();
+
         cachedLines.forEach(key => {
-          this.beginPath();
           lineCache[key].forEach((line, l) => {
-            const { px, py, lineWidth, stroke } = lineCache[key][l];
+            const { px, py, lineWidth, stroke, fill } = lineCache[key][l];
             if (!px && !py) return;
             if (lineWidth) this.lineWidth = lineWidth;
             if (stroke) this.strokeStyle = stroke;
-            const paramX = getX(px, l);
-            const paramY = getY(py, l)
-            if (l === 0) this.moveTo(paramX, paramY);
+            if (fill) this.fillStyle = fill;
+            paramX = getX(px, l);
+            paramY = getY(py, l);
+            areaFill = fill;
+            if (l === 0) {
+              this.beginPath();
+              if (fill) {
+                if (xFlipped) {
+                  this.moveTo(x+w, yFlipped ? y-h : y);
+                } else {
+                  this.moveTo(paramX, paramY);
+                }
+              }
+            }
             this.lineTo(paramX, paramY);
-            this.stroke();
           });
+          this.stroke();
+
+
+          // if filling area
+          if (areaFill) {
+            if (xFlipped) {
+              this.lineTo(paramX, yFlipped ? y-h : y);
+            } else {
+              this.lineTo(paramX, yFlipped ? y-h : y);
+              this.lineTo(x,yFlipped ? y-h : y);
+            }
+            this.globalAlpha = 0.5;
+            this.fill();
+          }
+          // always close path
           this.closePath();
         });
         this.restore();
@@ -467,7 +496,7 @@ const extraMethods = {
     drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
 
-    for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale) {
+    for (let i=0, p=0; i<=(w+distanceBetweenTicks); i+=distanceBetweenTicks*scale) {
       const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
       this._d.xLabels.push(tickLabel)
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
