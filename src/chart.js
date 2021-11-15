@@ -345,79 +345,44 @@ const extraMethods = {
             let stackedBarOffset = prevData ? totalHeight*yDistance : 0;
 
             this.beginPath();
-            if (stacked) {
-              this.rect(
-                // x
-                xFlipped
-                  ? heightIsFromData
-                    ? x+w-(xDistance*n)-(stacked ? centered+(barPadding/2) : 0)
-                    : x+w
-                  : heightIsFromData
-                    ? x+(xDistance*n)-(stacked ? centered+(barPadding/2) : 0)
-                    : x,
-                // y
-                yFlipped
-                  ? heightIsFromData
-                    ? y-h+(stackedBarOffset)
-                    : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
-                  : heightIsFromData
-                    ? y-(stackedBarOffset)
-                    : y-(barWidth*i)-(yDistance*n)+centered,
-                // w
-                xFlipped
-                  ? widthIsFromData
-                    ? -(xDistance*barHeight)+(xDistance*minXRange)
-                    : stacked ? xDistance-barPadding: barWidth
-                  : widthIsFromData
-                    ? (xDistance*barHeight)-(xDistance*minXRange)
-                    : stacked ? xDistance-barPadding: barWidth,
-                // h
-                yFlipped
-                  ? heightIsFromData
-                    ? yDistance*barHeight-(yDistance*minYRange)
-                    : -barWidth
-                  : heightIsFromData
-                    ? -yDistance*barHeight+(yDistance*minYRange)
-                    : -barWidth
-              );
-              stackedBarOffsets[i].push(barHeight); // store all bar heights for this dataset
-            } else {
-              this.rect(
-                // x
-                xFlipped
-                  ? heightIsFromData
-                    ? x+w-(barWidth*i)-(xDistance*n)+centered
-                    : x+w
-                  : heightIsFromData
-                    ? x+(barWidth*i)+(xDistance*n)-centered
-                    : x,
-                // y
-                yFlipped
-                  ? heightIsFromData
-                    ? y-h
-                    : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
-                  : heightIsFromData
-                    ? y
-                    : y-(barWidth*i)-(yDistance*n)+centered,
-                // w
-                xFlipped
-                  ? widthIsFromData
-                    ? -(xDistance*width)+(xDistance*minXRange)
-                    : barWidth
-                  : widthIsFromData
-                    ? (xDistance*width)-(xDistance*minXRange)
-                    : barWidth,
-                // h
-                yFlipped
-                  ? heightIsFromData
-                    ? yDistance*height-(yDistance*minYRange)
-                    : -barWidth
-                  : heightIsFromData
-                    ? -yDistance*height+(yDistance*minYRange)
-                    : -barWidth
-              );
-            }
 
+            this.rect(
+              // x
+              xFlipped
+                ? heightIsFromData
+                  ? stacked ? x+w-(xDistance*n)-(centered+(barPadding/2)) : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
+                  : x+w
+                : heightIsFromData
+                  ? x+(xDistance*n)+(stacked ? barPadding-centered/2 : barWidth*i)-centered
+                  : x,
+              // y
+              yFlipped
+                ? heightIsFromData
+                  ? y-h+(stacked ? stackedBarOffset : 0)
+                  : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
+                : heightIsFromData
+                  ? y-(stacked ? stackedBarOffset : 0)
+                  : y-(barWidth*i)-(yDistance*n)+centered,
+              // w
+              xFlipped
+                ? widthIsFromData
+                  ? -(xDistance*(stacked ? barHeight : width))+(xDistance*minXRange)
+                  : stacked ? xDistance-barPadding: barWidth
+                : widthIsFromData
+                  ? (xDistance*barHeight)-(xDistance*minXRange)
+                  : stacked ? xDistance-barPadding: barWidth,
+              // h
+              yFlipped
+                ? heightIsFromData
+                  ? yDistance*(stacked ? barHeight : height)-(stacked ? 0 : yDistance*minYRange)
+                  : -barWidth
+                : heightIsFromData
+                  ? -yDistance*(stacked ? barHeight : height)+(stacked ? 0 : yDistance*minYRange)
+                  : -barWidth
+            );
+            // store all bar heights for this dataset
+            if (stacked) stackedBarOffsets[i].push(barHeight);
+            // draw it
             this.stroke();
             if (fill) {
               this.fillStyle = fill;
