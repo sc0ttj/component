@@ -350,10 +350,10 @@ const extraMethods = {
                 // x
                 xFlipped
                   ? heightIsFromData
-                    ? x+w-(xDistance*n)+centered
+                    ? x+w-(xDistance*n)-(stacked ? centered+(barPadding/2) : 0)
                     : x+w
                   : heightIsFromData
-                    ? x+(xDistance*n)-(stacked ? centered : 0)
+                    ? x+(xDistance*n)-(stacked ? centered+(barPadding/2) : 0)
                     : x,
                 // y
                 yFlipped
@@ -367,7 +367,7 @@ const extraMethods = {
                 xFlipped
                   ? widthIsFromData
                     ? -(xDistance*barHeight)+(xDistance*minXRange)
-                    : barWidth
+                    : stacked ? xDistance-barPadding: barWidth
                   : widthIsFromData
                     ? (xDistance*barHeight)-(xDistance*minXRange)
                     : stacked ? xDistance-barPadding: barWidth,
@@ -381,7 +381,6 @@ const extraMethods = {
                     : -barWidth
               );
               stackedBarOffsets[i].push(barHeight); // store all bar heights for this dataset
-              console.log('stackedBarOffsets', stackedBarOffsets);
             } else {
               this.rect(
                 // x
