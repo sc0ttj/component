@@ -325,14 +325,13 @@ const extraMethods = {
           }
 
           const drawBar = ({ height, width, fill, stacked = false, padding = 12 }) => {
-            const heightIsFromData = (height||height===0),
-                  widthIsFromData  = (width||width===0);
+            const isVertical = (height||height===0);
 
-            if (!widthIsFromData && !heightIsFromData) return;
+            if (!(width||width===0) && !isVertical) return;
 
-            const barPadding = heightIsFromData ? xDistance/100*padding : yDistance/100*padding,
-                  barWidth   = (heightIsFromData ? xDistance : yDistance)/dataLength-(barPadding/2),
-                  barHeight  = heightIsFromData ? height : width,
+            const barPadding = isVertical ? xDistance/100*padding : yDistance/100*padding,
+                  barWidth   = (isVertical ? xDistance : yDistance)/(stacked ? 1.25: dataLength)-(barPadding/2),
+                  barHeight  = isVertical ? height : width,
                   centered   = barWidth*dataLength/2;
 
             // accumulate the previous bar heights
@@ -342,41 +341,41 @@ const extraMethods = {
             });
 
             // set the stacked bar offset position
-            let stackedBarOffset = prevData ? totalHeight*yDistance : 0;
+            let stackedBarOffset = prevData ? totalHeight*(isVertical ? yDistance : xDistance) : 0;
 
             this.beginPath();
 
             this.rect(
               // x
               xFlipped
-                ? heightIsFromData
+                ? isVertical
                   ? stacked ? x+w-(xDistance*n)-(centered+(barPadding/2)) : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
                   : x+w
-                : heightIsFromData
+                : isVertical
                   ? x+(xDistance*n)+(stacked ? barPadding-centered/2 : barWidth*i)-centered
-                  : x,
+                  : x+stackedBarOffset,
               // y
               yFlipped
-                ? heightIsFromData
+                ? isVertical
                   ? y-h+(stacked ? stackedBarOffset : 0)
-                  : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
-                : heightIsFromData
+                  : y-h+(barWidth*i)+(yDistance*n)-(barWidth)
+                : isVertical
                   ? y-(stacked ? stackedBarOffset : 0)
-                  : y-(barWidth*i)-(yDistance*n)+centered,
+                  : stacked ? y-(yDistance*n)+barWidth/2 : y-barWidth*i-(yDistance*n)+centered,
               // w
               xFlipped
-                ? widthIsFromData
-                  ? -(xDistance*(stacked ? barHeight : width))+(xDistance*minXRange)
-                  : stacked ? xDistance-barPadding: barWidth
-                : widthIsFromData
-                  ? (xDistance*barHeight)-(xDistance*minXRange)
-                  : stacked ? xDistance-barPadding: barWidth,
+                ? isVertical
+                  ? stacked ? xDistance-barPadding: barWidth
+                  : -(xDistance*(stacked ? barHeight : width))+(xDistance*minXRange)
+                : isVertical
+                  ? stacked ? xDistance-barPadding: barWidth
+                  : (xDistance*barHeight)-(xDistance*minXRange),
               // h
               yFlipped
-                ? heightIsFromData
+                ? isVertical
                   ? yDistance*(stacked ? barHeight : height)-(stacked ? 0 : yDistance*minYRange)
                   : -barWidth
-                : heightIsFromData
+                : isVertical
                   ? -yDistance*(stacked ? barHeight : height)+(stacked ? 0 : yDistance*minYRange)
                   : -barWidth
             );
