@@ -350,7 +350,7 @@ const extraMethods = {
               xFlipped
                 ? isVertical
                   ? stacked ? x+w-(xDistance*n)-(centered+(barPadding/2)) : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
-                  : x+w
+                  : stacked ? x+w-stackedBarOffset : x+w
                 : isVertical
                   ? x+(xDistance*n)+(stacked ? barPadding-centered/2 : barWidth*i)-centered
                   : x+stackedBarOffset,
@@ -369,7 +369,7 @@ const extraMethods = {
                   : -(xDistance*(stacked ? barHeight : width))+(xDistance*minXRange)
                 : isVertical
                   ? stacked ? xDistance-barPadding: barWidth
-                  : (xDistance*barHeight)-(xDistance*minXRange),
+                  : (xDistance*barHeight)-(stacked ? 0 : xDistance*minXRange),
               // h
               yFlipped
                 ? isVertical
