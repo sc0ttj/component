@@ -349,16 +349,16 @@ const extraMethods = {
               // x
               xFlipped
                 ? isVertical
-                  ? stacked ? x+w-(xDistance*n)-(centered+(barPadding/2)) : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
+                  ? stacked ? x+w-(xDistance*n)-(barWidth+barPadding)/2 : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
                   : stacked ? x+w-stackedBarOffset : x+w
                 : isVertical
-                  ? x+(xDistance*n)+(stacked ? barPadding-centered/2 : barWidth*i)-centered
+                  ? stacked ? x+(xDistance*n)-(barWidth+barPadding)/2 : x+(xDistance*n)+(barWidth*i)-centered
                   : x+stackedBarOffset,
               // y
               yFlipped
                 ? isVertical
                   ? y-h+(stacked ? stackedBarOffset : 0)
-                  : y-h+(barWidth*i)+(yDistance*n)-(barWidth)
+                  : stacked ? y-h+(yDistance*n)+barWidth/2 : y-h+(barWidth*i)+(yDistance*n)-(barWidth)
                 : isVertical
                   ? y-(stacked ? stackedBarOffset : 0)
                   : stacked ? y-(yDistance*n)+barWidth/2 : y-barWidth*i-(yDistance*n)+centered,
