@@ -227,10 +227,16 @@ const extraMethods = {
 
 
       let lineCache = {},
-          drawLines = () => {};
+          drawLines = () => {},
+          stackedBarOffsets = {};
 
       dataKeys.forEach((key, i) => {
+        const prevData = data[dataKeys[i-1]], // if needed
+              nextData = data[dataKeys[i+1]]; // if needed
+
         let currentPieDeg = -90;
+
+        stackedBarOffsets[i] = [];
 
         data[key].forEach((d, n) => {
           // Create our drawing methods here:
@@ -318,51 +324,101 @@ const extraMethods = {
             currentPieDeg += sliceInDeg;
           }
 
-          const drawBar = ({ height, width, fill, padding = 12 }) => {
-            const useHeight = (height||height===0),
-                  useWidth  = (width||width===0);
+          const drawBar = ({ height, width, fill, stacked = false, padding = 12 }) => {
+            const heightIsFromData = (height||height===0),
+                  widthIsFromData  = (width||width===0);
 
-            if (!useWidth && !useHeight) return;
+            if (!widthIsFromData && !heightIsFromData) return;
 
-            const barPadding = useHeight ? xDistance/100*padding : yDistance/100*padding,
-                  barWidth   = (useHeight ? xDistance : yDistance)/dataLength-(barPadding/2),
+            const barPadding = heightIsFromData ? xDistance/100*padding : yDistance/100*padding,
+                  barWidth   = (heightIsFromData ? xDistance : yDistance)/dataLength-(barPadding/2),
+                  barHeight  = heightIsFromData ? height : width,
                   centered   = barWidth*dataLength/2;
 
+            // accumulate the previous bar heights
+            let totalHeight = 0;
+            Object.keys(stackedBarOffsets).forEach(key => {
+              totalHeight += stackedBarOffsets[key][n-1]||0;
+            });
+
+            // set the stacked bar offset position
+            let stackedBarOffset = prevData ? totalHeight*yDistance : 0;
+
             this.beginPath();
-            this.rect(
-              // x
-              xFlipped
-                ? useHeight
-                  ? x+w-(barWidth*i)-(xDistance*n)+centered
-                  : x+w
-                : useHeight
-                  ? x+(barWidth*i)+(xDistance*n)-centered
-                  : x,
-              // y
-              yFlipped
-                ? useHeight
-                  ? y-h
-                  : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
-                : useHeight
-                  ? y
-                  : y-(barWidth*i)-(yDistance*n)+centered,
-              // w
-              xFlipped
-                ? useWidth
-                  ? -(xDistance*width)+(xDistance*minXRange)
-                  : barWidth
-                : useWidth
-                  ? (xDistance*width)-(xDistance*minXRange)
-                  : barWidth,
-              // h
-              yFlipped
-                ? useHeight
-                  ? yDistance*height-(yDistance*minYRange)
-                  : -barWidth
-                : useHeight
-                  ? -yDistance*height+(yDistance*minYRange)
-                  : -barWidth
-            );
+            if (stacked) {
+              this.rect(
+                // x
+                xFlipped
+                  ? heightIsFromData
+                    ? x+w-(xDistance*n)+centered
+                    : x+w
+                  : heightIsFromData
+                    ? x+(xDistance*n)-(stacked ? centered : 0)
+                    : x,
+                // y
+                yFlipped
+                  ? heightIsFromData
+                    ? y-h+(stackedBarOffset)
+                    : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
+                  : heightIsFromData
+                    ? y-(stackedBarOffset)
+                    : y-(barWidth*i)-(yDistance*n)+centered,
+                // w
+                xFlipped
+                  ? widthIsFromData
+                    ? -(xDistance*barHeight)+(xDistance*minXRange)
+                    : barWidth
+                  : widthIsFromData
+                    ? (xDistance*barHeight)-(xDistance*minXRange)
+                    : stacked ? xDistance-barPadding: barWidth,
+                // h
+                yFlipped
+                  ? heightIsFromData
+                    ? yDistance*barHeight-(yDistance*minYRange)
+                    : -barWidth
+                  : heightIsFromData
+                    ? -yDistance*barHeight+(yDistance*minYRange)
+                    : -barWidth
+              );
+              stackedBarOffsets[i].push(barHeight); // store all bar heights for this dataset
+              console.log('stackedBarOffsets', stackedBarOffsets);
+            } else {
+              this.rect(
+                // x
+                xFlipped
+                  ? heightIsFromData
+                    ? x+w-(barWidth*i)-(xDistance*n)+centered
+                    : x+w
+                  : heightIsFromData
+                    ? x+(barWidth*i)+(xDistance*n)-centered
+                    : x,
+                // y
+                yFlipped
+                  ? heightIsFromData
+                    ? y-h
+                    : y-h+(barWidth*i)+(yDistance*n)-(barWidth/2)
+                  : heightIsFromData
+                    ? y
+                    : y-(barWidth*i)-(yDistance*n)+centered,
+                // w
+                xFlipped
+                  ? widthIsFromData
+                    ? -(xDistance*width)+(xDistance*minXRange)
+                    : barWidth
+                  : widthIsFromData
+                    ? (xDistance*width)-(xDistance*minXRange)
+                    : barWidth,
+                // h
+                yFlipped
+                  ? heightIsFromData
+                    ? yDistance*height-(yDistance*minYRange)
+                    : -barWidth
+                  : heightIsFromData
+                    ? -yDistance*height+(yDistance*minYRange)
+                    : -barWidth
+              );
+            }
+
             this.stroke();
             if (fill) {
               this.fillStyle = fill;
@@ -389,6 +445,7 @@ const extraMethods = {
         });
         // now run the given func on the decorated data
         fn(data[key], key, i);
+        //
       });
 
       drawLines = () => {
