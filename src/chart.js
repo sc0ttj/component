@@ -228,7 +228,8 @@ const extraMethods = {
 
       let lineCache = {},
           drawLines = () => {},
-          stackedBarOffsets = {};
+          stackedBarOffsets = {},
+          stackedLineOffsets = {};
 
       dataKeys.forEach((key, i) => {
         const prevData = data[dataKeys[i-1]], // if needed
@@ -414,51 +415,64 @@ const extraMethods = {
       drawLines = () => {
         const cachedLines = Object.keys(lineCache);
 
-        let paramX, paramY, areaFill;
+        let paramX, paramY, isStacked, areaFill;
 
         if (cachedLines.length < 1) return;
 
         this.save();
 
-        cachedLines.forEach(key => {
+        cachedLines.forEach((key, i) => {
+          stackedLineOffsets[key] = [];
+
           lineCache[key].forEach((line, l) => {
-            const { px, py, lineWidth, stroke, fill } = lineCache[key][l];
+            const { px, py, lineWidth, stroke, fill, stacked } = line;
+
             if (!px && !py) return;
+
             if (lineWidth) this.lineWidth = lineWidth;
             if (stroke) this.strokeStyle = stroke;
             if (fill) this.fillStyle = fill;
+
+            // accumulate the previous line heights
+            let totalHeight = 0;
+            const prevKey = cachedLines[i-1];
+            if (prevKey) {
+              Object.keys(stackedLineOffsets).forEach(k => {
+                totalHeight += stackedLineOffsets[k][l]||0;
+              });
+            }
+
             paramX = getX(px, l);
-            paramY = getY(py, l);
+            paramY = getY(stacked ? py+totalHeight : py, l);
             areaFill = fill;
+            isStacked = stacked;
+
             if (l === 0) {
               this.beginPath();
               if (fill) {
-                if (xFlipped) {
-                  this.moveTo(x+w, yFlipped ? y-h : y);
-                } else {
-                  this.moveTo(paramX, paramY);
-                }
+                xFlipped
+                  ? this.moveTo(x+w, yFlipped ? y-h : y)
+                  : this.moveTo(paramX, paramY);
               }
             }
             this.lineTo(paramX, paramY);
+            // store all line heights for this dataset
+            if (stacked) stackedLineOffsets[key].push(py);
           });
+
           this.stroke();
-
-
-          // if filling area
+          // if filling the area under the line
           if (areaFill) {
-            if (xFlipped) {
-              this.lineTo(paramX, yFlipped ? y-h : y);
-            } else {
-              this.lineTo(paramX, yFlipped ? y-h : y);
-              this.lineTo(x,yFlipped ? y-h : y);
-            }
-            this.globalAlpha = 0.5;
+            this.lineTo(paramX, yFlipped ? y-h : y);
+            if (!xFlipped) this.lineTo(x,yFlipped ? y-h : y);
+            if (isStacked) this.globalCompositeOperation = "destination-over"
+            this.globalAlpha = 0.75;
             this.fill();
           }
           // always close path
           this.closePath();
         });
+
         this.restore();
         lineCache = {};
       }
