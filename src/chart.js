@@ -228,7 +228,8 @@ const extraMethods = {
 
       let lineCache = {},
           drawLines = () => {},
-          stackedBarOffsets = {};
+          stackedBarOffsets = {},
+          stackedLineOffsets = {};
 
       dataKeys.forEach((key, i) => {
         const prevData = data[dataKeys[i-1]], // if needed
@@ -413,23 +414,65 @@ const extraMethods = {
 
       drawLines = () => {
         const cachedLines = Object.keys(lineCache);
+
+        let paramX, paramY, isStacked, areaFill;
+
         if (cachedLines.length < 1) return;
+
         this.save();
-        cachedLines.forEach(key => {
-          this.beginPath();
+
+        cachedLines.forEach((key, i) => {
+          stackedLineOffsets[key] = [];
+
           lineCache[key].forEach((line, l) => {
-            const { px, py, lineWidth, stroke } = lineCache[key][l];
+            const { px, py, lineWidth, stroke, fill, stacked } = line;
+
             if (!px && !py) return;
+
             if (lineWidth) this.lineWidth = lineWidth;
             if (stroke) this.strokeStyle = stroke;
-            const paramX = getX(px, l);
-            const paramY = getY(py, l)
-            if (l === 0) this.moveTo(paramX, paramY);
+            if (fill) this.fillStyle = fill;
+
+            // accumulate the previous line heights
+            let totalHeight = 0;
+            const prevKey = cachedLines[i-1];
+            if (prevKey) {
+              Object.keys(stackedLineOffsets).forEach(k => {
+                totalHeight += stackedLineOffsets[k][l]||0;
+              });
+            }
+
+            paramX = getX(px, l);
+            paramY = getY(stacked ? py+totalHeight : py, l);
+            areaFill = fill;
+            isStacked = stacked;
+
+            if (l === 0) {
+              this.beginPath();
+              if (fill) {
+                xFlipped
+                  ? this.moveTo(x+w, yFlipped ? y-h : y)
+                  : this.moveTo(paramX, paramY);
+              }
+            }
             this.lineTo(paramX, paramY);
-            this.stroke();
+            // store all line heights for this dataset
+            if (stacked) stackedLineOffsets[key].push(py);
           });
+
+          this.stroke();
+          // if filling the area under the line
+          if (areaFill) {
+            this.lineTo(paramX, yFlipped ? y-h : y);
+            if (!xFlipped) this.lineTo(x,yFlipped ? y-h : y);
+            if (isStacked) this.globalCompositeOperation = "destination-over"
+            this.globalAlpha = 0.75;
+            this.fill();
+          }
+          // always close path
           this.closePath();
         });
+
         this.restore();
         lineCache = {};
       }
@@ -467,7 +510,7 @@ const extraMethods = {
     drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
 
-    for (let i=0, p=0; i<=w; i+=distanceBetweenTicks*scale) {
+    for (let i=0, p=0; i<=(w+distanceBetweenTicks); i+=distanceBetweenTicks*scale) {
       const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
       this._d.xLabels.push(tickLabel)
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
