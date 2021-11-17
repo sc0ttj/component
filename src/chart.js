@@ -110,14 +110,14 @@ function drawAxisLine(ctx, dimensions, whichAxis = 'x', pos, lineWidth = 0.5, st
 function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCentered, distanceBetweenTicks, scale, lineWidth = 0.5, strokeStyle = '#bbb') {
   const { w, h, x, y } = dimensions,
         max = (whichAxis === 'x') ? w : h,
-        centered = tickCentered ? distanceBetweenTicks/2: 0;
+        centered = tickCentered ? 0 : distanceBetweenTicks/2;
 
   if (tickLength !== 0) {
     ctx.save();
     ctx.lineWidth = lineWidth;
     ctx.strokeStyle = strokeStyle;
 
-    for (let i=0, p=0; i<=max+(tickCentered ? (whichAxis==='y'?-1:0) : distanceBetweenTicks/4); i+=distanceBetweenTicks*scale){
+    for (let i=0, p=0; i<=max+(tickCentered ? distanceBetweenTicks/4 : (whichAxis==='y'?-1:0)); i+=distanceBetweenTicks*scale){
       ctx.beginPath();
       if (whichAxis === 'x'){
         const py = pos < 50 ? y : y-h;
@@ -544,7 +544,7 @@ const extraMethods = {
   //  - direction of rotation
   //  -
 
-  xAxis: function({ range, scale = 1, yPos = 0, tickLength = 5, label = false, labelBelow = true, tickLabelCentered = false, tickCentered = false, tickLabels }) {
+  xAxis: function({ range, scale = 1, yPos = 0, tickLength = 5, label = false, labelBelow = true, tickLabelCentered = false, tickCentered = true, tickLabels }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
@@ -586,7 +586,7 @@ const extraMethods = {
     }
   },
 
-  yAxis: function({ range, scale = 1, xPos = 0, tickLength = 5, label = false, labelLeft = true, tickCentered = false, tickLabels }) {
+  yAxis: function({ range, scale = 1, xPos = 0, tickLength = 5, label = false, labelLeft = true, tickCentered = true, tickLabels }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
