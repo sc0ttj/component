@@ -116,17 +116,18 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCe
     ctx.save();
     ctx.lineWidth = lineWidth;
     ctx.strokeStyle = strokeStyle;
-
-    for (let i=0, p=0; i<=max+(tickCentered ? distanceBetweenTicks/4 : (whichAxis==='y'?-1:0)); i+=distanceBetweenTicks*scale){
+    for (let i=0, p=0; i<=max+(tickCentered ? distanceBetweenTicks/4 : 0); i+=distanceBetweenTicks*scale){
       ctx.beginPath();
-      if (whichAxis === 'x'){
-        const py = pos < 50 ? y : y-h;
-        ctx.moveTo(x+i+(centered),py);
-        ctx.lineTo(x+i+(centered),py-(tickLength/100*h))
-      } else {
-        const px = pos < 50 ? x : x+w;
-        ctx.moveTo(px,y-i-(centered));
-        ctx.lineTo(px+(tickLength/100*w),y-i-(centered));
+      if (whichAxis === 'x' && x+i+centered <= x+w) {
+        const px = x+i+centered,
+              py = pos < 50 ? y : y-h;
+        ctx.moveTo(px,py);
+        ctx.lineTo(px,py-(tickLength/100*h))
+      } else if (y-i-centered >= y-h) {
+        const px = pos < 50 ? x : x+w,
+              py = y-i-centered;
+        ctx.moveTo(px,py);
+        ctx.lineTo(px+(tickLength/100*w),py);
       }
       ctx.stroke();
       ctx.closePath();
