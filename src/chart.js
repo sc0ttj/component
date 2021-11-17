@@ -68,12 +68,12 @@ const isFn = v => typeof v ==='function',
 //    }
 //}
 
-
 // returns the scaled value of the given position in the given range
 //const scale = ({ range, scale, position }) => {
 //  const [min, max] = range;
 //  return min + (position - min) * scale;
 //};
+
 
 // returns the dimensions and sizings used by the chart/graph
 function getDimensions(ctx) {
@@ -231,6 +231,9 @@ const extraMethods = {
           stackedBarOffsets = {},
           stackedLineOffsets = {};
 
+      // Now loop over the users data:
+      // 'dataKeys' is the top-level keys in our data, (usually categories, countries, etc)
+      //
       dataKeys.forEach((key, i) => {
         const prevData = data[dataKeys[i-1]], // if needed
               nextData = data[dataKeys[i+1]]; // if needed
@@ -239,21 +242,33 @@ const extraMethods = {
 
         stackedBarOffsets[i] = [];
 
+        // Now loop over this dataset, and prepare drawing functions for each
+        // data point in the set.
+        //
         data[key].forEach((d, n) => {
-          // Create our drawing methods here:
+          // Lets create our drawing methods here:
           //
-          // @TODO - don't use `fill` etc, pass in `styles` object,
-          //         each drawing method should use setStyle()
+          // In d3, to make it assume shape x/y/w/h defaults, you join your data
+          // to an attr, but must often explictly define the other attrs as defaults.
+          //
+          // Let's make it easier - only define the attrs you wanna join to your data:
 
+          // Drawing lines:
+          // - just cache the line points, we'll draw them later
           const drawLine = (opts) => {
             lineCache[key] = lineCache[key] || [];
             lineCache[key].push(opts);
           }
 
+          //
+          // @TODO - don't use `fill` etc, pass in `styles` object,
+          //         each drawing method should use setStyle()
+
+          // Drawing circles
+          // - give either cx or cy, plus any other params you wanna set
           const drawCircle = ({ cx, cy, radius, start, end, rotate = 0, fill }) => {
             if (!cx && !cy) return;
             const paramX = getX(cx, n),  paramY = getY(cy, n);
-
             this.beginPath();
             this.arc(
               paramX,
@@ -277,9 +292,11 @@ const extraMethods = {
             this.closePath();
           };
 
-          const drawPieSlice = ({ px, py, radius = w-(w/100*50), innerRadius = 0, slice = 0, fill }) => {
+          // Drawing pie slices
+          // - just pass in the slice, all others are optional
+          const drawPieSlice = ({ slice = 0, totalDegrees = 360, px, py, radius = w-(w/100*50), innerRadius = 0, fill, rotation = 0 }) => {
             // dont draw anything if blank data
-            if (Object.keys(d).length < 4) return;
+            if (Object.keys(d).length < 5) return;
             const paramX = px||x+w/2,
                   paramY = py||y-h/2,
                   // get name of key/prop that "slice" represents:
@@ -289,7 +306,7 @@ const extraMethods = {
                   // get the sum total in our dataset for that prop
                   sumTotal = getSumTotal(data[key], prop),
                   sliceAsPercOfTotal = slice/sumTotal*100,
-                  sliceInDeg = sliceAsPercOfTotal*360/100;
+                  sliceInDeg = sliceAsPercOfTotal*totalDegrees/100;
 
             this.beginPath();
             this.arc(
@@ -297,37 +314,56 @@ const extraMethods = {
               paramY,
               radius,
               // start angle (in radians)
-              deg2rad(currentPieDeg),
+              deg2rad(currentPieDeg-rotation),
               // end angle (in radians)
-              deg2rad(currentPieDeg+sliceInDeg)
+              deg2rad(currentPieDeg+sliceInDeg-rotation),
             );
             // go to center of circle, and _then_ close the path (creates a "pie"
             // or "pacman" shape, if degrees < 360)
             this.lineTo(paramX, paramY);
-            this.closePath();
             if (fill) {
               this.fillStyle = fill;
               this.fill();
             }
-            this.stroke();
+            this.closePath();
             if (innerRadius) {
               this.save();
               this.globalCompositeOperation = "destination-out";
               this.beginPath();
-              this.arc(paramX, paramY, innerRadius, 0, Math.PI*2, false);
+              this.arc(paramX, paramY, innerRadius, 0, Math.PI*2);
               this.moveTo(radius, 0);
               this.fill();
-              this.globalCompositeOperation = "source-over";
-              this.stroke();
               this.restore();
             }
-            this.closePath();
             currentPieDeg += sliceInDeg;
           }
 
+          // Drawing arc/gauge slices
+          // - just pass in the slice, all others are optional
+          // - a wrapper around pieSlice, with different defaults
+          const drawArcSlice = ({
+            slice = 0,
+            fill,
+            innerRadius = 50,
+            rotation = 90,
+            totalDegrees = 180,
+          }) => {
+            drawPieSlice({
+              slice,
+              fill,
+              innerRadius,
+              rotation,
+              totalDegrees,
+            });
+          };
+
+          // Draw bars
+          // - pass in either height or width, not both!
+          //   - pass in height to draw vertical bars
+          //   - pass in width to draw horizontal bars
+          // - bars are grouped side by side, by default, but can be stacked
           const drawBar = ({ height, width, fill, stacked = false, padding = 12 }) => {
             const isVertical = (height||height===0);
-
             if (!(width||width===0) && !isVertical) return;
 
             const barPadding = isVertical ? xDistance/100*padding : yDistance/100*padding,
@@ -337,15 +373,14 @@ const extraMethods = {
 
             // accumulate the previous bar heights
             let totalHeight = 0;
-            Object.keys(stackedBarOffsets).forEach(key => {
-              totalHeight += stackedBarOffsets[key][n-1]||0;
+            Object.keys(stackedBarOffsets).forEach(k => {
+              totalHeight += stackedBarOffsets[k][n-1]||0;  // for padded data
+              //totalHeight += stackedBarOffsets[num][n]||0;  // not padded data
             });
-
             // set the stacked bar offset position
             let stackedBarOffset = prevData ? totalHeight*(isVertical ? yDistance : xDistance) : 0;
 
             this.beginPath();
-
             this.rect(
               // x
               xFlipped
@@ -393,18 +428,20 @@ const extraMethods = {
 
           // @TODO - add more drawing methods:
           //
-          // - candlesticks:                      .candle({ start, end, min, max, green, red, axis })
-          // - svg file:                          .svg({ svg, x, y, h, w })
-          // - rescaled svg:                      .svg({ svg, sx, sy, sh, sw, dx, dy, dh, dh })
-          // - lines/polygons, drawn manually:    .poly({ x1,y1,x2,y2 })
-          // - stacked lines (area chart)         .area({})
-          // -
-
+          // - smooth lines                          https://stackoverflow.com/a/40978275/5479837
+          // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
+          // - lollipops:                            ...just circles which draw a length to axis, or to lineLength (see https://www.d3-graph-gallery.com/lollipop.html)
+          // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
+          // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
+          // - small multiples                       https://www.juiceanalytics.com/writing/better-know-visualization-small-multiples
+          // - parallell coords plot:                ...multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
+          // - leaderboard                           ...alternative to parrallel coords plot, labelled table style
 
           // add drawing methods to `data[key][n][shape]`
           d['circle'] = drawCircle;
           d['bar'] = drawBar;
           d['pie'] = drawPieSlice;
+          d['arc'] = drawArcSlice;
           d['line'] = drawLine;
         });
         // now run the given func on the decorated data
@@ -412,13 +449,14 @@ const extraMethods = {
         //
       });
 
+      // Draw lines
+      // - draws the lines that were merely cached by .line()
+      // - takes its the x,y point to draw from the cachedLines object
       drawLines = () => {
         const cachedLines = Object.keys(lineCache);
-
-        let paramX, paramY, isStacked, areaFill;
-
         if (cachedLines.length < 1) return;
 
+        let paramX, paramY, isStacked, areaFill;
         this.save();
 
         cachedLines.forEach((key, i) => {
@@ -435,18 +473,17 @@ const extraMethods = {
 
             // accumulate the previous line heights
             let totalHeight = 0;
-            const prevKey = cachedLines[i-1];
-            if (prevKey) {
               Object.keys(stackedLineOffsets).forEach(k => {
-                totalHeight += stackedLineOffsets[k][l]||0;
+                //totalHeight += stackedLineOffsets[k][l-1]||0;  // for padded data
+                totalHeight += stackedLineOffsets[k][l]||0;      // not for padded data
               });
-            }
 
             paramX = getX(px, l);
             paramY = getY(stacked ? py+totalHeight : py, l);
             areaFill = fill;
             isStacked = stacked;
 
+            // if (l === 1) {   // for padded data
             if (l === 0) {
               this.beginPath();
               if (fill) {
@@ -495,6 +532,22 @@ const extraMethods = {
     };
   },
 
+  //
+  // @TODO - a radial axis, that draws a circle, ticks extending inwards/outwards from the outside edge
+  //
+  // - see https://github.com/vasturiano/d3-radial-axis
+  // - rotate around and draw tick for each axis point, accounting for scale
+  // - spread range over 360, so always draw a full circle
+  // - top of circle is min and max of range (clock, actual hours range [0,12])
+  //   - or set min and max of range (clock) by startAngle
+  // - long min,max = -180,180 so actual range is [-180,180]
+  // - avail axes are:
+  //  - degrees around edge
+  //  - distance from centre
+  //  - number of rotations
+  //  - direction of rotation
+  //  -
+
   xAxis: function(range, scale = 1, yPos = 0, tickLength = 5, label = false, below = true, centered = false, tickLabels) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
@@ -510,7 +563,7 @@ const extraMethods = {
     drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
 
-    for (let i=0, p=0; i<=(w+distanceBetweenTicks); i+=distanceBetweenTicks*scale) {
+    for (let i=0, p=0; i<=(w+distanceBetweenTicks/2); i+=distanceBetweenTicks*scale) {
       const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
       this._d.xLabels.push(tickLabel)
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
