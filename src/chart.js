@@ -107,25 +107,26 @@ function drawAxisLine(ctx, dimensions, whichAxis = 'x', pos, lineWidth = 0.5, st
 }
 
 // draws the ticks along the axis, used by xAxis and yAxis
-function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, distanceBetweenTicks, scale, lineWidth = 0.5, strokeStyle = '#bbb') {
+function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCentered, distanceBetweenTicks, scale, lineWidth = 0.5, strokeStyle = '#bbb') {
   const { w, h, x, y } = dimensions,
-        max = (whichAxis === 'x') ? w : h;
+        max = (whichAxis === 'x') ? w : h,
+        centered = tickCentered ? distanceBetweenTicks/2: 0;
 
   if (tickLength !== 0) {
     ctx.save();
     ctx.lineWidth = lineWidth;
     ctx.strokeStyle = strokeStyle;
 
-    for (let i=0, p=0; i<=max; i+=distanceBetweenTicks*scale){
+    for (let i=0, p=0; i<=max+(tickCentered ? (whichAxis==='y'?-1:0) : distanceBetweenTicks/4); i+=distanceBetweenTicks*scale){
       ctx.beginPath();
       if (whichAxis === 'x'){
         const py = pos < 50 ? y : y-h;
-        ctx.moveTo(x+i,py);
-        ctx.lineTo(x+i,py-(tickLength/100*h))
+        ctx.moveTo(x+i+(centered),py);
+        ctx.lineTo(x+i+(centered),py-(tickLength/100*h))
       } else {
         const px = pos < 50 ? x : x+w;
-        ctx.moveTo(px,y-i);
-        ctx.lineTo(px+(tickLength/100*w),y-i);
+        ctx.moveTo(px,y-i-(centered));
+        ctx.lineTo(px+(tickLength/100*w),y-i-(centered));
       }
       ctx.stroke();
       ctx.closePath();
@@ -543,7 +544,7 @@ const extraMethods = {
   //  - direction of rotation
   //  -
 
-  xAxis: function(range, scale = 1, yPos = 0, tickLength = 5, label = false, below = true, centered = false, tickLabels) {
+  xAxis: function({ range, scale = 1, yPos = 0, tickLength = 5, label = false, labelBelow = true, tickLabelCentered = false, tickCentered = false, tickLabels }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
@@ -555,7 +556,7 @@ const extraMethods = {
     this._d.xDistance = distanceBetweenTicks;
     this._d.xLabels = [];
 
-    drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
+    drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
 
     for (let i=0, p=0; i<=(w+distanceBetweenTicks/2); i+=distanceBetweenTicks*scale) {
@@ -564,8 +565,8 @@ const extraMethods = {
 
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
       const px = flippedAxis
-        ? centered ? x+w-i-(labelLength/2) : x+w-i
-        : centered ? x+i-(labelLength/2) : x+i;
+        ? tickLabelCentered ? x+w-i-(labelLength/2) : x+w-i
+        : tickLabelCentered ? x+i-(labelLength/2) : x+i;
 
       this.fillText(tickLabel, px, py);
       p++;
@@ -578,14 +579,14 @@ const extraMethods = {
       //x
       (x+w/2)-(labelLength/2),
       //y
-      below
+      labelBelow
         ? y+(16*3)
         : y-h-(16*2)-8
       );
     }
   },
 
-  yAxis: function(range, scale = 1, xPos = 0, tickLength = 5, label = false, leftLabel = true, tickLabels) {
+  yAxis: function({ range, scale = 1, xPos = 0, tickLength = 5, label = false, labelLeft = true, tickCentered = false, tickLabels }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
@@ -598,7 +599,7 @@ const extraMethods = {
     this._d.yDistance = distanceBetweenTicks;
     this._d.yLabels = [];
 
-    drawAxisTicks(this, { w, h, x, y }, 'y', xPos, xPos <= 50 ? tickLength : -tickLength, distanceBetweenTicks, scale);
+    drawAxisTicks(this, { w, h, x, y }, 'y', xPos, xPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale);
     drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
 
     for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
@@ -621,7 +622,7 @@ const extraMethods = {
         // text
         label,
         // x
-        leftLabel
+        labelLeft
           ? x-(`${label}`.length*6)-32-(maxLabelWidth*6)
           : xPos <= 50 ? x+w+16 : x+w+32+(maxLabelWidth*6),
         // y
