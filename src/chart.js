@@ -57,7 +57,7 @@ const isFn = v => typeof v ==='function',
       axisMin  = range => isArray(range) ? isAxisFlipped(range)?range[1]:range[0] : 0,
       getRange = range => isArray(range) ? isAxisFlipped(range)?range[0]-range[1]:range[1]-range[0]: 0,
       deg2rad = deg => +deg*Math.PI/180,
-      getSumTotal = (array, prop) => array.reduce((prev, cur) => prev + cur[prop], 0);
+      getSumTotal = (array, prop) => array.filter(item => item[prop]).reduce((prev, cur) => prev + cur[prop], 0);
 
 
 // clears a circular area on canvas, like clearRect, for circles
@@ -200,321 +200,316 @@ const extraMethods = {
   // then "decorates" it, so it's easier to draw that data to the chart area.
   //
   drawEach: function(fn) {
-    if (this.d) {
-      const { w, h, x, y } = getDimensions(this),
-          _d = this._d,
-          minXRange = axisMin(_d.xRange),
-          minYRange = axisMin(_d.yRange),
-          xFlipped = isAxisFlipped(_d.xRange),
-          yFlipped = isAxisFlipped(_d.yRange),
-          xDistance = _d.xDistance,
-          yDistance = _d.yDistance,
-          xScale = _d.xScale,
-          yScale = _d.yScale,
-          data = isArray(this.d) ? { data: [ ...this.d ] } : { ...this.d },
-          dataKeys = Object.keys(data),
-          dataLength = dataKeys.length;
+    if (!this.d) return;
 
-      // two helper funcs to get X,Y position of circle and line shapes,
-      // used by drawCircle() and drawLines()
-      const getX = (px, n) => xFlipped
-        ? (px||px===0) ? x+w-(xDistance*px)-(xDistance*minXRange) : x+w-(xDistance*n)*xScale
-        : (px||px===0) ? x+(xDistance*px)-(xDistance*minXRange) : x+(xDistance*n)*xScale;
+    const { w, h, x, y } = getDimensions(this),
+        _d = this._d,
+        minXRange = axisMin(_d.xRange),
+        minYRange = axisMin(_d.yRange),
+        xFlipped = isAxisFlipped(_d.xRange),
+        yFlipped = isAxisFlipped(_d.yRange),
+        xDistance = _d.xDistance,
+        yDistance = _d.yDistance,
+        xScale = _d.xScale,
+        yScale = _d.yScale,
+        data = isArray(this.d) ? { data: [ ...this.d ] } : { ...this.d },
+        dataKeys = Object.keys(data),
+        dataLength = dataKeys.length;
 
-      const getY = (py, n) => yFlipped
-        ? (py||py===0) ? y-h+(yDistance*py)-(yDistance*minYRange) : y-h+(yDistance*n)*yScale
-        : (py||py===0) ? y-(yDistance*py)+(yDistance*minYRange) : y-(yDistance*n)*yScale
+    // two helper funcs to get X,Y position of circle and line shapes,
+    // used by drawCircle() and drawLines()
+    const getX = (px, n) => xFlipped
+      ? (px||px===0) ? x+w-(xDistance*px)-(xDistance*minXRange) : x+w-(xDistance*n)*xScale
+      : (px||px===0) ? x+(xDistance*px)-(xDistance*minXRange) : x+(xDistance*n)*xScale;
+
+    const getY = (py, n) => yFlipped
+      ? (py||py===0) ? y-h+(yDistance*py)-(yDistance*minYRange) : y-h+(yDistance*n)*yScale
+      : (py||py===0) ? y-(yDistance*py)+(yDistance*minYRange) : y-(yDistance*n)*yScale
 
 
-      let lineCache = {},
-          drawLines = () => {},
-          stackedBarOffsets = {},
-          stackedLineOffsets = {};
+    let lineCache = {},
+        drawLines = () => {},
+        stackedBarOffsets = {},
+        stackedLineOffsets = {};
 
-      // Now loop over the users data:
-      // 'dataKeys' is the top-level keys in our data, (usually categories, countries, etc)
+    // Now loop over the users data:
+    // 'dataKeys' is the top-level keys in our data, (usually categories, countries, etc)
+    //
+    dataKeys.forEach((key, i) => {
+      const prevData = data[dataKeys[i-1]], // if needed
+            nextData = data[dataKeys[i+1]]; // if needed
+
+      let currentPieDeg = -90;
+
+      stackedBarOffsets[i] = [];
+
+      // Now loop over this dataset, and prepare drawing functions for each
+      // data point in the set.
       //
-      dataKeys.forEach((key, i) => {
-        const prevData = data[dataKeys[i-1]], // if needed
-              nextData = data[dataKeys[i+1]]; // if needed
-
-        let currentPieDeg = -90;
-
-        stackedBarOffsets[i] = [];
-
-        // Now loop over this dataset, and prepare drawing functions for each
-        // data point in the set.
+      data[key].forEach((d, n) => {
+        // Lets create our drawing methods here:
         //
-        data[key].forEach((d, n) => {
-          // Lets create our drawing methods here:
-          //
-          // In d3, to make it assume shape x/y/w/h defaults, you join your data
-          // to an attr, but must often explictly define the other attrs as defaults.
-          //
-          // Let's make it easier - only define the attrs you wanna join to your data:
-
-          // Drawing lines:
-          // - just cache the line points, we'll draw them later
-          const drawLine = (opts) => {
-            lineCache[key] = lineCache[key] || [];
-            lineCache[key].push(opts);
-          }
-
-          //
-          // @TODO - don't use `fill` etc, pass in `styles` object,
-          //         each drawing method should use setStyle()
-
-          // Drawing circles
-          // - give either cx or cy, plus any other params you wanna set
-          const drawCircle = ({ cx, cy, radius, start, end, rotate = 0, fill }) => {
-            if (!cx && !cy) return;
-            const paramX = getX(cx, n),  paramY = getY(cy, n);
-            this.beginPath();
-            this.arc(
-              paramX,
-              paramY,
-              // radius
-              radius||5,
-              // start angle (in radians)
-              deg2rad(start+rotate)||0,
-              // end angle (in radians)
-              deg2rad(end+rotate)||Math.PI*2
-            );
-            // go to center of circle, and _then_ close the path (creates
-            // a "pie" or "pacman" shape, if degrees < 360)
-            this.lineTo(paramX, paramY);
-            this.closePath();
-            this.stroke();
-            if (fill) {
-              this.fillStyle = fill;
-              this.fill();
-            }
-            this.closePath();
-          };
-
-          // Drawing pie slices
-          // - just pass in the slice, all others are optional
-          const drawPieSlice = ({ slice = 0, totalDegrees = 360, px, py, radius = w-(w/100*50), innerRadius = 0, fill, rotation = 0 }) => {
-            // dont draw anything if blank data
-            if (Object.keys(d).length < 5) return;
-            const paramX = px||x+w/2,
-                  paramY = py||y-h/2,
-                  // get name of key/prop that "slice" represents:
-                  // dumb method - just find a prop in `d` with a matching value
-                  // @TODO fix: this breaks if data is "padded" (first object in data[key] is empty)
-                  prop = Object.keys(d).find(k=>d[k]===slice),
-                  // get the sum total in our dataset for that prop
-                  sumTotal = getSumTotal(data[key], prop),
-                  sliceAsPercOfTotal = slice/sumTotal*100,
-                  sliceInDeg = sliceAsPercOfTotal*totalDegrees/100;
-
-            this.beginPath();
-            this.arc(
-              paramX,
-              paramY,
-              radius,
-              // start angle (in radians)
-              deg2rad(currentPieDeg-rotation),
-              // end angle (in radians)
-              deg2rad(currentPieDeg+sliceInDeg-rotation),
-            );
-            // go to center of circle, and _then_ close the path (creates a "pie"
-            // or "pacman" shape, if degrees < 360)
-            this.lineTo(paramX, paramY);
-            if (fill) {
-              this.fillStyle = fill;
-              this.fill();
-            }
-            this.closePath();
-            if (innerRadius) {
-              this.save();
-              this.globalCompositeOperation = "destination-out";
-              this.beginPath();
-              this.arc(paramX, paramY, innerRadius, 0, Math.PI*2);
-              this.moveTo(radius, 0);
-              this.fill();
-              this.restore();
-            }
-            currentPieDeg += sliceInDeg;
-          }
-
-          // Drawing arc/gauge slices
-          // - just pass in the slice, all others are optional
-          // - a wrapper around pieSlice, with different defaults
-          const drawArcSlice = ({
-            slice = 0,
-            fill,
-            innerRadius = 50,
-            rotation = 90,
-            totalDegrees = 180,
-          }) => {
-            drawPieSlice({
-              slice,
-              fill,
-              innerRadius,
-              rotation,
-              totalDegrees,
-            });
-          };
-
-          // Draw bars
-          // - pass in either height or width, not both!
-          //   - pass in height to draw vertical bars
-          //   - pass in width to draw horizontal bars
-          // - bars are grouped side by side, by default, but can be stacked
-          const drawBar = ({ height, width, fill, stacked = false, padding = 12 }) => {
-            const isVertical = (height||height===0);
-            if (!(width||width===0) && !isVertical) return;
-
-            const barPadding = isVertical ? xDistance/100*padding : yDistance/100*padding,
-                  barWidth   = (isVertical ? xDistance : yDistance)/(stacked ? 1.25: dataLength)-(barPadding/2),
-                  barHeight  = isVertical ? height : width,
-                  centered   = barWidth*dataLength/2;
-
-            // accumulate the previous bar heights
-            let totalHeight = 0;
-            Object.keys(stackedBarOffsets).forEach(k => {
-              totalHeight += stackedBarOffsets[k][n-1]||0;  // for padded data
-              //totalHeight += stackedBarOffsets[num][n]||0;  // not padded data
-            });
-            // set the stacked bar offset position
-            let stackedBarOffset = prevData ? totalHeight*(isVertical ? yDistance : xDistance) : 0;
-
-            this.beginPath();
-            this.rect(
-              // x
-              xFlipped
-                ? isVertical
-                  ? stacked ? x+w-(xDistance*n)-(barWidth+barPadding)/2 : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
-                  : stacked ? x+w-stackedBarOffset : x+w
-                : isVertical
-                  ? stacked ? x+(xDistance*n)-(barWidth+barPadding)/2 : x+(xDistance*n)+(barWidth*i)-centered
-                  : x+stackedBarOffset,
-              // y
-              yFlipped
-                ? isVertical
-                  ? y-h+(stacked ? stackedBarOffset : 0)
-                  : stacked ? y-h+(yDistance*n)+barWidth/2 : y-h+(barWidth*i)+(yDistance*n)-(barWidth)
-                : isVertical
-                  ? y-(stacked ? stackedBarOffset : 0)
-                  : stacked ? y-(yDistance*n)+barWidth/2 : y-barWidth*i-(yDistance*n)+centered,
-              // w
-              xFlipped
-                ? isVertical
-                  ? stacked ? xDistance-barPadding: barWidth
-                  : -(xDistance*(stacked ? barHeight : width))+(xDistance*minXRange)
-                : isVertical
-                  ? stacked ? xDistance-barPadding: barWidth
-                  : (xDistance*barHeight)-(stacked ? 0 : xDistance*minXRange),
-              // h
-              yFlipped
-                ? isVertical
-                  ? yDistance*(stacked ? barHeight : height)-(stacked ? 0 : yDistance*minYRange)
-                  : -barWidth
-                : isVertical
-                  ? -yDistance*(stacked ? barHeight : height)+(stacked ? 0 : yDistance*minYRange)
-                  : -barWidth
-            );
-            // store all bar heights for this dataset
-            if (stacked) stackedBarOffsets[i].push(barHeight);
-            // draw it
-            this.stroke();
-            if (fill) {
-              this.fillStyle = fill;
-              this.fill();
-            }
-            this.closePath();
-          }
-
-          // @TODO - add more drawing methods:
-          //
-          // - smooth lines                          https://stackoverflow.com/a/40978275/5479837
-          // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
-          // - lollipops:                            ...just circles which draw a length to axis, or to lineLength (see https://www.d3-graph-gallery.com/lollipop.html)
-          // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
-          // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
-          // - small multiples                       https://www.juiceanalytics.com/writing/better-know-visualization-small-multiples
-          // - parallell coords plot:                ...multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
-          // - leaderboard                           ...alternative to parrallel coords plot, labelled table style
-
-          // add drawing methods to `data[key][n][shape]`
-          d['circle'] = drawCircle;
-          d['bar'] = drawBar;
-          d['pie'] = drawPieSlice;
-          d['arc'] = drawArcSlice;
-          d['line'] = drawLine;
-        });
-        // now run the given func on the decorated data
-        fn(data[key], key, i);
+        // In d3, to make it assume shape x/y/w/h defaults, you join your data
+        // to an attr, but must often explictly define the other attrs as defaults.
         //
-      });
+        // Let's make it easier - only define the attrs you wanna join to your data:
 
-      // Draw lines
-      // - draws the lines that were merely cached by .line()
-      // - takes its the x,y point to draw from the cachedLines object
-      drawLines = () => {
-        const cachedLines = Object.keys(lineCache);
-        if (cachedLines.length < 1) return;
+        // Drawing lines:
+        // - just cache the line points, we'll draw them later
+        const drawLine = (opts) => {
+          lineCache[key] = lineCache[key] || [];
+          lineCache[key].push(opts);
+        }
 
-        let paramX, paramY, isStacked, areaFill;
-        this.save();
+        //
+        // @TODO - don't use `fill` etc, pass in `styles` object,
+        //         each drawing method should use setStyle()
 
-        cachedLines.forEach((key, i) => {
-          stackedLineOffsets[key] = [];
-
-          lineCache[key].forEach((line, l) => {
-            const { px, py, lineWidth, stroke, fill, stacked } = line;
-
-            if (!px && !py) return;
-
-            if (lineWidth) this.lineWidth = lineWidth;
-            if (stroke) this.strokeStyle = stroke;
-            if (fill) this.fillStyle = fill;
-
-            // accumulate the previous line heights
-            let totalHeight = 0;
-              Object.keys(stackedLineOffsets).forEach(k => {
-                //totalHeight += stackedLineOffsets[k][l-1]||0;  // for padded data
-                totalHeight += stackedLineOffsets[k][l]||0;      // not for padded data
-              });
-
-            paramX = getX(px, l);
-            paramY = getY(stacked ? py+totalHeight : py, l);
-            areaFill = fill;
-            isStacked = stacked;
-
-            // if (l === 1) {   // for padded data
-            if (l === 0) {
-              this.beginPath();
-              if (fill) {
-                xFlipped
-                  ? this.moveTo(x+w, yFlipped ? y-h : y)
-                  : this.moveTo(paramX, paramY);
-              }
-            }
-            this.lineTo(paramX, paramY);
-            // store all line heights for this dataset
-            if (stacked) stackedLineOffsets[key].push(py);
-          });
-
+        // Drawing circles
+        // - give either cx or cy, plus any other params you wanna set
+        const drawCircle = ({ cx, cy, radius, start, end, rotate = 0, fill }) => {
+          if (!cx && !cy) return;
+          const paramX = getX(cx, n),  paramY = getY(cy, n);
+          this.beginPath();
+          this.arc(
+            paramX,
+            paramY,
+            // radius
+            radius||5,
+            // start angle (in radians)
+            deg2rad(start+rotate)||0,
+            // end angle (in radians)
+            deg2rad(end+rotate)||Math.PI*2
+          );
+          // go to center of circle, and _then_ close the path (creates
+          // a "pie" or "pacman" shape, if degrees < 360)
+          this.lineTo(paramX, paramY);
+          this.closePath();
           this.stroke();
-          // if filling the area under the line
-          if (areaFill) {
-            this.lineTo(paramX, yFlipped ? y-h : y);
-            if (!xFlipped) this.lineTo(x,yFlipped ? y-h : y);
-            if (isStacked) this.globalCompositeOperation = "destination-over"
-            this.globalAlpha = 0.75;
+          if (fill) {
+            this.fillStyle = fill;
             this.fill();
           }
-          // always close path
           this.closePath();
+        };
+
+        // Drawing pie slices
+        // - just pass in the slice, all others are optional
+        const drawPieSlice = ({ slice = 0, totalDegrees = 360, px, py, radius = w-(w/100*50), innerRadius = 0, fill, rotation = 0 }) => {
+          // dont draw anything if blank data
+          if (Object.keys(d).length <= 5) return;
+
+          const paramX = px||x+w/2,
+                paramY = py||y-h/2,
+                // get name of key/prop that "slice" represents:
+                // dumb method - just find a prop in `d` with a matching value
+                prop = Object.keys(d).find(k=>d[k]===slice),
+                // get the sum total in our dataset for that prop
+                sumTotal = getSumTotal(data[key], prop),
+                sliceAsPercOfTotal = slice/(sumTotal)*100,
+                sliceInDeg = sliceAsPercOfTotal*totalDegrees/100;
+
+          this.beginPath();
+          this.arc(
+            paramX,
+            paramY,
+            radius,
+            // start angle (in radians)
+            deg2rad(currentPieDeg-rotation),
+            // end angle (in radians)
+            deg2rad(currentPieDeg+sliceInDeg-rotation),
+          );
+          // go to center of circle, and _then_ close the path (creates a "pie"
+          // or "pacman" shape, if degrees < 360)
+          this.lineTo(paramX, paramY);
+          if (fill) {
+            this.fillStyle = fill;
+            this.fill();
+          }
+          this.closePath();
+          if (innerRadius) {
+            this.save();
+            this.globalCompositeOperation = "destination-out";
+            this.beginPath();
+            this.arc(paramX, paramY, innerRadius, 0, Math.PI*2);
+            this.moveTo(radius, 0);
+            this.fill();
+            this.restore();
+          }
+          currentPieDeg += sliceInDeg;
+        }
+
+        // Drawing arc/gauge slices
+        // - just pass in the slice, all others are optional
+        // - a wrapper around pieSlice, with different defaults
+        const drawArcSlice = ({
+          slice = 0,
+          fill,
+          innerRadius = 50,
+          rotation = 90,
+          totalDegrees = 180,
+        }) => {
+          drawPieSlice({
+            slice,
+            fill,
+            innerRadius,
+            rotation,
+            totalDegrees,
+          });
+        };
+
+        // Draw bars
+        // - pass in either height or width, not both!
+        //   - pass in height to draw vertical bars
+        //   - pass in width to draw horizontal bars
+        // - bars are grouped side by side, by default, but can be stacked
+        const drawBar = ({ height, width, fill, stacked = false, padding = 12 }) => {
+          const isVertical = (height||height===0);
+
+          const barPadding = isVertical ? xDistance/100*padding : yDistance/100*padding,
+                barWidth   = (isVertical ? xDistance : yDistance)/(stacked ? 1.25: dataLength)-(barPadding/2),
+                barHeight  = isVertical ? height : width,
+                centered   = barWidth*dataLength/2;
+
+          // accumulate the previous bar heights
+          let totalHeight = 0;
+          if (stacked) {
+            Object.keys(stackedBarOffsets).forEach(k => {
+              // account for "padded" data when grabbing previous bar heights:
+              // @TODO - work out why this startNum check even works...
+              //       - and double check it actually does!
+              const startNum = stackedBarOffsets[k].length === 0 ? n-1 : n;
+              totalHeight += stackedBarOffsets[k][startNum]||0;
+            });
+          }
+          // set the stacked bar offset position
+          let stackedBarOffset = prevData ? totalHeight*(isVertical ? yDistance : xDistance) : 0;
+
+          this.beginPath();
+          this.rect(
+            // x
+            xFlipped
+              ? isVertical
+                ? stacked ? x+w-(xDistance*n)-(barWidth+barPadding)/2 : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
+                : stacked ? x+w-stackedBarOffset : x+w
+              : isVertical
+                ? stacked ? x+(xDistance*n)-(barWidth+barPadding)/2 : x+(xDistance*n)+(barWidth*i)-centered
+                : x+stackedBarOffset,
+            // y
+            yFlipped
+              ? isVertical
+                ? y-h+(stacked ? stackedBarOffset : 0)
+                : stacked ? y-h+(yDistance*n)+barWidth/2 : y-h+(barWidth*i)+(yDistance*n)-(barWidth)
+              : isVertical
+                ? y-(stacked ? stackedBarOffset : 0)
+                : stacked ? y-(yDistance*n)+barWidth/2 : y-barWidth*i-(yDistance*n)+centered,
+            // w
+            xFlipped
+              ? isVertical
+                ? stacked ? xDistance-barPadding: barWidth
+                : -(xDistance*(stacked ? barHeight : width))+(xDistance*minXRange)
+              : isVertical
+                ? stacked ? xDistance-barPadding: barWidth
+                : (xDistance*barHeight)-(stacked ? 0 : xDistance*minXRange),
+            // h
+            yFlipped
+              ? isVertical
+                ? yDistance*(stacked ? barHeight : height)-(stacked ? 0 : yDistance*minYRange)
+                : -barWidth
+              : isVertical
+                ? -yDistance*(stacked ? barHeight : height)+(stacked ? 0 : yDistance*minYRange)
+                : -barWidth
+          );
+          // store all bar heights for this dataset
+          if (stacked) stackedBarOffsets[i].push(barHeight);
+          // draw it
+          this.stroke();
+          if (fill) {
+            this.fillStyle = fill;
+            this.fill();
+          }
+          this.closePath();
+        }
+
+        // @TODO - add more drawing methods:
+        //
+        // - smooth lines                          https://stackoverflow.com/a/40978275/5479837
+        // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
+        // - lollipops:                            ...just circles which draw a length to axis, or to lineLength (see https://www.d3-graph-gallery.com/lollipop.html)
+        // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
+        // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
+        // - small multiples                       https://www.juiceanalytics.com/writing/better-know-visualization-small-multiples
+        // - parallell coords plot:                ...multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
+
+        // add drawing methods to `data[key][n][shape]`
+        d['circle'] = drawCircle;
+        d['bar'] = drawBar;
+        d['pie'] = drawPieSlice;
+        d['arc'] = drawArcSlice;
+        d['line'] = drawLine;
+      });
+      // now run the given func on the decorated data
+      fn(data[key], key, i);
+      //
+    });
+
+    // Draw lines
+    // - draws the lines that were merely cached by .line()
+    // - takes its the x,y point to draw from the cachedLines object
+    drawLines = () => {
+      const cachedLines = Object.keys(lineCache);
+      if (cachedLines.length < 1) return;
+      let paramX, paramY, isStacked, areaFill;
+      this.save();
+      cachedLines.forEach((key, i) => {
+        stackedLineOffsets[key] = [];
+        lineCache[key].forEach((line, l) => {
+          const { px, py, lineWidth, stroke, fill, stacked } = line;
+          // styling
+          if (lineWidth) this.lineWidth = lineWidth;
+          if (stroke) this.strokeStyle = stroke;
+          if (fill) this.fillStyle = fill;
+          // accumulate the previous line heights
+          let totalHeight = 0;
+          if (stacked) {
+            Object.keys(stackedLineOffsets).forEach(k => {
+              totalHeight += stackedLineOffsets[k][l]||0;
+            });
+          }
+          paramX = getX(px, l);
+          paramY = getY(stacked ? py+totalHeight : py, l);
+          areaFill = fill;
+          isStacked = stacked;
+          if (l === 0) {
+            this.beginPath();
+            if (fill) {
+              xFlipped
+                ? this.moveTo(x+w, yFlipped ? y-h : y)
+                : this.moveTo(paramX, paramY);
+            }
+          }
+          if (px||py) this.lineTo(paramX, paramY);
+          // store all line heights for this dataset
+          if (stacked) stackedLineOffsets[key].push(py);
         });
 
-        this.restore();
-        lineCache = {};
-      }
-      drawLines();
+        this.stroke();
+        // if filling the area under the line
+        if (areaFill) {
+          this.lineTo(paramX, yFlipped ? y-h : y);
+          if (!xFlipped) this.lineTo(x,yFlipped ? y-h : y);
+          if (isStacked) this.globalCompositeOperation = "destination-over"
+          this.globalAlpha = 0.75;
+          this.fill();
+        }
+        // always close path
+        this.closePath();
+      });
+
+      this.restore();
+      lineCache = {};
     }
+    drawLines();
   },
 
   margin: function(t,b,l,r){
@@ -566,25 +561,13 @@ const extraMethods = {
     for (let i=0, p=0; i<=(w+distanceBetweenTicks/2); i+=distanceBetweenTicks*scale) {
       const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
       this._d.xLabels.push(tickLabel)
+
       const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
-      if (!flippedAxis) {
-        this.fillText(
-          // text
-          tickLabel,
-          // x
-          centered ? x+i-(labelLength/2) : x+i,
-          // y
-          py);
-      } else {
-        this.fillText(
-          // text
-          tickLabel,
-          // x
-          centered ? x+w-i-(labelLength/2) : x+w-i,
-          // y
-          py
-        );
-      }
+      const px = flippedAxis
+        ? centered ? x+w-i-(labelLength/2) : x+w-i
+        : centered ? x+i-(labelLength/2) : x+i;
+
+      this.fillText(tickLabel, px, py);
       p++;
     }
 
@@ -619,23 +602,17 @@ const extraMethods = {
     drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
 
     for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
-
       const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
-
       const tickLabelWidth = `${tickLabel}`.length;
-
       if (tickLabelWidth >= maxLabelWidth) maxLabelWidth = tickLabelWidth;
       this._d.yLabels.push(tickLabel);
 
+      const py = !flippedAxis ? y-i+4 : (y-h)+i+2;
       const px = (xPos <= 50)
         ? x-16-(tickLabelWidth*6)+(w/100*xPos)
         : x+(w/100*xPos)+16;
 
-      if (!flippedAxis) {
-        this.fillText(tickLabel, px, y-i+4);
-      } else {
-        this.fillText(tickLabel, px, (y-h)+i+2);
-      }
+      this.fillText(tickLabel, px, py);
       p++;
     }
 
