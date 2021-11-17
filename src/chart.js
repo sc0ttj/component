@@ -156,6 +156,12 @@ const getTickLabel = (range, flippedAxis, pos, scale, labels) => {
   return tickLabel;
 }
 
+const getTextWidth  = (ctx, t) => ctx.measureText(t).width;
+const getTextHeight = (ctx, t) => {
+  const metrics = ctx.measureText(t);
+  return metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+}
+
 
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
@@ -437,10 +443,10 @@ const extraMethods = {
         //
         // - smooth lines                          https://stackoverflow.com/a/40978275/5479837
         // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
-        // - lollipops:                            ...just circles which draw a length to axis, or to lineLength (see https://www.d3-graph-gallery.com/lollipop.html)
         // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
         // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
         // - small multiples                       https://www.juiceanalytics.com/writing/better-know-visualization-small-multiples
+        // - lollipops:                            ...just circles which draw a length to axis, or to lineLength (see https://www.d3-graph-gallery.com/lollipop.html)
         // - parallell coords plot:                ...multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
 
         // add drawing methods to `data[key][n][shape]`
@@ -524,7 +530,7 @@ const extraMethods = {
   },
 
   setStyle: function(obj) {
-    for(i in obj) {
+    for(let i in obj) {
       this[i] = obj[i];
     };
   },
@@ -550,7 +556,8 @@ const extraMethods = {
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
           distanceBetweenTicks = Math.abs(w / theRange),
-          labelLength = label.length*6;
+          labelLength = getTextWidth(this, label),
+          labelHeight = getTextHeight(this, label);
 
     this._d.xRange = range;
     this._d.xScale = scale;
@@ -561,14 +568,14 @@ const extraMethods = {
     drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
 
     for (let i=0, p=0; i<=(w+distanceBetweenTicks/2); i+=distanceBetweenTicks*scale) {
-      const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
-      this._d.xLabels.push(tickLabel)
+      const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels),
+            tickLabelLength = getTextWidth(this, tickLabel),
+            py = yPos <= 50 ? (y+labelHeight+(labelHeight/2))-(h/100*yPos) : y-(h/100*yPos)-labelHeight,
+            px = flippedAxis
+              ? tickLabelCentered ? x+w-i-(tickLabelLength/2) : x+w-i
+              : tickLabelCentered ? x+i-(tickLabelLength/2) : x+i;
 
-      const py = yPos <= 50 ? (y+16+8)-(h/100*yPos) : y-(h/100*yPos)-16;
-      const px = flippedAxis
-        ? tickLabelCentered ? x+w-i-(labelLength/2) : x+w-i
-        : tickLabelCentered ? x+i-(labelLength/2) : x+i;
-
+      this._d.xLabels.push(tickLabel);
       this.fillText(tickLabel, px, py);
       p++;
     }
@@ -581,8 +588,8 @@ const extraMethods = {
       (x+w/2)-(labelLength/2),
       //y
       labelBelow
-        ? y+(16*3)
-        : y-h-(16*2)-8
+        ? y+(labelHeight*3)
+        : y-h-(labelHeight*2)-(labelHeight/2)
       );
     }
   },
@@ -591,7 +598,9 @@ const extraMethods = {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
-          distanceBetweenTicks = Math.abs(h / theRange);
+          distanceBetweenTicks = Math.abs(h / theRange),
+          labelWidth = getTextWidth(this, label),
+          labelHeight = getTextHeight(this, label);
 
     let maxLabelWidth = 0;
 
@@ -604,16 +613,15 @@ const extraMethods = {
     drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
 
     for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
-      const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels);
-      const tickLabelWidth = `${tickLabel}`.length;
+      const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels),
+            tickLabelWidth = getTextWidth(this, tickLabel),
+            py = !flippedAxis ? y-i+4 : (y-h)+i+2,
+            px = (xPos <= 50)
+              ? x-labelHeight-(tickLabelWidth)+(w/100*xPos)
+              : x+(w/100*xPos)+labelHeight;
+
       if (tickLabelWidth >= maxLabelWidth) maxLabelWidth = tickLabelWidth;
       this._d.yLabels.push(tickLabel);
-
-      const py = !flippedAxis ? y-i+4 : (y-h)+i+2;
-      const px = (xPos <= 50)
-        ? x-16-(tickLabelWidth*6)+(w/100*xPos)
-        : x+(w/100*xPos)+16;
-
       this.fillText(tickLabel, px, py);
       p++;
     }
@@ -624,8 +632,8 @@ const extraMethods = {
         label,
         // x
         labelLeft
-          ? x-(`${label}`.length*6)-32-(maxLabelWidth*6)
-          : xPos <= 50 ? x+w+16 : x+w+32+(maxLabelWidth*6),
+          ? x-labelWidth-(labelHeight*2)-(maxLabelWidth)
+          : xPos <= 50 ? x+w+labelHeight : x+w+(labelHeight*2)+(maxLabelWidth),
         // y
         y+4-(h/2)
       );
