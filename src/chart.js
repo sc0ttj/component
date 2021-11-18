@@ -7,17 +7,16 @@
  *
  */
 
-  // @TODO - fixes
+  // @TODO - fixes and improvements
   //
   // - sharper/crisper lines:  translate canvas by 0.5px, and round everything to 1px
-  // -
-  //
-  //
+  // - refactor: dont cache lines, draw them in the same func as the other shapes
+  // - fix: use `clip` to remove inner circle of doughnuts/arcs, to it doesn't remove bits of the other shapes
+  //    - fix: once `clip` fix is working, allow setting stroke lines on pie/doughnut/arc arc shapes
 
 
-  // @TODO - add more drawing methods:
+  // @TODO - more drawing methods:
   //
-  // - rounded lines                         https://stackoverflow.com/a/40978275/5479837
   // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
   // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
   // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
@@ -27,17 +26,13 @@
   // @TODO - a radial axis, that draws a circle, ticks extending inwards/outwards from the outside edge
   //
   // - see https://github.com/vasturiano/d3-radial-axis
-  // - rotate around and draw tick for each axis point, accounting for scale
-  // - spread range over 360, so always draw a full circle
-  // - top of circle is min and max of range (clock, actual hours range [0,12])
-  //   - or set min and max of range (clock) by startAngle
-  // - long min,max = -180,180 so actual range is [-180,180]
+  // - x axis rotates around the circle
+  // - y axis reaches from centre to each tick on x axis
   // - avail axes are:
-  //  - degrees around edge
-  //  - distance from centre
+  //  - degrees around edge (x axis)
+  //  - distance from centre (y axis)
   //  - number of rotations
   //  - direction of rotation
-  //  -
 
 
 
