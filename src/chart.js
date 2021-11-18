@@ -99,7 +99,6 @@ const isFn = v => typeof v ==='function',
 //  return min + (position - min) * scale;
 //};
 
-
 const setStyle = (ctx, obj) => {
   let fixedProp;
   for(let prop in obj) {
@@ -154,13 +153,13 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCe
     for (let i=0, p=0; i<=max+(tickCentered ? distanceBetweenTicks/4 : 0); i+=distanceBetweenTicks*scale){
       ctx.beginPath();
       if (whichAxis === 'x' && x+i+centered <= x+w) {
-        const px = x+i+centered,
-              py = pos < 50 ? y : y-h;
+        const px = Math.round(x+i+centered),
+              py = Math.round(pos < 50 ? y : y-h);
         ctx.moveTo(px,py);
         ctx.lineTo(px,py-(tickLength/100*h))
       } else if (y-i-centered >= y-h) {
-        const px = pos < 50 ? x : x+w,
-              py = y-i-centered;
+        const px = Math.round(pos < 50 ? x : x+w),
+              py = Math.round(y-i-centered);
         ctx.moveTo(px,py);
         ctx.lineTo(px+(tickLength/100*w),py);
       }
@@ -587,13 +586,13 @@ const extraMethods = {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
-          distanceBetweenTicks = Math.abs(w / theRange),
           labelLength = getTextWidth(this, label),
-          labelHeight = getTextHeight(this, label);
+          labelHeight = getTextHeight(this, label),
+          distanceBetweenTicks = Math.abs(w / theRange);
 
     this._d.xRange = range;
     this._d.xScale = scale;
-    this._d.xDistance = distanceBetweenTicks;
+    this._d.xDistance = Math.round(distanceBetweenTicks);
     this._d.xLabels = [];
 
     drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale);
@@ -630,15 +629,15 @@ const extraMethods = {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
-          distanceBetweenTicks = Math.abs(h / theRange),
           labelWidth = getTextWidth(this, label),
-          labelHeight = getTextHeight(this, label);
+          labelHeight = getTextHeight(this, label),
+          distanceBetweenTicks = Math.abs(h / theRange);
 
     let maxLabelWidth = 0;
 
     this._d.yRange = range;
     this._d.yScale = scale;
-    this._d.yDistance = distanceBetweenTicks;
+    this._d.yDistance = Math.round(distanceBetweenTicks);
     this._d.yLabels = [];
 
     drawAxisTicks(this, { w, h, x, y }, 'y', xPos, xPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale);
