@@ -413,7 +413,7 @@ const extraMethods = {
         //   - pass in height to draw vertical bars
         //   - pass in width to draw horizontal bars
         // - bars are grouped side by side, by default, but can be stacked
-        const drawBar = ({ height, width, stacked = false, padding = 12, style }) => {
+        const drawBar = ({ height, width, offset = 0, stacked = false, padding = 12, style }) => {
           const isVertical = (height||height===0);
 
           const barPadding = isVertical ? xDistance/100*padding : yDistance/100*padding,
@@ -444,18 +444,18 @@ const extraMethods = {
             // x
             xFlipped
               ? isVertical
-                ? stacked ? x+w-(xDistance*n)-(barWidth+barPadding)/2 : x+w-(barWidth*i)-(xDistance*n)+(centered/2)
+                ? stacked ? x+w-(xDistance*n)-(barWidth+barPadding)/2 : x+w-(barWidth*i)-(xDistance*n)-centered
                 : stacked ? x+w-stackedBarOffset : x+w
               : isVertical
-                ? stacked ? x+(xDistance*n)-(barWidth+barPadding)/2 : x+(xDistance*n)+(barWidth*i)-centered
+                ? stacked ? x+(xDistance*n)-(barWidth+barPadding)/2 : x+(barWidth*i)+(xDistance*n)-centered
                 : x+stackedBarOffset,
             // y
             yFlipped
               ? isVertical
-                ? y-h+(stacked ? stackedBarOffset : 0)
+                ? y-h+(stacked ? stackedBarOffset : 0-(yDistance*offset))
                 : stacked ? y-h+(yDistance*n)+barWidth/2 : y-h+(barWidth*i)+(yDistance*n)-(barWidth)
               : isVertical
-                ? y-(stacked ? stackedBarOffset : 0)
+                ? y-(stacked ? stackedBarOffset : 0)+(yDistance*offset) // NOTE: `offset` used for candlesticks
                 : stacked ? y-(yDistance*n)+barWidth/2 : y-barWidth*i-(yDistance*n)+centered,
             // w
             xFlipped
@@ -481,12 +481,40 @@ const extraMethods = {
           if (style) this.restore();
         }
 
+        const drawCandle = ({ open, close, low, high, green, red, padding = 100, style }) => {
+          const length = Math.abs(open - close),
+                offset = length - (close > open ? close : open),
+                lineLength = high - low,
+                px = xFlipped ? x+w-(xDistance*n) : x+(xDistance*n);
+
+          if (high-low > 0) {
+            this.beginPath();
+            this.save();
+            setStyle(this, style);
+            this.moveTo(px, getY(high, n));
+            this.lineTo(px, getY(low, n)-1);
+            this.stroke();
+            this.restore();
+          }
+
+          drawBar({
+            height: length,
+            offset,
+            padding,
+            style: {
+              ...style,
+              fill: close > open ? green||'#0d0' : red||'#d00',
+            },
+          });
+        };
+
         // add drawing methods to `data[key][n][shape]`
         d['circle'] = drawCircle;
         d['bar'] = drawBar;
         d['pie'] = drawPieSlice;
         d['arc'] = drawArcSlice;
         d['line'] = drawLine;
+        d['candle'] = drawCandle;
       });
       // now run the given func on the decorated data
       fn(data[key], key, i);
