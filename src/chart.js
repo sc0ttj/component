@@ -1,28 +1,24 @@
 /*
  * Based on Canvas Context2D Wrapper <http://github.com/millermedeiros/CanvasContext2DWrapper>
  *
- * With additions shamelessly stolen from:
- *
- * -
- *
  */
 
   // @TODO - fixes and improvements
   //
-  // - sharper/crisper lines:  translate canvas by 0.5px, and round everything to 1px
   // - refactor: dont cache lines, draw them in the same func as the other shapes
   // - fix: use `clip` to remove inner circle of doughnuts/arcs, to it doesn't remove bits of the other shapes
   //    - fix: once `clip` fix is working, allow setting stroke lines on pie/doughnut/arc arc shapes
 
-
   // @TODO - more drawing methods:
   //
-  // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
-  // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
-  // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
-  // - parallell coords plot:                ...multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
+  // - candlesticks:  .candle({ open, close, low, high, green, red, whichAxis })`
+  // - draw svg:      .svg({ x, y, w, h , data })  ..where `data` is { '.a-selector': { 'fill':  data.foo }
 
+  // @TODO - more chart types
   //
+  // - spider charts           https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
+  // - parallell coords plot:  multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
+
   // @TODO - a radial axis, that draws a circle, ticks extending inwards/outwards from the outside edge
   //
   // - see https://github.com/vasturiano/d3-radial-axis
