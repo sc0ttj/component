@@ -12,12 +12,6 @@
   // @TODO - more drawing methods:
   //
   // - candlesticks:  .candle({ open, close, low, high, green, red, whichAxis })`
-  // - draw svg:      .svg({ x, y, w, h , data })  ..where `data` is { '.a-selector': { 'fill':  data.foo }
-
-  // @TODO - more chart types
-  //
-  // - spider charts           https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
-  // - parallell coords plot:  multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
 
   // @TODO - a radial axis, that draws a circle, ticks extending inwards/outwards from the outside edge
   //
@@ -29,6 +23,13 @@
   //  - distance from centre (y axis)
   //  - number of rotations
   //  - direction of rotation
+
+  // @TODO - more chart types
+  //
+  // - spider charts           https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
+  // - parallell coords plot:  multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
+
+
 
 
 
