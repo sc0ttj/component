@@ -518,9 +518,11 @@ const extraMethods = {
           if (style) setStyle(this, style);
           // accumulate the previous line heights
           let totalHeight = 0;
+          let nextTotalHeight = 0;
           if (stacked) {
             Object.keys(stackedLineOffsets).forEach(k => {
               totalHeight += stackedLineOffsets[k][l]||0;
+              nextTotalHeight += stackedLineOffsets[k][l+1]||0;
             });
           }
           paramX = getX(px, l);
@@ -529,19 +531,18 @@ const extraMethods = {
           isStacked = stacked;
           if (l === 0) {
             this.beginPath();
-            if (areaFill && !smooth) {
+            if (areaFill) {
               xFlipped
                 ? this.moveTo(x+w, yFlipped ? y-h : y)
                 : this.moveTo(paramX, paramY);
             }
           }
-
           if (px||py) {
             if (smooth) {
               const nextLine = lineCache[key][l+1];
               if (nextLine) {
                 const nextPx = getX(nextLine.px, l+1),
-                      nextPy = getY(nextLine.py+totalHeight, l+1),
+                      nextPy = getY(nextLine.py+nextTotalHeight, l+1),
                       x_mid = (paramX + nextPx) / 2,
                       y_mid = (paramY + nextPy) / 2,
                       cp_x1 = (x_mid + paramX) / 2,
