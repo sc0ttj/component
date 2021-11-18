@@ -7,6 +7,40 @@
  *
  */
 
+  // @TODO - fixes
+  //
+  // - sharper/crisper lines:  translate canvas by 0.5px, and round everything to 1px
+  // -
+  //
+  //
+
+
+  // @TODO - add more drawing methods:
+  //
+  // - rounded lines                         https://stackoverflow.com/a/40978275/5479837
+  // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
+  // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
+  // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
+  // - parallell coords plot:                ...multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
+
+  //
+  // @TODO - a radial axis, that draws a circle, ticks extending inwards/outwards from the outside edge
+  //
+  // - see https://github.com/vasturiano/d3-radial-axis
+  // - rotate around and draw tick for each axis point, accounting for scale
+  // - spread range over 360, so always draw a full circle
+  // - top of circle is min and max of range (clock, actual hours range [0,12])
+  //   - or set min and max of range (clock) by startAngle
+  // - long min,max = -180,180 so actual range is [-180,180]
+  // - avail axes are:
+  //  - degrees around edge
+  //  - distance from centre
+  //  - number of rotations
+  //  - direction of rotation
+  //  -
+
+
+
 const ctxMethods = 'arc arcTo beginPath bezierCurveTo clearRect clip closePath createImageData createLinearGradient createRadialGradient createPattern drawFocusRing drawImage fill fillRect fillText getImageData isPointInPath lineTo measureText moveTo putImageData quadraticCurveTo rect restore rotate save scale setTransform stroke strokeRect strokeText transform translate'.split(' ');
 const ctxProps = 'canvas fillStyle font globalAlpha globalCompositeOperation lineCap lineJoin lineWidth miterLimit shadowOffsetX shadowOffsetY shadowBlur shadowColor strokeStyle textAlign textBaseline'.split(' ');
 
@@ -280,10 +314,6 @@ const extraMethods = {
           lineCache[key].push(opts);
         }
 
-        //
-        // @TODO - don't use `fill` etc, pass in `styles` object,
-        //         each drawing method should use setStyle()
-
         // Drawing circles
         // - give either cx or cy, plus any other params you wanna set
         const drawCircle = ({ cx, cy, radius, start, end, rotate = 0, style }) => {
@@ -460,16 +490,6 @@ const extraMethods = {
           if (style) this.restore();
         }
 
-        // @TODO - add more drawing methods:
-        //
-        // - smooth lines                          https://stackoverflow.com/a/40978275/5479837
-        // - spider charts                         https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
-        // - candlesticks:                         .candle({ open, close, low, high, green, red, whichAxis })
-        // - draw svg or fn(ctx, x, y):            .svg({ x, y, w, h , data })  where `data` is { '.a-selector': { 'fill':  data.foo }
-        // - small multiples                       https://www.juiceanalytics.com/writing/better-know-visualization-small-multiples
-        // - lollipops:                            ...just circles which draw a length to axis, or to lineLength (see https://www.d3-graph-gallery.com/lollipop.html)
-        // - parallell coords plot:                ...multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
-
         // add drawing methods to `data[key][n][shape]`
         d['circle'] = drawCircle;
         d['bar'] = drawBar;
@@ -484,23 +504,25 @@ const extraMethods = {
 
     // Draw lines
     // - draws the lines that were merely cached by .line()
-    // - takes its the x,y point to draw from the cachedLines object
+    // - takes its the x,y point to draw from the lineCache object
     drawLines = () => {
-      const cachedLines = Object.keys(lineCache);
-      if (cachedLines.length < 1) return;
+      const cachedKeys = Object.keys(lineCache);
+      if (cachedKeys.length < 1) return;
       let paramX, paramY, isStacked, areaFill;
       this.save();
-      cachedLines.forEach((key, i) => {
+      cachedKeys.forEach((key, i) => {
         stackedLineOffsets[key] = [];
         lineCache[key].forEach((line, l) => {
-          const { px, py, stacked, style } = line;
+          const { px, py, stacked, smooth, style } = line;
           // styling
           if (style) setStyle(this, style);
           // accumulate the previous line heights
           let totalHeight = 0;
+          let nextTotalHeight = 0;
           if (stacked) {
             Object.keys(stackedLineOffsets).forEach(k => {
               totalHeight += stackedLineOffsets[k][l]||0;
+              nextTotalHeight += stackedLineOffsets[k][l+1]||0;
             });
           }
           paramX = getX(px, l);
@@ -515,7 +537,24 @@ const extraMethods = {
                 : this.moveTo(paramX, paramY);
             }
           }
-          if (px||py) this.lineTo(paramX, paramY);
+          if (px||py) {
+            if (smooth) {
+              const nextLine = lineCache[key][l+1];
+              if (nextLine) {
+                const nextPx = getX(nextLine.px, l+1),
+                      nextPy = getY(nextLine.py+nextTotalHeight, l+1),
+                      x_mid = (paramX + nextPx) / 2,
+                      y_mid = (paramY + nextPy) / 2,
+                      cp_x1 = (x_mid + paramX) / 2,
+                      cp_x2 = (x_mid + nextPx) / 2;
+
+                this.quadraticCurveTo(cp_x1, paramY, x_mid,  y_mid);
+                this.quadraticCurveTo(cp_x2, nextPy, nextPx, nextPy);
+              }
+            } else {
+              this.lineTo(paramX, paramY);
+            }
+          }
           // store all line heights for this dataset
           if (stacked) stackedLineOffsets[key].push(py);
         });
@@ -552,22 +591,6 @@ const extraMethods = {
   setStyle: function(obj) {
     setStyle(this, obj);
   },
-
-  //
-  // @TODO - a radial axis, that draws a circle, ticks extending inwards/outwards from the outside edge
-  //
-  // - see https://github.com/vasturiano/d3-radial-axis
-  // - rotate around and draw tick for each axis point, accounting for scale
-  // - spread range over 360, so always draw a full circle
-  // - top of circle is min and max of range (clock, actual hours range [0,12])
-  //   - or set min and max of range (clock) by startAngle
-  // - long min,max = -180,180 so actual range is [-180,180]
-  // - avail axes are:
-  //  - degrees around edge
-  //  - distance from centre
-  //  - number of rotations
-  //  - direction of rotation
-  //  -
 
   xAxis: function({ range, scale = 1, yPos = 0, tickLength = 5, label = false, labelBelow = true, tickLabelCentered = false, tickCentered = true, tickLabels }) {
     const { w, h, x, y } = getDimensions(this),
