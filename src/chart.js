@@ -504,16 +504,16 @@ const extraMethods = {
 
     // Draw lines
     // - draws the lines that were merely cached by .line()
-    // - takes its the x,y point to draw from the cachedLines object
+    // - takes its the x,y point to draw from the lineCache object
     drawLines = () => {
-      const cachedLines = Object.keys(lineCache);
-      if (cachedLines.length < 1) return;
+      const cachedKeys = Object.keys(lineCache);
+      if (cachedKeys.length < 1) return;
       let paramX, paramY, isStacked, areaFill;
       this.save();
-      cachedLines.forEach((key, i) => {
+      cachedKeys.forEach((key, i) => {
         stackedLineOffsets[key] = [];
         lineCache[key].forEach((line, l) => {
-          const { px, py, stacked, style } = line;
+          const { px, py, stacked, smooth, style } = line;
           // styling
           if (style) setStyle(this, style);
           // accumulate the previous line heights
@@ -529,13 +529,31 @@ const extraMethods = {
           isStacked = stacked;
           if (l === 0) {
             this.beginPath();
-            if (areaFill) {
+            if (areaFill && !smooth) {
               xFlipped
                 ? this.moveTo(x+w, yFlipped ? y-h : y)
                 : this.moveTo(paramX, paramY);
             }
           }
-          if (px||py) this.lineTo(paramX, paramY);
+
+          if (px||py) {
+            if (smooth) {
+              const nextLine = lineCache[key][l+1];
+              if (nextLine) {
+                const nextPx = getX(nextLine.px, l+1),
+                      nextPy = getY(nextLine.py+totalHeight, l+1),
+                      x_mid = (paramX + nextPx) / 2,
+                      y_mid = (paramY + nextPy) / 2,
+                      cp_x1 = (x_mid + paramX) / 2,
+                      cp_x2 = (x_mid + nextPx) / 2;
+
+                this.quadraticCurveTo(cp_x1, paramY, x_mid,  y_mid);
+                this.quadraticCurveTo(cp_x2, nextPy, nextPx, nextPy);
+              }
+            } else {
+              this.lineTo(paramX, paramY);
+            }
+          }
           // store all line heights for this dataset
           if (stacked) stackedLineOffsets[key].push(py);
         });
