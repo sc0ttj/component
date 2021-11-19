@@ -26,6 +26,7 @@
   const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
 
 
+
   // Enable the enhanced canvas 2dContext API (optional).
   // The extended `ctx` enables:
   //  - HDPI aware size() method
@@ -50,9 +51,9 @@
       //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
     }
 
+
     ctx
       .clear()  // using `clear(true)` will clear transforms too
-      .beginPath()
 
       // uncomment one of the lines below to try out the "camera":
       // usage: camera(xCenter, yCenter, scale, rotation); // rotation is in degrees
@@ -214,3 +215,62 @@
 </script>
 </body>
 </html>
+
+<!--
+
+
+    ctx
+      chart(someArrayOfObjects)
+        .position(0, 0)
+        .title('How many hours did you work each week this year?')
+        .width(800)
+        .height(600)
+        .margins([24, 24, 24, 24])
+        .xAxis({
+          title: { text: 'Days', position: 'below' },
+          range: [0, 365],
+          labels: ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'],
+          ticks: {
+            length: 4,
+            color: '#444',
+            position: 'above',
+          },
+        })
+        .yAxis({
+          title: { text: 'Hours', position: 'left' },
+          range: [0, 24],
+          ticks: {
+            length: 4,
+            color: '#444',
+            position: 'right',
+          },
+        })
+        .draw(d => {
+          // this = chart object
+          // Here are the properties and methods available inside draw()
+          this.width
+          this.height
+          this.margin
+          this.xAxis
+          this.yAxis
+          //
+
+          // background grid
+          this.grid(cellSize, lineColor, lineWidth)
+          // scatter plot
+          this.circle(x,y)     // radius based on d.value
+          // bar charts
+          this.rect(x,y)       // h based on d.value, w based on number of bars
+          // pie charts
+          this.pieSlice(x,y)   // start + end rotations based on d.value and data index
+          // line charts
+          this.line(x,y)       //
+
+
+        })
+
+
+
+
+
+-->

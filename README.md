@@ -61,6 +61,7 @@ A "state" is a snapshot of your application data at a specific time.
   - [`useAudio`](#using-the-useaudio-module): add dynamic audio to your components (uses Web Audio API)
   - [`onLoop`](#using-the-onloop-module): a fixed-interval loop, suitable for games, animations, time-dependant stuff
   - [`geo`](#using-the-geo-module): an easy way to create Mercator or Robinson projected world maps
+  - [`chart`](#using-the-chart-module): an easy way to create charts, graphs and plotting things
   - [`react-hooks`](#using-the-react-hooks-module): an alternative, more React-like API add-on
   - [`devtools`](#using-the-devtools-module): enables easier component debugging in the browser
 
@@ -1998,6 +1999,143 @@ Here's an example map:
 ![Robinson map](https://user-images.githubusercontent.com/2726610/139452315-f6cb21b2-cca4-4e88-b647-a69e50ce82ed.png)
 
 For a full usage example, see [examples/usage-Geo.html](examples/usage-Geo.html).
+
+## Using the `Chart` module
+
+The `Chart` add-on let's you draw charts & graphs to the canvas, using a chainable API similar to `d3`. 
+
+It's only 3.5kb, minified & gzipped.
+
+It supports these chart types:
+
+- scatter charts
+- bubble charts
+- line charts
+- area charts (layered & stacked)
+- bar charts (horizontal & vertical)
+- grouped bar charts (horizontal & vertical)
+- stacked bar charts (horizontal & vertical)
+- candlestick charts
+- pie & doughnut charts
+- arc or "gauge" charts
+- lollipop charts
+- mixed charts
+
+It can work standalone, without `Component` being installed.
+
+### In browsers:
+
+```html
+<script src="https://unpkg.com/@scottjarvis/component/dist/chart.min.js"></script>
+<script>
+// use it here
+</script>
+```
+
+### In ES6:
+
+```js
+import { Chart } from '@scottjarvis/component';
+
+// use it here
+```
+
+### In NodeJS:
+
+```js
+const { Chart } = require('@scottjarvis/component');
+
+// use it here
+
+```
+
+### Usage:
+
+Here's how it works, generally:
+
+- define a canvas size
+- define the margins around your "chart area"
+- pass in some data to use
+- define X and Y axes:
+  - min and max values of axis
+  - labels and tick values
+  - styling, positioning, etc
+- use the `drawEach()` method to draw your chart:
+  - it loops over your data, giving access to each data point
+  - each data point is "decorated" with various drawing methods:
+    - `data.bar({ opts })` - draw bars
+    - `data.line({ opts })` - draw lines and filled areas, smoothed or not
+    - `data.circle({ opts })` - draw circles and circle segments around the chart
+    - `data.pie({ opts })` - draw a segment of a full, single circle
+    - `data.arc({ opts })` - draw a segment of a single arc (partial circle) 
+    - `data.candle({ opts })` - draw a candle stick (box and line, red or green)
+
+You need only pass in the options/attributes you want to join to your data and ignore the others - each drawing method will try to work out the rest, based on your margins and axes settings. However, there as some positioning and styling options available for each drawing method.
+
+Here's a minimal example, of a simple "candlestick" chart:
+
+```js
+  // enable the add-on:
+  Component.Ctx = Chart;
+
+  // ..create a component as usual, 
+  // ..now define it's view, where we draw our chart:
+
+  Foo.view = (props, ctx) => {
+    ctx.clear()
+
+    .size(props.width, props.height) 
+
+    .margin(40,80,170,80)  // top, bottom, left, right
+
+    // Pass in your data, an array of objects for bar/pie/candle charts, or 
+    // an object of arrays (more useful for grouped bar charts & line charts):
+    .useData({
+      'Dollars':
+      [
+        { year: 2000, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, open: 3, close: 4, low: 1, high: 8 },
+        // ...
+      ],
+    })
+
+    .xAxis({
+      range: [1999,2007],
+      scale: 1,
+      label: "Years",
+      tickLength: -3,
+    })
+
+    .yAxis({
+      range: [0,500],
+      scale: 5,
+      label: "Dollars",
+      tickLength: -3,
+    })
+
+    .drawEach(currency => {
+      currency.forEach(data => {
+        data.candle({
+          open: data.open,
+          close: data.close,
+          high: data.high,
+          low: data.low,
+        })
+      });
+    });
+
+  };
+```
+
+Some very basic examples/demos:
+
+<p align="center">
+  <img align="center" src="https://i.imgur.com/yaAXLdv.gif" alt="Chart demos" />
+</p>
+
+To see more about using `Chart`, see [examples/usage-Chart.html](examples/usage-Chart.html).
 
 ## Using the "React hooks" module
 
