@@ -2129,6 +2129,12 @@ Here's a minimal example, of a simple "candlestick" chart:
   };
 ```
 
+Some very basic examples/demos:
+
+<p align="center">
+  <img align="center" src="https://i.imgur.com/yaAXLdv.gif" alt="Chart demos" />
+</p>
+
 To see more about using `Chart`, see [examples/usage-Chart.html](examples/usage-Chart.html).
 
 ## Using the "React hooks" module
