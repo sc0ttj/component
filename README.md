@@ -2002,7 +2002,7 @@ For a full usage example, see [examples/usage-Geo.html](examples/usage-Geo.html)
 
 ## Using the `Chart` module
 
-The `Chart` add-on let's you draw charts & graphs to the canvas, using the a chainable API (kinda) similar to `d3`. 
+The `Chart` add-on let's you draw charts & graphs to the canvas, using a chainable API similar to `d3`. 
 
 It's only 3.5kb, minified & gzipped.
 
