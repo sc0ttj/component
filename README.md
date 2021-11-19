@@ -2051,7 +2051,28 @@ const { Chart } = require('@scottjarvis/component');
 
 ### Usage:
 
-Here's a minimal example showing how to make a chart:
+Here's how it works, generally:
+
+- define a canvas size
+- define the margins around your "chart area"
+- pass in some data to use
+- define X and Y axes
+  - min and max values of axis
+  - labels and tick values
+  - styling, positioning, etc
+- use the `drawEach()` method to draw your chart:
+  - loop over your data to access each data point
+  - each data point is decorated with various drawing methods:
+    - `data.bar({ opts })` - draw bars
+    - `data.line({ opts })` - draw lines and filled areas, smoothed or not
+    - `data.circle({ opts })` - draw circles and circle segments around the chart
+    - `data.pie({ opts })` - draw a segment of a full, single circle
+    - `data.arc({ opts })` - draw a segment of a single arc (partial circle) 
+    - `data.candle({ opts })` - draw a candle stick (box and line, red or green)
+
+You only pass in the options/attributes you want to join to your data, and ignore the others - each drawing method will try to work out the rest, based on your margins and axes settings.
+
+Here's a minimal example, of a simple "candlestick" chart:
 
 ```js
   // enable the add-on:
@@ -2061,15 +2082,14 @@ Here's a minimal example showing how to make a chart:
   // ..now define it's view, where we draw our chart:
 
   Foo.view = (props, ctx) => {
-    // Pass in your data, an array of objects for bar/pie/candle charts, or 
-    // an object of arrays (more useful for grouped bar charts & line charts):
-
     ctx.clear()
 
     .size(props.width, props.height) 
 
     .margin(40,80,170,80)  // top, bottom, left, right
 
+    // Pass in your data, an array of objects for bar/pie/candle charts, or 
+    // an object of arrays (more useful for grouped bar charts & line charts):
     .useData({
       'Dollars':
       [
@@ -2109,7 +2129,7 @@ Here's a minimal example showing how to make a chart:
   };
 ```
 
-To see more about `Chart` with `Component`, see [examples/usage-Chart.html](examples/usage-Chart.html).
+To see more about using `Chart`, see [examples/usage-Chart.html](examples/usage-Chart.html).
 
 ## Using the "React hooks" module
 
