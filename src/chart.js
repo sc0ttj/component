@@ -3,34 +3,12 @@
  *
  */
 
-  // @TODO - fixes and improvements
-  //
-  // - refactor: dont cache lines, draw them in the same func as the other shapes
-  // - fix: use `clip` to remove inner circle of doughnuts/arcs, to it doesn't remove bits of the other shapes
-  //    - fix: once `clip` fix is working, allow setting stroke lines on pie/doughnut/arc arc shapes
-
-  // @TODO - more drawing methods:
-  //
-  // - candlesticks:  .candle({ open, close, low, high, green, red, whichAxis })`
-
-  // @TODO - a radial axis, that draws a circle, ticks extending inwards/outwards from the outside edge
-  //
-  // - see https://github.com/vasturiano/d3-radial-axis
-  // - x axis rotates around the circle
-  // - y axis reaches from centre to each tick on x axis
-  // - avail axes are:
-  //  - degrees around edge (x axis)
-  //  - distance from centre (y axis)
-  //  - number of rotations
-  //  - direction of rotation
-
-  // @TODO - more chart types
-  //
-  // - spider charts           https://yangdanny97.github.io/blog/2019/03/01/D3-Spider-Chart
-  // - parallell coords plot:  multiple Y axes, implicit/invisible X axis: https://datavizcatalogue.com/methods/parallel_coordinates.html
-
-
-
+// @TODO Fixes and improvements:
+//
+// - fix mis-aligned stacked bars (see magic 1.2 number in setting of `barWidth`)
+//
+//
+//
 
 
 const ctxMethods = 'arc arcTo beginPath bezierCurveTo clearRect clip closePath createImageData createLinearGradient createRadialGradient createPattern drawFocusRing drawImage fill fillRect fillText getImageData isPointInPath lineTo measureText moveTo putImageData quadraticCurveTo rect restore rotate save scale setTransform stroke strokeRect strokeText transform translate'.split(' ');
@@ -86,14 +64,6 @@ const isFn = v => typeof v ==='function',
       getSumTotal = (array, prop) => array.filter(item => item[prop]).reduce((prev, cur) => prev + cur[prop], 0);
 
 
-// clears a circular area on canvas, like clearRect, for circles
-//const clearCircle = (ctx, x, y, r) => {
-//    for(let i = 0; i < Math.round( Math.PI * r ); i++ ) {
-//        let angle = ( i / Math.round( Math.PI * r )) * 360;
-//        ctx.clearRect( x , y , Math.sin( angle * ( Math.PI / 180 )) * r , Math.cos( angle * ( Math.PI / 180 )) * r );
-//    }
-//}
-
 // returns the scaled value of the given position in the given range
 //const scale = ({ range, scale, position }) => {
 //  const [min, max] = range;
@@ -112,12 +82,14 @@ const setStyle = (ctx, obj) => {
 
 // returns the dimensions and sizings used by the chart/graph
 function getDimensions(ctx) {
-  const w = ctx.canvas.width-ctx.margin.right-ctx.margin.left;
-  const h = ctx.canvas.height-ctx.margin.top-ctx.margin.bottom;
-  const x = 0+ctx.margin.left;
-  const y = ctx.margin.top+h;
+  const c = ctx.canvas,
+        m = ctx.margin,
+        w = c.width - m.right - m.left,
+        h = c.height - m.top - m.bottom,
+        x = m.left,
+        y = m.top + h;
   const { xRange, yRange, xScale, yScale, xLabels, yLabels, xDistance, yDistance } = ctx._d;
-  return { x, y, w, h, margin: ctx.margin, xRange, yRange, xScale, yScale, xLabels, yLabels, xDistance, yDistance };
+  return { x, y, w, h, margin: m, xRange, yRange, xScale, yScale, xLabels, yLabels, xDistance, yDistance };
 }
 
 // draws the main line of the axis, used by xAxis and yAxis
@@ -213,13 +185,14 @@ const extraMethods = {
     this.w = w ? w : h * a;
     this.h = h ? h : w * a;
     // respect device pixel ratio
-    const c = this.canvas;
+    const c = this.canvas,
+          s = c.style;
     c.width = this.w * PIXEL_RATIO;
     c.height = this.h * PIXEL_RATIO;
     // update the CSS too
-    c.style.width = this.w + 'px';
-    c.style.height = this.h + 'px';
-    c.style.objectFit = a ? 'contain' : null;
+    s.width = this.w + 'px';
+    s.height = this.h + 'px';
+    s.objectFit = a ? 'contain' : null;
     // adjust scale for pixel ratio
     if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
       this.scale(PIXEL_RATIO, PIXEL_RATIO);
@@ -492,7 +465,7 @@ const extraMethods = {
             this.save();
             setStyle(this, style);
             this.moveTo(px, getY(high, n));
-            this.lineTo(px, getY(low, n)-1);
+            this.lineTo(px, getY(low, n)-1); // -1 just to make a little nicer visual gap with the axis..
             this.stroke();
             this.restore();
           }
