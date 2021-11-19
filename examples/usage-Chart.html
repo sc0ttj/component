@@ -70,13 +70,23 @@
     // Pass in your data, an array of objects for simple bar charts, or
     // (more useful for grouped bar charts & line charts) an object of arrays:
     .useData({
+      'UK':
+      [{}, // padded data trick - mainly for bar charts, to give more "space" from axis
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
+      ],
       'USA':
       [{}, // padded data trick - mainly for bar charts, to give more "space" from axis
         { year: 2000, medals: 7, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: -5, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2001, medals: 5, open: 5, close: 6, low: 2, high: 6 },
         { year: 2002, medals: 5, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: -7, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: -4, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2003, medals: 7, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 4, open: 4, close: 3, low: 1, high: 5 },
         { year: 2005, medals: 6, open: 3, close: 5, low: 2, high: 6 },
         { year: 2006, medals: 8, open: 5, close: 6, low: 2, high: 6 },
       ],
@@ -89,27 +99,26 @@
     })
 
     .xAxis({
-      range: [-10,10],
-      scale: 2,
-      label: "",
+      range: [1999,2007],
+      scale: 1,
+      label: "Years",
       labelBelow: true,
       yPos: 0,
       tickLength: 100,
       tickCentered: true,
       tickLabelCentered: true,
-      //tickLabels: (label, i) => (i === 0 || i === 8) ? '' : label, // hide first or last label
-      tickLabels: label => label === -1 ? '' : label,
+      //tickLabels: label => '',
     })
 
     .yAxis({
-      range: [-10,10],
-      scale: 2,
-      label: "",
+      range: [0,10],
+      scale: 1,
+      label: "Totals",
       labelLeft: true,
       xPos: 0,
       tickLength: 100,
       tickCentered: true,
-      //tickLabels: label => label === -1 ? '' : label,
+      //tickLabels: label => '',
     })
 
     .drawEach( (country, name, i) => {
@@ -131,19 +140,21 @@
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
 
-        //data.bar({
-        //  height: data.medals,
-        //  stacked: false,
-        //  style:{ fill: colors[i] },
-        //});
-        data.circle({
-          py:     data.medals,
-          radius: Math.abs(data.medals*2),
-          start: 0,
-          end: 360,
-          rotate: 0,
-          style: { fill: colors[n], lineWidth: 2, stroke: colors[n+1] },
+        data.bar({
+          height: data.medals,
+          stacked: false,
+          offset: 0,
+          padding: 20,
+          style:{ fill: colors[i] },
         });
+        //data.circle({
+        //  py:     data.medals,
+        //  radius: Math.abs(data.medals*2),
+        //  start: 0,
+        //  end: 360,
+        //  rotate: 0,
+        //  style: { fill: colors[n], lineWidth: 2, stroke: colors[n+1] },
+        //});
         //data.pie({
         //  px: 0,
         //  py: 0,
