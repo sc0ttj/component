@@ -99,16 +99,12 @@
       tickLabelCentered: true,
       //tickLabels: (label, i) => (i === 0 || i === 8) ? '' : label, // hide first or last label
       tickLabels: label => label === -1 ? '' : label,
-      style: {
-        lineWidth: 5,
-        strokeStyle: 'red',
-      }
     })
 
     .yAxis({
       range: [-10,10],
       scale: 2,
-      label: ``,
+      label: "",
       labelLeft: true,
       xPos: 0,
       tickLength: 100,
@@ -141,7 +137,7 @@
         //  style:{ fill: colors[i] },
         //});
         data.circle({
-          cy:     data.medals,
+          py:     data.medals,
           radius: Math.abs(data.medals*2),
           start: 0,
           end: 360,
@@ -157,6 +153,8 @@
         //  style: { fill: colors[n] },
         //});
         //data.arc({
+        //  px: 0,
+        //  py: 0,
         //  slice: data.medals,
         //  radius: 100,
         //  innerRadius: 70,
@@ -177,6 +175,9 @@
         //  close: data.close,
         //  high: data.high,
         //  low: data.low,
+        //  padding: 100,
+        //  green: "#0d0",
+        //  red: "#d00",
         //  style: {
         //    lineWidth: 1,
         //  }

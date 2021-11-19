@@ -280,9 +280,9 @@ const extraMethods = {
 
         // Drawing circles
         // - give either cx or cy, plus any other params you wanna set
-        const drawCircle = ({ cx, cy, radius, start, end, rotate = 0, style }) => {
-          if (!cx && !cy) return;
-          const paramX = getX(cx, n),  paramY = getY(cy, n);
+        const drawCircle = ({ px, py, radius, start, end, rotate = 0, style }) => {
+          if (!px && !py) return;
+          const paramX = getX(px, n),  paramY = getY(py, n);
           if (style) {
             this.save();
             setStyle(this, style);
