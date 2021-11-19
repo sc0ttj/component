@@ -2061,11 +2061,16 @@ Here's a minimal example showing how to make a chart:
   // ..now define it's view, where we draw our chart:
 
   Foo.view = (props, ctx) => {
-
     // Pass in your data, an array of objects for bar/pie/candle charts, or 
     // an object of arrays (more useful for grouped bar charts & line charts):
 
-    ctx.useData({
+    ctx.clear()
+
+    .size(props.width, props.height) 
+
+    .margin(40,80,170,80)  // top, bottom, left, right
+
+    .useData({
       'Dollars':
       [
         { year: 2000, open: 3, close: 5, low: 2, high: 6 },
@@ -2075,24 +2080,23 @@ Here's a minimal example showing how to make a chart:
         // ...
       ],
     })
-    .margin(40,80,170,80)  // top, bottom, left, right
-    .setStyle({
-      font: 'Normal 1em Sans-Serif',
-    })
+
     .xAxis({
       range: [1999,2007],
       scale: 1,
       label: "Years",
       tickLength: -3,
     })
+
     .yAxis({
       range: [0,500],
       scale: 5,
       label: "Dollars",
       tickLength: -3,
     })
-    .drawEach( (currency, name, i) => {
-      currency.forEach((data, n) => {
+
+    .drawEach(currency => {
+      currency.forEach(data => {
         data.candle({
           open: data.open,
           close: data.close,
@@ -2100,9 +2104,9 @@ Here's a minimal example showing how to make a chart:
           low: data.low,
         })
       });
-    })
+    });
+
   };
-  
 ```
 
 To see more about `Chart` with `Component`, see [examples/usage-Chart.html](examples/usage-Chart.html).
