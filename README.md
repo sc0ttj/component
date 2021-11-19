@@ -2056,8 +2056,8 @@ Here's how it works, generally:
 - define a canvas size
 - define the margins around your "chart area"
 - pass in some data to use
-- define X and Y axes
-  - min and max values of axis:
+- define X and Y axes:
+  - min and max values of axis
   - labels and tick values
   - styling, positioning, etc
 - use the `drawEach()` method to draw your chart:
