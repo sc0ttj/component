@@ -2057,12 +2057,12 @@ Here's how it works, generally:
 - define the margins around your "chart area"
 - pass in some data to use
 - define X and Y axes
-  - min and max values of axis
+  - min and max values of axis:
   - labels and tick values
   - styling, positioning, etc
 - use the `drawEach()` method to draw your chart:
-  - loop over your data to access each data point
-  - each data point is decorated with various drawing methods:
+  - it loops over your data, giving access to each data point
+  - each data point is "decorated" with various drawing methods:
     - `data.bar({ opts })` - draw bars
     - `data.line({ opts })` - draw lines and filled areas, smoothed or not
     - `data.circle({ opts })` - draw circles and circle segments around the chart
@@ -2070,7 +2070,7 @@ Here's how it works, generally:
     - `data.arc({ opts })` - draw a segment of a single arc (partial circle) 
     - `data.candle({ opts })` - draw a candle stick (box and line, red or green)
 
-You only pass in the options/attributes you want to join to your data, and ignore the others - each drawing method will try to work out the rest, based on your margins and axes settings.
+You need only pass in the options/attributes you want to join to your data and ignore the others - each drawing method will try to work out the rest, based on your margins and axes settings. However, there as some positioning and styling options available for each drawing method.
 
 Here's a minimal example, of a simple "candlestick" chart:
 
