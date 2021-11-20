@@ -5,8 +5,6 @@
 
 // @TODO Fixes and improvements:
 //
-// - fix: mis-aligned stacked bars (see magic 1.2 number in setting of `barWidth`)
-// - fix: barPadding calculation not right, setting to 99 should make the bars *really* thin
 // - add: stackPadding param to bars - to allow gaps between stacked bars - paves the way for heatmaps
 //
 
