@@ -20,16 +20,16 @@
 <script>
   let frame = 1; // frame count
   const colors = [
-    '#FF4136',
     '#0074D9',
-    '#B10DC9',
-    '#2ECC40',
-    '#FF851B',
-    '#F012BE',
-    '#FFDC00',
+    '#FF4136',
     '#39CCCC',
-    '#85144b',
-    '#01FF70',
+    '#FFDC00',
+    '#01DA70',
+    '#FF851B',
+    '#B10DC9',
+    '#FFABAB',
+    '#F012BE',
+    '#4FDD82',
   ];
 
   // Enable our Chart addon, it'll create an extended 2dContext,
@@ -71,7 +71,7 @@
     // (more useful for grouped bar charts & line charts) an object of arrays:
     .useData({
       'UK':
-      [{}, // padded data trick - mainly for bar charts, to give more "space" from axis
+      [ {},
         { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
         { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
         { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
@@ -81,15 +81,38 @@
         { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
       ],
       'USA':
-      [{}, // padded data trick - mainly for bar charts, to give more "space" from axis
-        { year: 2000, medals: 7, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 5, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 5, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 7, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 4, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 6, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 8, open: 5, close: 6, low: 2, high: 6 },
+      [ {},
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
       ],
+
+      'France':
+      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
+      ],
+
+      'Foo':
+      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
+      ],
+
     })
 
     .margin(40,80,170,80)  // top, bottom, left, right
@@ -104,7 +127,7 @@
       label: "Years",
       labelBelow: true,
       yPos: 0,
-      tickLength: 100,
+      tickLength: -3,
       tickCentered: true,
       tickLabelCentered: true,
       //tickLabels: label => '',
@@ -116,7 +139,7 @@
       label: "Totals",
       labelLeft: true,
       xPos: 0,
-      tickLength: 100,
+      tickLength: -3,
       tickCentered: true,
       //tickLabels: label => '',
     })
@@ -143,7 +166,7 @@
         data.bar({
           height: data.medals,
           stacked: false,
-          //offset: -n,
+          offset: 0,
           padding: 12,
           style:{ fill: colors[i] },
         });
