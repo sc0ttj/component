@@ -128,7 +128,8 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCe
               py = pos < 50 ? y : y-h;
         ctx.moveTo(px,py);
         ctx.lineTo(px,py-(tickLength/100*h))
-      } else if (y-i-centered >= y-h) {
+      }
+      if (whichAxis === 'y' && y-i-centered >= y-h) {
         const px = pos < 50 ? x : x+w,
               py = y-i-centered;
         ctx.moveTo(px,py);
