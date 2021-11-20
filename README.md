@@ -2018,6 +2018,7 @@ It supports these chart types:
 - candlestick charts
 - pie & doughnut charts
 - arc or "gauge" charts
+- polar area charts
 - lollipop charts
 - mixed charts
 
@@ -2132,7 +2133,7 @@ Here's a minimal example, of a simple "candlestick" chart:
 Some very basic examples/demos:
 
 <p align="center">
-  <img align="center" src="https://i.imgur.com/r2l1Sbv.gif" alt="Chart demos" />
+  <img align="center" src="https://i.imgur.com/s9juOUh.gif" alt="Chart demos" />
 </p>
 
 To see more about using `Chart`, see [examples/usage-Chart.html](examples/usage-Chart.html).

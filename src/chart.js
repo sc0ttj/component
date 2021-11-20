@@ -5,8 +5,8 @@
 
 // @TODO Fixes and improvements:
 //
-// - add: stackPadding param to bars - to allow gaps between stacked bars - paves the way for heatmaps
-//
+// - add:  stackPadding param to bars  - to allow gaps between stacked bars, paves the way for heatmaps
+// - demo: timeline/gantt chatrs       - just horizontal bars with start times as `offset` param
 
 
 const ctxMethods = 'arc arcTo beginPath bezierCurveTo clearRect clip closePath createImageData createLinearGradient createRadialGradient createPattern drawFocusRing drawImage fill fillRect fillText getImageData isPointInPath lineTo measureText moveTo putImageData quadraticCurveTo rect restore rotate save scale setTransform stroke strokeRect strokeText transform translate'.split(' ');
