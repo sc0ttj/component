@@ -5,9 +5,9 @@
 
 // @TODO Fixes and improvements:
 //
-// - fix mis-aligned stacked bars (see magic 1.2 number in setting of `barWidth`)
-//
-//
+// - fix: mis-aligned stacked bars (see magic 1.2 number in setting of `barWidth`)
+// - fix: barPadding calculation not right, setting to 99 should make the bars *really* thin
+// - add: stackPadding param to bars - to allow gaps between stacked bars - paves the way for heatmaps
 //
 
 
@@ -123,16 +123,16 @@ function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCe
     ctx.save();
     ctx.lineWidth = lineWidth;
     ctx.strokeStyle = strokeStyle;
-    for (let i=0, p=0; i<=max+(tickCentered ? distanceBetweenTicks/4 : 0); i+=distanceBetweenTicks*scale){
+    for (let i=0, p=0; i<=max+(tickCentered ? distanceBetweenTicks/4 : 0); i+=Math.round(distanceBetweenTicks)*scale){
       ctx.beginPath();
       if (whichAxis === 'x' && x+i+centered <= x+w) {
-        const px = Math.round(x+i+centered),
-              py = Math.round(pos < 50 ? y : y-h);
+        const px = x+i+centered,
+              py = pos < 50 ? y : y-h;
         ctx.moveTo(px,py);
         ctx.lineTo(px,py-(tickLength/100*h))
       } else if (y-i-centered >= y-h) {
-        const px = Math.round(pos < 50 ? x : x+w),
-              py = Math.round(y-i-centered);
+        const px = pos < 50 ? x : x+w,
+              py = y-i-centered;
         ctx.moveTo(px,py);
         ctx.lineTo(px+(tickLength/100*w),py);
       }
@@ -387,10 +387,10 @@ const extraMethods = {
         //   - pass in width to draw horizontal bars
         // - bars are grouped side by side, by default, but can be stacked
         const drawBar = ({ height, width, offset = 0, stacked = false, padding = 12, style }) => {
-          const isVertical = (height||height===0);
-
-          const barPadding = isVertical ? xDistance/100*padding : yDistance/100*padding,
-                barWidth   = (isVertical ? xDistance : yDistance)/(stacked ? 1.25: dataLength)-(barPadding/2),
+          const isVertical = (height||height===0),
+                distance   = isVertical ? xDistance : yDistance,
+                barPadding = distance/100*padding,
+                barWidth   = stacked ? distance-barPadding : (distance/dataLength)-(barPadding/2),
                 barHeight  = isVertical ? height : width,
                 centered   = barWidth*dataLength/2;
 
@@ -417,16 +417,16 @@ const extraMethods = {
             // x
             xFlipped
               ? isVertical
-                ? stacked ? x+w-(xDistance*n)-(barWidth+barPadding)/2 : x+w-(barWidth*i)-(xDistance*n)-centered
+                ? stacked ? x+w-(xDistance*n)-(barWidth/2) : x+w-(barWidth*i)-(xDistance*n)
                 : stacked ? x+w-stackedBarOffset : x+w
               : isVertical
-                ? stacked ? x+(xDistance*n)-(barWidth+barPadding)/2 : x+(barWidth*i)+(xDistance*n)-centered
+                ? stacked ? x+(xDistance*n)-(barWidth/2) : x+(barWidth*i)+(xDistance*n)-centered
                 : x+stackedBarOffset,
             // y
             yFlipped
               ? isVertical
                 ? y-h+(stacked ? stackedBarOffset : 0-(yDistance*offset))
-                : stacked ? y-h+(yDistance*n)+barWidth/2 : y-h+(barWidth*i)+(yDistance*n)-(barWidth)
+                : stacked ? y-h+(yDistance*n)+barWidth/2 : y-h+(barWidth*i)+(yDistance*n)
               : isVertical
                 ? y-(stacked ? stackedBarOffset : 0)+(yDistance*offset) // NOTE: `offset` used for candlesticks
                 : stacked ? y-(yDistance*n)+barWidth/2 : y-barWidth*i-(yDistance*n)+centered,
