@@ -454,7 +454,7 @@ const extraMethods = {
           if (style) this.restore();
         }
 
-        const drawCandle = ({ open, close, low, high, green, red, padding = 60, style }) => {
+        const drawCandle = ({ open, close, low, high, green, red, padding = 80, style }) => {
           const length = Math.abs(open - close),
                 offset = length - (close > open ? close : open),
                 lineLength = high - low,
@@ -473,7 +473,7 @@ const extraMethods = {
           drawBar({
             height: length,
             offset,
-            padding: padding*2,
+            padding,
             style: {
               ...style,
               fill: close > open ? green||'#0d0' : red||'#d00',
