@@ -5,9 +5,10 @@
 
 // @TODO Fixes and improvements:
 //
-// - add:  stackPadding param to bars  - to allow gaps between stacked bars, paves the way for heatmaps
-// - demo: timeline/gantt chatrs       - just horizontal bars with start times as `offset` param
-
+// - demo: timeline/gantt charts       - just horizontal bars with start times as `offset` param, each stack colour/pattern can be a "status" (done, in progress, etc) or category (kind of task, etc)
+// - demo: radial bar chart            - just a bunch of arc charts, wrapped round like russian dolls (https://nivo.rocks/radial-bar/)
+// - demo: heatmap charts              - series of stacked bars, all stacked bits same size, covers whole area w/h, with "padding" bits, from data, every 7 or so
+// - demo: parallel charts             - like this one: https://datavizcatalogue.com/methods/parallel_coordinates.html
 
 const ctxMethods = 'arc arcTo beginPath bezierCurveTo clearRect clip closePath createImageData createLinearGradient createRadialGradient createPattern drawFocusRing drawImage fill fillRect fillText getImageData isPointInPath lineTo measureText moveTo putImageData quadraticCurveTo rect restore rotate save scale setTransform stroke strokeRect strokeText transform translate'.split(' ');
 const ctxProps = 'canvas fillStyle font globalAlpha globalCompositeOperation lineCap lineJoin lineWidth miterLimit shadowOffsetX shadowOffsetY shadowBlur shadowColor strokeStyle textAlign textBaseline'.split(' ');
@@ -420,7 +421,7 @@ const extraMethods = {
                 : stacked ? x+w-stackedBarOffset : x+w
               : isVertical
                 ? stacked ? x+(xDistance*n)-(barWidth/2) : x+(barWidth*i)+(xDistance*n)-centered
-                : x+stackedBarOffset,
+                : x+stackedBarOffset+(xDistance*offset),
             // y
             yFlipped
               ? isVertical
