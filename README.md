@@ -2022,6 +2022,7 @@ It supports these chart types:
 - gantt/timeline charts
 - radial bar charts
 - lollipop charts
+- heatmaps
 - mixed charts
 
 It can work standalone, without `Component` being installed.
@@ -2135,7 +2136,7 @@ Here's a minimal example, of a simple "candlestick" chart:
 Some very basic examples/demos:
 
 <p align="center">
-  <img align="center" src="https://i.imgur.com/zeZlCTk.gif" alt="Chart demos" />
+  <img align="center" src="https://i.imgur.com/t1ZEw7u.gif" alt="Chart demos" />
 </p>
 
 To see more about using `Chart`, see [examples/usage-Chart.html](examples/usage-Chart.html).
