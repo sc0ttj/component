@@ -5,9 +5,10 @@
 
 // @TODO Fixes and improvements:
 //
-// - demo: timeline/gantt charts       - just horizontal bars with start times as `offset` param, each stack colour/pattern can be a "status" (done, in progress, etc) or category (kind of task, etc)
+// - new: style and tickStyle params for axes ?
+//
 // - demo: radial bar chart            - just a bunch of arc charts, wrapped round like russian dolls (https://nivo.rocks/radial-bar/)
-// - demo: heatmap charts              - series of stacked bars, all stacked bits same size, covers whole area w/h, with "padding" bits, from data, every 7 or so
+// - demo: heatmap charts              - series of stacked bars, all stacked bits same size, covers whole area w, coloured by data
 // - demo: parallel charts             - like this one: https://datavizcatalogue.com/methods/parallel_coordinates.html
 
 const ctxMethods = 'arc arcTo beginPath bezierCurveTo clearRect clip closePath createImageData createLinearGradient createRadialGradient createPattern drawFocusRing drawImage fill fillRect fillText getImageData isPointInPath lineTo measureText moveTo putImageData quadraticCurveTo rect restore rotate save scale setTransform stroke strokeRect strokeText transform translate'.split(' ');
@@ -92,11 +93,11 @@ function getDimensions(ctx) {
 }
 
 // draws the main line of the axis, used by xAxis and yAxis
-function drawAxisLine(ctx, dimensions, whichAxis = 'x', pos, lineWidth = 0.5, strokeStyle = '#222') {
+function drawAxisLine(ctx, dimensions, whichAxis = 'x', pos, style = {}) {
   const { w, h, x, y } = dimensions;
   ctx.save();
-  ctx.lineWidth = lineWidth;
-  ctx.strokeStyle = strokeStyle;
+  if (!style.strokeStyle && !style.stroke) style.stroke = '#222';
+  if (style) setStyle(ctx, style);
   ctx.beginPath();
   if (whichAxis === 'x') {
     let py = y-(h/100*pos);
@@ -113,15 +114,15 @@ function drawAxisLine(ctx, dimensions, whichAxis = 'x', pos, lineWidth = 0.5, st
 }
 
 // draws the ticks along the axis, used by xAxis and yAxis
-function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCentered, distanceBetweenTicks, scale, lineWidth = 0.5, strokeStyle = '#bbb') {
+function drawAxisTicks(ctx, dimensions, whichAxis = 'x', pos, tickLength, tickCentered, distanceBetweenTicks, scale, tickStyle = {}) {
   const { w, h, x, y } = dimensions,
         max = (whichAxis === 'x') ? w : h,
         centered = tickCentered ? 0 : distanceBetweenTicks/2;
 
   if (tickLength !== 0) {
     ctx.save();
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = strokeStyle;
+    if (!tickStyle.strokeStyle && !tickStyle.stroke) tickStyle.stroke = '#bbb';
+    if (tickStyle) setStyle(ctx, tickStyle);
     for (let i=0, p=0; i<=max+(tickCentered ? distanceBetweenTicks/4 : 0); i+=Math.round(distanceBetweenTicks)*scale){
       ctx.beginPath();
       if (whichAxis === 'x' && x+i+centered <= x+w) {
@@ -584,7 +585,7 @@ const extraMethods = {
     setStyle(this, obj);
   },
 
-  xAxis: function({ range, scale = 1, yPos = 0, tickLength = 5, label = false, labelBelow = true, tickLabelCentered = false, tickCentered = true, tickLabels }) {
+  xAxis: function({ range, scale = 1, yPos = 0, tickLength = 5, label = false, labelBelow = true, tickLabelCentered = false, tickCentered = true, tickLabels, style, tickStyle }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
@@ -597,8 +598,8 @@ const extraMethods = {
     this._d.xDistance = Math.round(distanceBetweenTicks);
     this._d.xLabels = [];
 
-    drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale);
-    drawAxisLine(this,  { w, h, x, y }, 'x', yPos);
+    drawAxisTicks(this, { w, h, x, y }, 'x', yPos, yPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale, tickStyle);
+    drawAxisLine(this,  { w, h, x, y }, 'x', yPos, style);
 
     for (let i=0, p=0; i<=(w+distanceBetweenTicks/2); i+=distanceBetweenTicks*scale) {
       const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels),
@@ -627,7 +628,7 @@ const extraMethods = {
     }
   },
 
-  yAxis: function({ range, scale = 1, xPos = 0, tickLength = 5, label = false, labelLeft = true, tickCentered = true, tickLabels }) {
+  yAxis: function({ range, scale = 1, xPos = 0, tickLength = 5, label = false, labelLeft = true, tickCentered = true, tickLabels, style, tickStyle }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
           theRange = getRange(range),
@@ -642,8 +643,8 @@ const extraMethods = {
     this._d.yDistance = Math.round(distanceBetweenTicks);
     this._d.yLabels = [];
 
-    drawAxisTicks(this, { w, h, x, y }, 'y', xPos, xPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale);
-    drawAxisLine(this,  { w, h, x, y }, 'y', xPos);
+    drawAxisTicks(this, { w, h, x, y }, 'y', xPos, xPos <= 50 ? tickLength : -tickLength, tickCentered, distanceBetweenTicks, scale, tickStyle);
+    drawAxisLine(this,  { w, h, x, y }, 'y', xPos, style);
 
     for (let i=0, p=0; i<=h; i+=distanceBetweenTicks*scale){
       const tickLabel = getTickLabel(range, flippedAxis, p, scale, tickLabels),
