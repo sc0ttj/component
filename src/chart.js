@@ -5,8 +5,6 @@
 
 // @TODO Fixes and improvements:
 //
-// - new: style and tickStyle params for axes ?
-//
 // - demo: radial bar chart            - just a bunch of arc charts, wrapped round like russian dolls (https://nivo.rocks/radial-bar/)
 // - demo: heatmap charts              - series of stacked bars, all stacked bits same size, covers whole area w, coloured by data
 // - demo: parallel charts             - like this one: https://datavizcatalogue.com/methods/parallel_coordinates.html

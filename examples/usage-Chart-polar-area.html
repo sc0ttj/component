@@ -1,0 +1,266 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - canvas demo</title>
+  <script src="../dist/component.min.js"></script>
+  <script src="../dist/chart.min.js"></script>
+  <style>
+    .container {
+      border: 1px solid #222;
+      margin: 1em;
+      width: 640px;
+      height: 480px;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas class="container"></canvas>
+
+<script>
+  let frame = 1; // frame count
+  const colors = [
+    '#0074D9',
+    '#FF4136',
+    '#39CCCC',
+    '#FFDC00',
+    '#01DA70',
+    '#FF851B',
+    '#B10DC9',
+    '#FFABAB',
+    '#F012BE',
+    '#4FDD82',
+  ];
+
+  // Enable our Chart addon, it'll create an extended 2dContext,
+  // with a chainable API, and these extra methods:
+  //
+  //    .data(), .margin(), .xAxis(), .yAxis(), .each(),
+  //
+  // Inside `.each()`, you get these drawing methods:
+  //
+  //    data.circle(), data.bar(), data.line(), data.pie()
+  //
+  Component.Ctx = Chart;
+
+  // define a new component
+  const myChart = new Component({ sizeX: 640, sizeY: 520 });
+
+  // define the "view", that draws to the components canvas
+  myChart.view = (props, ctx) => {
+
+    if (frame === 1) {
+      // set the canvas size (w, h, aspectRatio)
+      ctx.size(props.sizeX, props.sizeY)  // set width and height, ignore aspect ratio
+      //ctx.size(640, 480, null)   // same as above
+      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 4.0
+      //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
+      //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
+      //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
+      //console.clear();
+      frame++;
+      return;
+    }
+
+    ctx.clear()
+
+    .translate(0.5,0.5) // crisp lines trick
+
+
+    // Pass in your data, an array of objects for simple bar charts, or
+    // (more useful for grouped bar charts & line charts) an object of arrays:
+    .useData({
+      'UK':
+      [ //{},
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
+      ],
+      'USA':
+      [ {},
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
+      ],
+
+      'France':
+      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
+      ],
+
+      'Foo':
+      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
+      ],
+
+    })
+
+    .margin(40,250,80,80)  // top, bottom, left, right
+
+    .setStyle({
+      font: 'Normal 1em Sans-Serif',
+    })
+
+    .xAxis({
+      range: [1999,2007],
+      scale: 1,
+      label: "",
+      labelBelow: true,
+      yPos: -200,
+      tickLength: 0,
+      tickCentered: true,
+      tickLabelCentered: true,
+      //tickLabels: label => '',
+    })
+
+    .yAxis({
+      range: [0,10],
+      scale: 1,
+      label: "",
+      labelLeft: true,
+      xPos: 50,
+      tickLength: 0,
+      tickCentered: true,
+      //tickLabels: label => '',
+    })
+
+    // Also available, just FYI:
+    const { x, y, h, w, margin, xRange, yRange, xScale, yScale, xDistance, yDistance } = ctx.dimensions();
+    // Do whatever you like with these params, if anything..
+    //    x/y         = the x/y origins of the chart area, accounting for margins
+    //    w/h         = the x/y end points of the chart area, accounting for margins
+    //    margin      = the space in px outside the chart area, in format { top, bottom, left, right }
+    //    x/yRange    = the min/max data values of the x/y axes
+    //    x/yScale    = the number by which axis values are multiplied
+    //    x/yDistance = the tick distance (in px) along the x and y axes
+
+    ctx.drawEach( (country, name, i) => {
+      // Now we can work with some "decorated" chart data, ${data}.
+      // You might wanna use your top-level ${data} here - e.g. to draw a legend
+
+      // Now lets go over each bit of "decorated" data for this country
+      country.forEach((data, n) => {
+        //data.bar({
+        //  height: data.medals,
+        //  stacked: false,
+        //  offset: 0,
+        //  padding: 12,
+        //  style:{ fill: colors[i] },
+        //});
+        //data.circle({
+        //  py:     data.medals,
+        //  radius: Math.abs(data.medals*2),
+        //  start: 0,
+        //  end: 360,
+        //  rotate: 0,
+        //  style: { fill: colors[n], lineWidth: 2, stroke: colors[n+1] },
+        //});
+        //data.pie({
+        //  px: 0,
+        //  py: 270,
+        //  slice: data.medals,
+        //  radius: 100,
+        //  //innerRadius: 70,
+        //  style: { fill: colors[n] },
+        //});
+        //data.arc({
+        //  px: 0,
+        //  py: 0,
+        //  slice: data.medals,
+        //  radius: 100,
+        //  innerRadius: 70,
+        //  style: { fill: colors[n] },
+        //});
+        //data.line({
+        //  py: data.medals,
+        //  stacked: true,
+        //  smooth: true,
+        //  style: {
+        //    fill: colors[i],
+        //    stroke: colors[i],
+        //    lineWidth: 2,
+        //  },
+        //});
+        //data.candle({
+        //  open: data.open,
+        //  close: data.close,
+        //  high: data.high,
+        //  low: data.low,
+        //  padding: 80,
+        //  green: "#0d0",
+        //  red: "#d00",
+        //  style: {
+        //    lineWidth: 1,
+        //  }
+        //})
+
+        // gantt/timeline chart
+        //data.bar({
+        //  height: data.medals,
+        //  stacked: false,
+        //  offset: 0,
+        //  padding: 12,
+        //  style:{ fill: colors[i] },
+        //});
+
+        // polar area chart example
+        ctx.save().globalCompositeOperation("destination-over"); // draw the colours *under* the axis
+        data.pie({
+          px: 0,
+          py: 270,
+          slice: data.medals,
+          radius: data.medals*yDistance,
+          //innerRadius: 70,
+          style: { fill: colors[n] },
+        });
+        ctx.restore();
+
+      });
+    })
+
+    // only for polar area chart - lets draw a custom, radial axis,
+    // ..not needed for any other chart types
+    for (let num = 0; num<=yRange[1]; num++) {
+      ctx
+        .save()
+        .globalCompositeOperation("destination-over") // draw it *under* everything else
+        .beginPath()
+        .lineWidth(1)
+        .strokeStyle('#888')
+        .globalAlpha(0.3)
+        .arc(w/2+margin.left, 270, Math.round(num*yDistance), 0, Math.PI*2)
+        .stroke()
+        .closePath()
+        .restore()
+    }
+
+    frame++;
+  };
+
+
+  // render to a canvas, and attach its context (`ctx`) to our component
+  myChart.render('.container', '2d');
+
+</script>
+</body>
+</html>
