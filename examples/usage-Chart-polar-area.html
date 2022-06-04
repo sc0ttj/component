@@ -66,54 +66,17 @@
 
     .translate(0.5,0.5) // crisp lines trick
 
-
     // Pass in your data, an array of objects for simple bar charts, or
     // (more useful for grouped bar charts & line charts) an object of arrays:
-    .useData({
-      'UK':
-      [ //{},
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-      'USA':
-      [ {},
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-
-      'France':
-      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-
-      'Foo':
-      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-
-    })
+    .useData([
+      { total: 2 },
+      { total: 5 },
+      { total: 4 },
+      { total: 7 },
+      { total: 6 },
+      { total: 9 },
+      { total: 3 },
+    ])
 
     .margin(40,250,80,80)  // top, bottom, left, right
 
@@ -121,27 +84,11 @@
       font: 'Normal 1em Sans-Serif',
     })
 
-    .xAxis({
-      range: [1999,2007],
-      scale: 1,
-      label: "",
-      labelBelow: true,
-      yPos: -200,
-      tickLength: 0,
-      tickCentered: true,
-      tickLabelCentered: true,
-      //tickLabels: label => '',
-    })
-
     .yAxis({
       range: [0,10],
       scale: 1,
-      label: "",
-      labelLeft: true,
-      xPos: 45,
+      xPos: 44.8,
       tickLength: 0,
-      tickCentered: true,
-      //tickLabels: label => '',
     })
 
     // Also available, just FYI:
@@ -157,20 +104,18 @@
     ctx.drawEach( (country, name, i) => {
       // Now we can work with some "decorated" chart data, ${data}.
       // You might wanna use your top-level ${data} here - e.g. to draw a legend
-
+      //
       // Now lets go over each bit of "decorated" data for this country
       country.forEach((data, n) => {
-        // polar area chart example
-        ctx.save().globalCompositeOperation("destination-over"); // draw the colours *under* the axis
+        ctx.save().globalCompositeOperation("destination-over"); // draw stuff *under* the axis
         data.pie({
           px: 295,
           py: 270,
-          slice: data.medals,
-          radius: data.medals*yDistance,
+          slice: data.total,
+          radius: data.total*yDistance,
           style: { fill: colors[n] },
         });
         ctx.restore();
-
       });
     })
 

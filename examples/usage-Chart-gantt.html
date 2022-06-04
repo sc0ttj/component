@@ -72,23 +72,23 @@
     .useData({
       'Done':
       [ {},
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 0, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 1, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 3.5, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 2, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 0, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 3, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2000, width: 2 },
+        { year: 2001, width: 0 },
+        { year: 2002, width: 1 },
+        { year: 2003, width: 2.1 },
+        { year: 2004, width: 2 },
+        { year: 2005, width: 0 },
+        { year: 2006, width: 1.2 },
       ],
       'Todo':
       [ {},
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 2.5, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 1, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 2, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 1.5, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 0, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2000, width: 2 },
+        { year: 2001, width: 1 },
+        { year: 2002, width: 2.5 },
+        { year: 2003, width: 1 },
+        { year: 2004, width: 2 },
+        { year: 2005, width: 1.5 },
+        { year: 2006, width: 0 },
       ],
 
     })
@@ -100,10 +100,9 @@
     })
 
     .yAxis({
-      range: [2007,1999],
+      range: [1999,2007],
       scale: 1,
       label: "",
-      labelBelow: true,
       yPos: 0,
       tickLength: -3,
       tickCentered: false,
@@ -158,7 +157,7 @@
 
         // gantt/timeline chart (horizontal stack bars, with leading offsets)
         data.bar({
-          width: data.medals,
+          width: data.width,
           stacked: true,
           offset: 7-n+(n < 5 && n > 1 ? 1 : 0), // some random offsets
           padding: 20,

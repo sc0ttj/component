@@ -743,9 +743,7 @@ const Chart = function(origCtx, c) {
   this.canvas = origCtx.canvas;
 
 
-  // add more methods to the extended context - they're added here cos they're
-  // nested/namespaced under ctx.image.* and ctx.video.* and the above
-  // loops that make methods chainable don't handle nested objects
+  // you can add more methods to the extended context here
 
   this.context.margin = {
     top: 0,

@@ -2020,6 +2020,7 @@ It supports these chart types:
 - polar area charts
 - arc/gauge charts
 - gantt/timeline charts
+- waterfall charts
 - radial bar charts
 - lollipop charts
 - heatmaps
@@ -2134,7 +2135,7 @@ Here's a minimal example, of a simple "candlestick" chart:
   };
 ```
 
-To make charts responsive, just re-render it whenever the size of its container element changes, maybe adjusting margins and font sizes as needed at various screen sizes.
+To make charts responsive, just re-render your charts when the size of their container element changes, making sure to pass in the new desired dimensions to `ctx.size()`. You might also want to adjust margins at this point.
 
 Some very basic examples/demos:
 
