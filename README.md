@@ -2004,7 +2004,7 @@ For a full usage example, see [examples/usage-Geo.html](examples/usage-Geo.html)
 
 The `Chart` add-on let's you draw charts & graphs to the canvas, using a chainable API similar to `d3`. 
 
-It's only 3.6kb, minified & gzipped, .
+It's only 3.6kb, minified & gzipped.
 
 It supports these chart types:
 
