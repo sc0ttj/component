@@ -2134,7 +2134,7 @@ Here's a minimal example, of a simple "candlestick" chart:
   };
 ```
 
-To make charts responsive, you just re-render whenever the size of the canvas' container element changes.
+To make charts responsive, just re-render it whenever the size of its container element changes, maybe adjusting margins and font sizes as needed at various screen sizes.
 
 Some very basic examples/demos:
 
