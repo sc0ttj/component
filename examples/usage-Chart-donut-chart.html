@@ -121,28 +121,6 @@
       font: 'Normal 1em Sans-Serif',
     })
 
-    .xAxis({
-      range: [1999,2007],
-      scale: 1,
-      label: "Years",
-      labelBelow: true,
-      yPos: 0,
-      tickLength: -3,
-      tickCentered: true,
-      tickLabelCentered: true,
-      //tickLabels: label => '',
-    })
-
-    .yAxis({
-      range: [0,10],
-      scale: 1,
-      label: "Totals",
-      labelLeft: true,
-      xPos: 0,
-      tickLength: -3,
-      tickCentered: true,
-      //tickLabels: label => '',
-    })
 
     .drawEach( (country, name, i) => {
       // Now we can work with some "decorated" chart data, ${data}.
@@ -162,62 +140,17 @@
       country.forEach((data, n) => {
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
-
-        //data.bar({
-        //  height: data.medals,
-        //  stacked: false,
-        //  offset: 0,
-        //  padding: 12,
-        //  style:{ fill: colors[i] },
-        //});
-        //data.circle({
-        //  py:     data.medals,
-        //  radius: Math.abs(data.medals*2),
-        //  start: 0,
-        //  end: 360,
-        //  rotate: 0,
-        //  style: { fill: colors[n], lineWidth: 2, stroke: colors[n+1] },
-        //});
         data.pie({
-          px: 0,
-          py: 0,
+          px: 310,
+          py: 255,
           slice: data.medals,
-          radius: 100,
-          innerRadius: 70,
+          radius: 200,
+          innerRadius: 130,
           style: { fill: colors[n] },
         });
-        //data.arc({
-        //  px: 0,
-        //  py: 0,
-        //  slice: data.medals,
-        //  radius: 100,
-        //  innerRadius: 70,
-        //  style: { fill: colors[n] },
-        //});
-        //data.line({
-        //  py: data.medals,
-        //  stacked: true,
-        //  smooth: true,
-        //  style: {
-        //    fill: colors[i],
-        //    stroke: colors[i],
-        //    lineWidth: 2,
-        //  },
-        //});
-        //data.candle({
-        //  open: data.open,
-        //  close: data.close,
-        //  high: data.high,
-        //  low: data.low,
-        //  padding: 80,
-        //  green: "#0d0",
-        //  red: "#d00",
-        //  style: {
-        //    lineWidth: 1,
-        //  }
-        //})
+
       });
-    })
+    });
 
     frame++;
   };

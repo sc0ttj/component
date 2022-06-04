@@ -570,6 +570,31 @@ const extraMethods = {
     drawLines();
   },
 
+  // adapted from http://javascripter.net/faq/plotafunctiongraph.htm
+  plotFn: function(func, opts = {}) {
+    const { x, y, h, w, margin, xDistance } = getDimensions(this);
+    let xx,
+        yy,
+        dx = 4,
+        x0 = (opts.x||0) + (this.canvas.width/2),
+        y0 = (opts.y||0) + (this.canvas.height/2),
+        scale = xDistance,
+        iMax = Math.round((w-x0)/dx),
+        iMin = Math.round(-x0/dx);
+
+    this.beginPath();
+    setStyle(this, opts)
+    for (let i = iMin; i <= iMax; i++) {
+      xx = x+(dx*i);
+      yy = scale*func(xx/scale);
+      if ((y0-yy) <= margin.top+h && (y0+yy) <= y) { // prevents drawing outside of chart area
+        i === iMin ? this.moveTo(x0+xx,y0-yy) : this.lineTo(x0+xx,y0-yy);
+      }
+    }
+    this.stroke();
+    this.closePath();
+  },
+
   margin: function(t,b,l,r){
     this.margin = {
       top: t,

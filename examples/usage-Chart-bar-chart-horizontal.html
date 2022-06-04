@@ -20,9 +20,9 @@
 <script>
   let frame = 1; // frame count
   const colors = [
+    '#FF4136',
     '#0074D9',
     '#B10DC9',
-    '#FF4136',
     '#2ECC40',
     '#FF851B',
     '#F012BE',
@@ -30,7 +30,7 @@
     '#39CCCC',
     '#85144b',
     '#01FF70',
-    'yellow', 'red', 'green', 'blue', 'orange', '#666', '#333', 'magenta', 'grey', 'cyan' ];
+  ];
 
   // Enable our Chart addon, it'll create an extended 2dContext,
   // with a chainable API, and these extra methods:
@@ -66,29 +66,28 @@
 
     .translate(0.5,0.5) // crisp lines trick
 
-
     // Pass in your data, an array of objects for simple bar charts, or
     // (more useful for grouped bar charts & line charts) an object of arrays:
     .useData({
-      'yellow':
-      [{},
-        { year: 2000, medals: 7, open: 3, close: 5, low: 2, high: 6 },
+      'UK':
+      [{}, // padded data trick - mainly for bar charts, to give more "space" from axis
+        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
         { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 5, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 12, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 4, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 10, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 8, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
       ],
     })
 
     .margin(40,80,170,80)  // top, bottom, left, right
 
     .setStyle({
-      font: 'Normal 0.875rem Sans-Serif',
+      font: 'Normal 1em Sans-Serif',
     })
 
-    .xAxis({
+    .yAxis({
       range: [1999,2007],
       scale: 1,
       label: "Years",
@@ -96,23 +95,19 @@
       yPos: 0,
       tickLength: -2,
       tickCentered: false,
-      tickLabelCentered: true,
-      tickLabels: (label, i) => (i === 0 || i === 8) ? '' : label,
-      style: {
-        lineWidth: 1,
-        strokeStyle: '#000',
-      }
+      tickLabels: (label, i) => i === 0 || i === 8 ? '' : label,
     })
 
-    .yAxis({
-      range: [0,15],
+    .xAxis({
+      range: [0,10],
       scale: 1,
-      label: `Gold medals`,
+      label: "Totals",
       labelLeft: true,
       xPos: 0,
-      tickLength: -2,
+      tickLength: 100,
       tickCentered: true,
-      tickLabels: [],
+      tickLabelCentered: true,
+      //tickLabels: label => '',
     })
 
     .drawEach( (country, name, i) => {
@@ -120,7 +115,7 @@
       // You might wanna use your top-level ${data} here - e.g. to draw a legend
 
       // Also available, just FYI:
-      //const { x, y, h, w, margin, xRange, yRange, xScale, yScale, xDistance, yDistance } = ctx.dimensions();
+      const { x, y, h, w, margin, xRange, yRange, xScale, yScale, xDistance, yDistance } = ctx.dimensions();
       // Do whatever you like with these params, if anything..
       //    x/y         = the x/y origins of the chart area, accounting for margins
       //    w/h         = the x/y end points of the chart area, accounting for margins
@@ -133,56 +128,17 @@
       country.forEach((data, n) => {
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
+
         data.bar({
-          height: data.medals,
+          width: data.medals,
           stacked: false,
+          //offset: -n,
           padding: 24,
           style:{ fill: colors[n] },
         });
-        //data.circle({
-        //  cy:     data.medals,
-        //  radius: data.medals*2,
-        //  start: 0,
-        //  end: 360,
-        //  rotate: 0,
-        //  style: { fill: colors[i+2], lineWidth: 5, stroke: 'red' },
-        //});
-        //data.pie({
-        //  slice: data.medals,
-        //  innerRadius: 120,
-        //  style: { fill: colors[n] },
-        //});
-        //data.arc({
-       //   slice: data.medals,
-       //   radius: 80,
-       //   innerRadius: 40,
-       //   style: { fill: colors[n] },
-        //});
-        //data.line({
-        //  py: data.medals,
-        //  stacked: true,
-        //  smooth: true,
-        //  style: {
-        //    fill: colors[i],
-        //    stroke: colors[i],
-        //    lineWidth: 2,
-        //  },
-        //});
-        //data.candle({
-        //  open: data.open,
-        //  close: data.close,
-        //  high: data.high,
-        //  low: data.low,
-        //  style: {
-        //    lineWidth: 1,
-        //  }
-        //})
+
       });
-    })
-
-
-
-
+    });
 
     frame++;
   };

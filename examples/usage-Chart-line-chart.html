@@ -20,9 +20,9 @@
 <script>
   let frame = 1; // frame count
   const colors = [
+    '#FF4136',
     '#0074D9',
     '#B10DC9',
-    '#FF4136',
     '#2ECC40',
     '#FF851B',
     '#F012BE',
@@ -70,8 +70,8 @@
     // Pass in your data, an array of objects for simple bar charts, or
     // (more useful for grouped bar charts & line charts) an object of arrays:
     .useData({
-      'yellow':
-      [{},
+      'USA':
+      [
         { year: 2000, medals: 7, open: 3, close: 5, low: 2, high: 6 },
         { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
         { year: 2002, medals: 5, open: 6, close: 3, low: 2, high: 4 },
@@ -79,6 +79,16 @@
         { year: 2004, medals: 4, open: 4, close: 3, low: 1, high: 5 },
         { year: 2005, medals: 10, open: 3, close: 5, low: 2, high: 6 },
         { year: 2006, medals: 8, open: 5, close: 6, low: 2, high: 6 },
+      ],
+      'UK':
+      [
+        { year: 2000, medals: 4, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, medals: 12, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, medals: 14, open: 6, close: 3, low: 2, high: 4 },
+        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
+        { year: 2004, medals: 6, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, medals: 5, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2006, medals: 9, open: 5, close: 6, low: 2, high: 6 },
       ],
     })
 
@@ -89,15 +99,15 @@
     })
 
     .xAxis({
-      range: [1999,2007],
+      range: [2000,2006],
       scale: 1,
       label: "Years",
       labelBelow: true,
       yPos: 0,
-      tickLength: -2,
-      tickCentered: false,
+      tickLength: -3,
+      tickCentered: true,
       tickLabelCentered: true,
-      tickLabels: (label, i) => (i === 0 || i === 8) ? '' : label,
+      //tickLabels: (label, i) => (i === 0 || i === 8) ? '' : label,
       style: {
         lineWidth: 1,
         strokeStyle: '#000',
@@ -110,7 +120,7 @@
       label: `Gold medals`,
       labelLeft: true,
       xPos: 0,
-      tickLength: -2,
+      tickLength: -3,
       tickCentered: true,
       tickLabels: [],
     })
@@ -133,50 +143,13 @@
       country.forEach((data, n) => {
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
-        data.bar({
-          height: data.medals,
-          stacked: false,
-          padding: 24,
-          style:{ fill: colors[n] },
+        data.line({
+          py: data.medals,
+          style: {
+            stroke: colors[i],
+            lineWidth: 2,
+          },
         });
-        //data.circle({
-        //  cy:     data.medals,
-        //  radius: data.medals*2,
-        //  start: 0,
-        //  end: 360,
-        //  rotate: 0,
-        //  style: { fill: colors[i+2], lineWidth: 5, stroke: 'red' },
-        //});
-        //data.pie({
-        //  slice: data.medals,
-        //  innerRadius: 120,
-        //  style: { fill: colors[n] },
-        //});
-        //data.arc({
-       //   slice: data.medals,
-       //   radius: 80,
-       //   innerRadius: 40,
-       //   style: { fill: colors[n] },
-        //});
-        //data.line({
-        //  py: data.medals,
-        //  stacked: true,
-        //  smooth: true,
-        //  style: {
-        //    fill: colors[i],
-        //    stroke: colors[i],
-        //    lineWidth: 2,
-        //  },
-        //});
-        //data.candle({
-        //  open: data.open,
-        //  close: data.close,
-        //  high: data.high,
-        //  low: data.low,
-        //  style: {
-        //    lineWidth: 1,
-        //  }
-        //})
       });
     })
 

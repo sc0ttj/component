@@ -6,7 +6,7 @@
   <script src="../dist/chart.min.js"></script>
   <style>
     .container {
-      border: 1px solid #222;
+      border: 0px solid #222;
       margin: 1em;
       width: 640px;
       height: 480px;
@@ -35,11 +35,11 @@
   // Enable our Chart addon, it'll create an extended 2dContext,
   // with a chainable API, and these extra methods:
   //
-  //    .data(), .margin(), .xAxis(), .yAxis(), .each(),
+  //    .data(), .margin(), .xAxis(), .yAxis(), .drawEach(),
   //
   // Inside `.each()`, you get these drawing methods:
   //
-  //    data.circle(), data.bar(), data.line(), data.pie()
+  //    data.circle(), data.bar(), data.line(), data.pie(), data.arc(), data.candle()
   //
   Component.Ctx = Chart;
 
@@ -92,24 +92,23 @@
     .xAxis({
       range: [1999,2007],
       scale: 1,
-      label: "Years",
-      labelBelow: true,
-      yPos: 0,
-      tickLength: -3,
-      tickCentered: true,
-      tickLabelCentered: true,
+      yPos: -1000,
+      tickLength: 0,
       //tickLabels: label => '',
+      style: {
+        strokeStyle: '#fff'
+      }
     })
 
     .yAxis({
       range: [0,10],
       scale: 1,
-      label: "Totals",
-      labelLeft: true,
-      xPos: 0,
-      tickLength: -3,
-      tickCentered: true,
+      xPos: -1000,
+      tickLength: 0,
       //tickLabels: label => '',
+      style: {
+        strokeStyle: '#fff'
+      }
     })
 
     .drawEach( (country, name, i) => {
@@ -117,7 +116,7 @@
       // You might wanna use your top-level ${data} here - e.g. to draw a legend
 
       // Also available, just FYI:
-      const { x, y, h, w, margin, xRange, yRange, xScale, yScale, xDistance, yDistance } = ctx.dimensions();
+      const { x, y, h, w, margin, xRange, yRange, xScale, yScale, xDistance, yDistance, xLabels, yLabels } = ctx.dimensions();
       // Do whatever you like with these params, if anything..
       //    x/y         = the x/y origins of the chart area, accounting for margins
       //    w/h         = the x/y end points of the chart area, accounting for margins
@@ -126,64 +125,36 @@
       //    x/yScale    = the number by which axis values are multiplied
       //    x/yDistance = the tick distance (in px) along the x and y axes
 
+      ctx
+        .setStyle({
+          font: 'Normal 2em Sans-Serif',
+        })
+        .fillText(`UK medals`, 10, 40)
+
       // Now lets go over each bit of "decorated" data for this country
       country.forEach((data, n) => {
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
 
-        //data.bar({
-        //  height: data.medals,
-        //  stacked: false,
-        //  //offset: -n,
-        //  padding: 12,
-        //  style:{ fill: colors[i] },
-        //});
-        //data.circle({
-        //  py:     data.medals,
-        //  radius: Math.abs(data.medals*2),
-        //  start: 0,
-        //  end: 360,
-        //  rotate: 0,
-        //  style: { fill: colors[n], lineWidth: 2, stroke: colors[n+1] },
-        //});
-        //data.pie({
-        //  px: 0,
-        //  py: 0,
-        //  slice: data.medals,
-        //  radius: 100,
-        //  innerRadius: 70,
-        //  style: { fill: colors[n] },
-        //});
+        // do a simple legend
+        ctx
+          .fillStyle(colors[n])
+          .fillRect(12, 62 + (n*40), 30, 30)
+          .setStyle({
+            font: 'Normal 1em Sans-Serif',
+            fill: '#222',
+          })
+          .fillText(`${xLabels[n]} - ${country[yLabels[n]].medals}`, 50, (n*40) + 82);
+
         data.arc({
-          px: 0,
-          py: 0,
           slice: data.medals,
-          radius: 100,
-          innerRadius: 70,
+          px: 400,
+          py: 275,
+          radius: 160,
+          innerRadius: 115,
           style: { fill: colors[n] },
         });
-        //data.line({
-        //  py: data.medals,
-        //  stacked: true,
-        //  smooth: true,
-        //  style: {
-        //    fill: colors[i],
-        //    stroke: colors[i],
-        //    lineWidth: 2,
-        //  },
-        //});
-        //data.candle({
-        //  open: data.open,
-        //  close: data.close,
-        //  high: data.high,
-        //  low: data.low,
-        //  padding: 80,
-        //  green: "#0d0",
-        //  red: "#d00",
-        //  style: {
-        //    lineWidth: 1,
-        //  }
-        //})
+
       });
     })
 
