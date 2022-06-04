@@ -2004,7 +2004,7 @@ For a full usage example, see [examples/usage-Geo.html](examples/usage-Geo.html)
 
 The `Chart` add-on let's you draw charts & graphs to the canvas, using a chainable API similar to `d3`. 
 
-It's only 3.5kb, minified & gzipped.
+It's only 3.6kb, minified & gzipped, .
 
 It supports these chart types:
 
@@ -2023,6 +2023,7 @@ It supports these chart types:
 - radial bar charts
 - lollipop charts
 - heatmaps
+- function plotting
 - mixed charts
 
 It can work standalone, without `Component` being installed.
@@ -2133,13 +2134,15 @@ Here's a minimal example, of a simple "candlestick" chart:
   };
 ```
 
+To make charts responsive, you just re-render whenever the size of the canvas' container element changes.
+
 Some very basic examples/demos:
 
 <p align="center">
   <img align="center" src="https://i.imgur.com/M7bLPEm.gif" alt="Chart demos" />
 </p>
 
-To see more about using `Chart`, see [examples/usage-Chart.html](examples/usage-Chart.html).
+To see examples of all supported chart types, see [examples/](examples/).
 
 ## Using the "React hooks" module
 
