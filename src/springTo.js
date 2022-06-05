@@ -22,71 +22,77 @@ function isAtTarget(curr, dest, precision = config.precision) {
 }
 
 function createObjectSpring(start, {
+  paused = false,
   stiffness = config.stiffness,
   damping = config.damping,
   mass = config.mass,
   precision = config.precision,
   shouldSetState = () => true,
+  onSetState = noop,
+  onStart = noop,
   onUpdate = noop,
   onComplete = noop,
 } = config) {
   let keys, previous, current;
-  let destination = {};
+  let finalState = {};
   let completedKeys = [];
 
-  function target(dest) {
-    Object.keys(dest).forEach(key => {
+  function to(newState) {
+    Object.keys(newState).forEach(key => {
       let completedKeyIndex = completedKeys.indexOf(key);
       if (completedKeyIndex >= 0) {
         completedKeys.splice(completedKeyIndex, 1);
       }
-
-      destination[key] = dest[key];
+      finalState[key] = newState[key];
     });
-
     spring.completed = false;
   }
 
   function update(frame, self) { // pass in frame, so it can be receved by users callbacks (for convenience)
-    if (Object.keys(destination).length > 0) {
+    if (Object.keys(finalState).length > 0) {
       let velocity;
       let acceleration;
+
       for (let i = 0; i < keys.length; i++) {
         let key = keys[i];
-
-        if (destination[key] !== undefined && !completedKeys.includes(key)) {
+        if (finalState[key] !== undefined && !completedKeys.includes(key)) {
           velocity = (current[key] - previous[key]);
-          acceleration = (destination[key] - current[key]) * spring.stiffness - velocity * spring.damping;
+          acceleration = (finalState[key] - current[key]) * spring.stiffness - velocity * spring.damping;
           acceleration /= spring.mass;
 
           previous[key] = current[key];
           current[key] += velocity + acceleration;
           start[key] = current[key];
 
-          if (isAtTarget(current[key], destination[key], spring.precision) && !completedKeys.includes(key)) {
+          if (isAtTarget(current[key], finalState[key], spring.precision) && !completedKeys.includes(key)) {
               completedKeys.push(key);
           }
         }
       }
 
-      let isComplete = Object.keys(destination).every(key => completedKeys.includes(key));
+      const values = getValue();
+      const currentData = { ...values, velocity, acceleration, frame };
+      if (frame === 1) onStart({ ...values, frame });
 
-      if (isComplete && !spring.completed) {
-        spring.completed = true;
-        Object.keys(destination).forEach(key => {
-            current[key] = destination[key];
-        })
-        const values = getValue();
-        onUpdate({ ...values, frame });
-        onComplete({ ...values, frame });
-        if (shouldSetState({ ...values, frame })) self.setState({ ...values });
-      } else if (!spring.completed) {
-        const values = getValue();
-        onUpdate({ ...values, velocity, acceleration, frame });
-        if (shouldSetState({ ...values, frame })) self.setState({ ...values });
+      let isComplete = Object.keys(finalState).every(key => completedKeys.includes(key));
+
+      if (!spring.completed) {
+        onUpdate(currentData);
+        if (shouldSetState(currentData)) {
+          self.setState({ ...values });
+          onSetState(currentData);
+        }
+        if (isComplete) {
+          spring.completed = true;
+          Object.keys(finalState).forEach(key => {
+              current[key] = finalState[key];
+          });
+          onComplete(currentData);
+        }
       }
     }
   }
+
 
   function setValue(value) {
     keys = Object.keys(value);
@@ -103,16 +109,19 @@ function createObjectSpring(start, {
       return obj;
     }, {});
 
-    destination = {};
+    finalState = {};
     completedKeys = [];
     spring.completed = false;
   }
+
 
   function getValue() {
       return current;
   }
 
+
   const spring = {
+    paused,
     completed: false,
     stiffness,
     damping,
@@ -121,7 +130,7 @@ function createObjectSpring(start, {
     update,
     getValue,
     setValue,
-    target
+    to
   };
 
   spring.setValue(start);
@@ -142,46 +151,59 @@ const getStateToTween = function(state, newState) {
   return stateToTween
 }
 
-const setTweenedValues = function(state, vals) {
-  function reducer(obj, [key, val]) {
-    obj[key] = val
-    if (typeof val === "number") {
-      obj[key] = vals.shift()
-    } else if (typeof val === "object") {
-      obj[key] = Object.entries(val).reduce(reducer, {})
-    }
-    return obj
-  }
-  const tweenedState = Object.entries(state).reduce(reducer, {})
-  return tweenedState
-}
-
 const springTo = function(self, newState, springCfg) {
-  let spring;
-  let timeout;
+  let spring,
+      loop,
+      frame = 1;
 
-  const defaults = { shouldSetState: noop, onUpdate: noop, onComplete: noop };
+  const defaults = {
+    onStart: noop,
+    onUpdate: noop,
+    onComplete: noop,
+    shouldSetState: noop,
+    onSetState: noop,
+  };
 
   // get a state matching the shape of newState, but with values from self.state
   const stateToTween = getStateToTween(self.state, newState)
 
   // define the spring
   spring = createObjectSpring(stateToTween, { ...defaults, ...springCfg });
-
-  // pass the values to animate
-  spring.target(newState);
+  spring.cfg = springCfg;
 
   // define the animation loop
-  function loop() {
+  function loopFn() {
+    if (spring.paused === true) return;
     spring.update(frame, self);
     frame += 1;
-    timeout = requestAnimationFrame(loop);
+    loop = requestAnimationFrame(loopFn);
   }
 
+  // pass the values to animate
+  spring.to(newState);
   // start the loop
-  let frame = 1;
-  requestAnimationFrame(() => loop())
+  loopFn();
 
+
+  // create some callbacks
+  spring.pause = () => {
+    spring.paused = true;
+    cancelAnimationFrame(loop);
+  };
+
+  spring.play = () => {
+    spring.paused = false;
+    loopFn();
+  }
+
+  spring.stop = () => {
+    cancelAnimationFrame(loop);
+    spring.play = noop;
+    spring.completed = true;
+    frame = 1;
+  }
+
+  return spring;
 };
 
 export default springTo;

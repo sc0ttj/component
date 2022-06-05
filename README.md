@@ -991,22 +991,34 @@ document.addEventListener('click', function(e) {
   const mouseY = e.clientY - rect.top;
 
   // use "springTo" to animate the component
-  Foo.springTo(
+  const mySpring = Foo.springTo(
     // 1st param - the state values to animate to (pass in only the values you want to animate!)
     { x: mouseX, y: mouseY },
     // 2nd param - the spring settings
     {
+      paused: false,
       mass: 4.0,       // higher is slower/more drag         Default = 1.0
       stiffness: 0.5,  // higher is more "bouncy"            Default = 0.1
       damping: 0.9,    // higher is more "friction"          Default = 0.8
       precision: 0.01, // higher values finish anim sooner   Default = 0.01
       //
-      // these callbacks are called on every frame:
+      // called on each frame
       shouldSetState: props => true,
+      // called on on frames where shouldSetState returns true 
+      onSetState: props => true,
+      // called on first frame
+      onStart: props => {},
+      // called on each frame
       onUpdate: props => {},
       // this callback is called at the end:
       onComplete: props => {},
-    });
+    }
+  );
+
+  // available control methods
+  mySpring.pause();
+  mySpring.play();
+  mySpring.stop();
 });
 ```
 
@@ -1016,9 +1028,11 @@ The spring config (2nd param) takes the following properties:
 - `stiffness`: higher is more "bouncy". Default = 0.1
 - `damping`: higher is more "friction". Default = 0.8
 - `precision`: higher values finish anim sooner. Default = 0.01
+- `onStart(props)`:  called on first frame, receives current animation values as `props`
 - `onUpdate(props)`:  called on every frame, receives current animation values as `props`
 - `onComplete(props)`: called on the last frame, receives current animation values as `props`
 - `shouldSetState(props)`:  called on every frame, if it returns true, `setState(props)` is run
+- `onSetState(props)`:  called only on frames where the state is updated, receives anim data as `props`
 
 The `props` object returned to the callbacks contains:
 

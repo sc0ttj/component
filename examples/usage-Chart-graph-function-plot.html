@@ -1,15 +1,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Component - canvas demo</title>
+  <title>Component - Chart demo, function plotting</title>
   <script src="../dist/component.min.js"></script>
   <script src="../dist/chart.min.js"></script>
   <style>
     .container {
       border: 1px solid #222;
       margin: 1em;
-      width: 640px;
-      height: 480px;
     }
   </style>
 </head>
@@ -31,22 +29,22 @@
 
   // set some drawing options
   const opts = {
-    // x,y offset (in pixels)
+    // x,y offset (in pixels), adjust this to move the center of the plot to match your charts axes origins,
+    // if your axes are centered, you can leave this at 0,0
     x: 0,
     y: 0,
     // canvas styling options
     lineWidth: 1.5,
   };
 
-
   // Enable our Chart addon, it'll create an extended 2dContext,
   // with a chainable API, and these extra methods:
   //
-  //    .data(), .margin(), .xAxis(), .yAxis(), .each(),
+  //    .useData(), .margin(), .xAxis(), .yAxis(), .drawEach(), .plotFn(), and more
   //
-  // Inside `.each()`, you get these drawing methods:
+  // Inside `.drawEach()`, you get these drawing methods:
   //
-  //    data.circle(), data.bar(), data.line(), data.pie()
+  //    d.circle(), d.bar(), d.line(), d.pie(), d.arc(), d.candle()
   //
   Component.Ctx = Chart;
 
@@ -60,7 +58,7 @@
       // set the canvas size (w, h, aspectRatio)
       ctx.size(props.sizeX, props.sizeY)  // set width and height, ignore aspect ratio
       //ctx.size(640, 480, null)   // same as above
-      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 4.0
+      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 480
       //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
       //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
       //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
@@ -85,21 +83,14 @@
 
     .xAxis({
       range: [-10,10],
-      scale: 1,
-      label: "",
-      labelBelow: true,
       yPos: 49.9,
       tickLength: 100,
       tickCentered: true,
       tickLabelCentered: true,
-//      tickLabels: label => label === -1 ? '' : label,
     })
 
     .yAxis({
       range: [-10,10],
-      scale: 1,
-      label: "",
-      labelLeft: true,
       xPos: 50,
       tickLength: -100,
       tickCentered: true,

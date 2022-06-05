@@ -70,7 +70,7 @@
       ease: "outQuint",
       duration: 1000,
       // we want to show an integer on the page, so don't set state on each frame...
-      shouldSetState: () => false,
+      shouldSetState: props => false,
       // until we convert "count" to an integer
       onUpdate: props => App.setState({ count: Number.parseInt(props.values[0], 10) })
     });

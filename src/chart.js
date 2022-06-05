@@ -575,7 +575,7 @@ const extraMethods = {
     const { x, y, h, w, margin, xDistance } = getDimensions(this);
     let xx,
         yy,
-        dx = 4,
+        dx = 2,
         x0 = (opts.x||0) + (this.canvas.width/2),
         y0 = (opts.y||0) + (this.canvas.height/2),
         scale = xDistance,

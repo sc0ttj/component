@@ -35,11 +35,11 @@
   // Enable our Chart addon, it'll create an extended 2dContext,
   // with a chainable API, and these extra methods:
   //
-  //    .data(), .margin(), .xAxis(), .yAxis(), .each(),
+  //    .useData(), .margin(), .xAxis(), .yAxis(), .drawEach(), .plotFn(), and more
   //
-  // Inside `.each()`, you get these drawing methods:
+  // Inside `.drawEach()`, you get these drawing methods:
   //
-  //    data.circle(), data.bar(), data.line(), data.pie()
+  //    d.circle(), d.bar(), d.line(), d.pie(), d.arc(), d.candle()
   //
   Component.Ctx = Chart;
 

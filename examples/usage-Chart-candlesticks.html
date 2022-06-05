@@ -8,8 +8,6 @@
     .container {
       border: 1px solid #222;
       margin: 1em;
-      width: 640px;
-      height: 480px;
     }
   </style>
 </head>
@@ -35,11 +33,11 @@
   // Enable our Chart addon, it'll create an extended 2dContext,
   // with a chainable API, and these extra methods:
   //
-  //    .data(), .margin(), .xAxis(), .yAxis(), .each(),
+  //    .useData(), .margin(), .xAxis(), .yAxis(), .drawEach(), .plotFn(), and more
   //
-  // Inside `.each()`, you get these drawing methods:
+  // Inside `.drawEach()`, you get these drawing methods:
   //
-  //    data.circle(), data.bar(), data.line(), data.pie()
+  //    d.circle(), d.bar(), d.line(), d.pie(), d.arc(), d.candle()
   //
   Component.Ctx = Chart;
 
@@ -72,13 +70,13 @@
     .useData({
       'USA':
       [{},
-        { year: 2000, medals: 7, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 5, open: 5.6, close: 3.4, low: 2.2, high: 5.61 },
-        { year: 2003, medals: 12, open: 3, close: 4.15, low: 1, high: 5 },
-        { year: 2004, medals: 4, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 10, open: 3.7, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 8, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2000, open: 3, close: 5, low: 2, high: 6 },
+        { year: 2001, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2002, open: 5.6, close: 3.4, low: 2.2, high: 5.61 },
+        { year: 2003, open: 3, close: 4.15, low: 1, high: 5 },
+        { year: 2004, open: 4, close: 3, low: 1, high: 5 },
+        { year: 2005, open: 3.7, close: 5, low: 2, high: 6 },
+        { year: 2006, open: 5, close: 6, low: 2, high: 6 },
       ],
     })
 
@@ -90,26 +88,16 @@
 
     .xAxis({
       range: [1999,2007],
-      scale: 1,
       label: "Years",
-      labelBelow: true,
-      yPos: 0,
       tickLength: -3,
       tickCentered: true,
       tickLabelCentered: true,
       tickLabels: (label, i) => (i === 0 || i === 8) ? '' : label,
-      style: {
-        lineWidth: 1,
-        strokeStyle: '#000',
-      }
     })
 
     .yAxis({
       range: [0,10],
-      scale: 1,
       label: `Dollars`,
-      labelLeft: true,
-      xPos: 0,
       tickLength: -3,
       tickCentered: true,
       tickLabels: label => `$${label}`,
@@ -133,43 +121,6 @@
       country.forEach((data, n) => {
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
-        //data.bar({
-        //  height: data.medals,
-        //  stacked: false,
-        //  style:{ fill: colors[i] },
-        //});
-        //data.circle({
-        //  cy:     data.medals,
-        //  radius: data.medals*2,
-        //  start: 0,
-        //  end: 360,
-        //  rotate: 0,
-        //  style: { fill: colors[i+2], lineWidth: 5, stroke: 'red' },
-        //});
-        //data.pie({
-        //  px: 0,
-        //  py: 0,
-        //  slice: data.medals,
-        //  radius: 100,
-        //  innerRadius: 70,
-        //  style: { fill: colors[n] },
-        //});
-        //data.arc({
-        //  slice: data.medals,
-        //  radius: 100,
-        //  innerRadius: 70,
-        //  style: { fill: colors[n] },
-        //});
-        //data.line({
-        //  py: data.medals,
-        //  stacked: true,
-        //  smooth: true,
-        //  style: {
-        //    fill: colors[i],
-        //    stroke: colors[i],
-        //    lineWidth: 2,
-        //  },
-        //});
         data.candle({
           open: data.open,
           close: data.close,
@@ -178,13 +129,10 @@
           style: {
             lineWidth: 1,
           }
-        })
+        });
       });
-    })
 
-
-
-
+    });
 
     frame++;
   };
