@@ -72,23 +72,23 @@
     .useData({
       'USA':
       [
-        { year: 2000, medals: 7, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 5, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 12, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 4, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 10, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 8, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2000, total: 7 },
+        { year: 2001, total: 9 },
+        { year: 2002, total: 5 },
+        { year: 2003, total: 12 },
+        { year: 2004, total: 4 },
+        { year: 2005, total: 10 },
+        { year: 2006, total: 8 },
       ],
       'UK':
       [
-        { year: 2000, medals: 4, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 12, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 14, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 6, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 5, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 9, open: 5, close: 6, low: 2, high: 6 },
+        { year: 2000, total: 4 },
+        { year: 2001, total: 12 },
+        { year: 2002, total: 14 },
+        { year: 2003, total: 8 },
+        { year: 2004, total: 6 },
+        { year: 2005, total: 5 },
+        { year: 2006, total: 9 },
       ],
     })
 
@@ -117,7 +117,7 @@
     .yAxis({
       range: [0,15],
       scale: 1,
-      label: `Gold medals`,
+      label: `Total`,
       labelLeft: true,
       xPos: 0,
       tickLength: -3,
@@ -144,7 +144,7 @@
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
         data.line({
-          py: data.medals,
+          py: data.total,
           stacked: false,
           smooth: false,
           style: {

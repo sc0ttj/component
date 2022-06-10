@@ -69,51 +69,15 @@
 
     // Pass in your data, an array of objects for simple bar charts, or
     // (more useful for grouped bar charts & line charts) an object of arrays:
-    .useData({
-      'UK':
-      [
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-      'USA':
-      [
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-
-      'France':
-      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-
-      'Foo':
-      [ {}, // padded data trick - mainly for bar charts, to give more "space" from axis
-        { year: 2000, medals: 2, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 4, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 7, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 3, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 1, open: 5, close: 6, low: 2, high: 6 },
-      ],
-
-    })
+    .useData([
+      { year: 2000, medals: 2 },
+      { year: 2001, medals: 9 },
+      { year: 2002, medals: 4 },
+      { year: 2003, medals: 8 },
+      { year: 2004, medals: 7 },
+      { year: 2005, medals: 3 },
+      { year: 2006, medals: 1 },
+    ])
 
     .margin(40,80,170,80)  // top, bottom, left, right
 
@@ -122,7 +86,7 @@
     })
 
 
-    .drawEach( (country, name, i) => {
+    .drawEach((year, name, i) => {
       // Now we can work with some "decorated" chart data, ${data}.
       // You might wanna use your top-level ${data} here - e.g. to draw a legend
 
@@ -136,8 +100,8 @@
       //    x/yScale    = the number by which axis values are multiplied
       //    x/yDistance = the tick distance (in px) along the x and y axes
 
-      // Now lets go over each bit of "decorated" data for this country
-      country.forEach((data, n) => {
+      // Now lets go over each bit of "decorated" data for this year
+      year.forEach((data, n) => {
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
         data.pie({

@@ -69,28 +69,15 @@
 
     // Pass in your data, an array of objects for simple bar charts, or
     // (more useful for grouped bar charts & line charts) an object of arrays:
-    .useData({
-      'USA':
-      [
-        { year: 2000, medals: 7, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 5, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 12, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 4, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 10, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 8, open: 5, close: 6, low: 2, high: 6 },
-      ],
-      'UK':
-      [
-        { year: 2000, medals: 4, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2001, medals: 12, open: 5, close: 6, low: 2, high: 6 },
-        { year: 2002, medals: 14, open: 6, close: 3, low: 2, high: 4 },
-        { year: 2003, medals: 8, open: 3, close: 4, low: 1, high: 8 },
-        { year: 2004, medals: 6, open: 4, close: 3, low: 1, high: 5 },
-        { year: 2005, medals: 5, open: 3, close: 5, low: 2, high: 6 },
-        { year: 2006, medals: 9, open: 5, close: 6, low: 2, high: 6 },
-      ],
-    })
+    .useData([
+      { year: 2000, medals: 7 },
+      { year: 2001, medals: 9 },
+      { year: 2002, medals: 5 },
+      { year: 2003, medals: 12 },
+      { year: 2004, medals: 4 },
+      { year: 2005, medals: 5 },
+      { year: 2006, medals: 8 },
+    ])
 
     .margin(40,80,170,80)  // top, bottom, left, right
 

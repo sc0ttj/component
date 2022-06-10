@@ -124,7 +124,7 @@
       label: "",
       labelLeft: true,
       xPos: 0,
-      tickLength: -3,
+      tickLength: 100,
       tickCentered: true,
       tickLabelCentered: true,
       tickLabels: [ 'Jan', 'Feb', 'Mar', 'Apr', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ],
@@ -159,7 +159,7 @@
         data.bar({
           width: data.width,
           stacked: true,
-          offset: 7-n+(n < 5 && n > 1 ? 1 : 0), // some random offsets
+          offset: 7-n, // some made up offsets
           padding: 20,
           style:{ fill: i % 2 === 0 ? colors[4] : colors[1] }, // red or "unfinished", green for "finished"
         });

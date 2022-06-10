@@ -1004,8 +1004,8 @@ document.addEventListener('click', function(e) {
       //
       // called on each frame
       shouldSetState: props => true,
-      // called on on frames where shouldSetState returns true 
-      onSetState: props => true,
+      // called on frames where shouldSetState returns true 
+      onSetState: props => {},
       // called on first frame
       onStart: props => {},
       // called on each frame
@@ -1024,6 +1024,7 @@ document.addEventListener('click', function(e) {
 
 The spring config (2nd param) takes the following properties:
 
+- `paused`: if true, the animation must be started manually, with `.play()`, once created
 - `mass`: higher is slower/more drag. Default = 1.0
 - `stiffness`: higher is more "bouncy". Default = 0.1
 - `damping`: higher is more "friction". Default = 0.8
