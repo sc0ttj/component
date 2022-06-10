@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title> Some Title  </title>
+  <title>Component demo - spring animation  </title>
   <style>
   * { box-sizing:border-box; }
   body { margin:0; padding:0; }
@@ -37,7 +37,12 @@
 
     // 2. listen to clicks on the page and spring the component to click location
 
+    let mySpring;
+
     document.addEventListener('click', function(e) {
+
+      // don' interrupt a previous animation
+      if (mySpring && mySpring.completed === false) return;
 
       // get mouse position on click
       const rect = e.target.getBoundingClientRect();
@@ -45,23 +50,34 @@
       const mouseY = e.clientY - rect.top;
 
       // use "springTo" to animate the component
-      Foo.springTo(
-        // 1st param - the state values to animate to (pass in only the values you want to animate!)
+      mySpring = Foo.springTo(
+        // 1st param - an object containing the state values to animate to
+        // (pass in only the values you want to animate!)
         { x: mouseX, y: mouseY },
         // 2nd param - the spring settings
         {
+          paused: false,   // if true, use the play() method to start the anim
           mass: 4.0,       // higher is slower/more drag         Default = 1.0
           stiffness: 0.5,  // higher is more "bouncy"            Default = 0.1
           damping: 0.9,    // higher is more "friction"          Default = 0.8
           precision: 0.01, // higher values finish anim sooner   Default = 0.01
-          //
-          // these callbacks are called on every frame:
+          // callbacks
           shouldSetState: props => true,
+          onSetState: props => {},
+          onStart: props => console.log('onStart', props),
           onUpdate: props => {},
-          // this callback is called at the end:
           onComplete: props => console.log("onComplete()", props),
-        });
+        }
+      );
+
+      // methods to control the spring object - pause(), play(), stop()
+      //mySpring.pause();
+      //mySpring.stop();
+      //mySpring.play();
+      //setTimeout(() => mySpring.play(), 1000);
+
     });
+
   </script>
 </body>
 </html>

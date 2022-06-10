@@ -1,0 +1,115 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - Chart demo, function plotting</title>
+  <script src="../dist/component.min.js"></script>
+  <script src="../dist/chart.min.js"></script>
+  <style>
+    .container {
+      border: 1px solid #222;
+      margin: 1em;
+    }
+  </style>
+</head>
+<body>
+
+  <p>Here's an example of <strong><a href="https://www.cuemath.com/calculus/graphing-functions/">graphing functions</a></strong>:</p>
+
+  <canvas class="container"></canvas>
+
+<script>
+  let frame = 1; // frame count
+
+  // set some functions to plot
+  const plot1 = x => Math.sin(x),
+        plot2 = x => Math.cos(3*x),
+        plot3 = x => x,
+        plot4 = x => x*x*x,
+        plot5 = x => (x*x)-6;
+
+  // set some drawing options
+  const opts = {
+    // x,y offset (in pixels), adjust this to move the center of the plot to match your charts axes origins,
+    // if your axes are centered, you can leave this at 0,0
+    x: 0,
+    y: 0,
+    // canvas styling options
+    lineWidth: 1.5,
+  };
+
+  // Enable our Chart addon, it'll create an extended 2dContext,
+  // with a chainable API, and these extra methods:
+  //
+  //    .useData(), .margin(), .xAxis(), .yAxis(), .drawEach(), .plotFn(), and more
+  //
+  // Inside `.drawEach()`, you get these drawing methods:
+  //
+  //    d.circle(), d.bar(), d.line(), d.pie(), d.arc(), d.candle()
+  //
+  Component.Ctx = Chart;
+
+  // define a new component
+  const myChart = new Component({ sizeX: 640, sizeY: 520 });
+
+  // define the "view", that draws to the components canvas
+  myChart.view = (props, ctx) => {
+
+    if (frame === 1) {
+      // set the canvas size (w, h, aspectRatio)
+      ctx.size(props.sizeX, props.sizeY)  // set width and height, ignore aspect ratio
+      //ctx.size(640, 480, null)   // same as above
+      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 480
+      //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
+      //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
+      //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
+      //console.clear();
+      frame++;
+      return;
+    }
+
+    ctx.clear()
+
+    .translate(0.5,0.5) // crisp lines trick
+
+    .margin(40,40,100,100)  // top, bottom, left, right
+
+    // we don't need to pass in data - we'll define functions to draw instead -
+    // but we still need to call this method
+    .useData({})
+
+    .setStyle({
+      font: 'Normal 0.750rem Sans-Serif',
+    })
+
+    .xAxis({
+      range: [-10,10],
+      yPos: 49.9,
+      tickLength: 100,
+      tickCentered: true,
+      tickLabelCentered: true,
+    })
+
+    .yAxis({
+      range: [-10,10],
+      xPos: 50,
+      tickLength: -100,
+      tickCentered: true,
+      tickLabels: label => label === -1 ? '' : label,
+    })
+
+    .plotFn(plot1, { ...opts, strokeStyle: '#c00' })
+    .plotFn(plot2, { ...opts, strokeStyle: '#99d' })
+    .plotFn(plot3, { ...opts, strokeStyle: '#2e2' })
+    .plotFn(plot4, { ...opts, strokeStyle: '#22a' })
+    .plotFn(plot5, { ...opts, strokeStyle: '#888' })
+
+    frame++;
+  };
+
+
+  // render to a canvas, and attach its context (`ctx`) to our component
+  myChart.render('.container', '2d');
+
+</script>
+</body>
+</html>

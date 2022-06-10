@@ -1,0 +1,146 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - canvas demo</title>
+  <script src="../dist/component.min.js"></script>
+  <script src="../dist/chart.min.js"></script>
+  <style>
+    .container {
+      border: 1px solid #222;
+      margin: 1em;
+      width: 640px;
+      height: 480px;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas class="container"></canvas>
+
+<script>
+  let frame = 1; // frame count
+  const colors = [
+    '#0074D9',
+    '#FF4136',
+    '#39CCCC',
+    '#FFDC00',
+    '#01DA70',
+    '#FF851B',
+    '#B10DC9',
+    '#FFABAB',
+    '#F012BE',
+    '#4FDD82',
+  ];
+
+  // Enable our Chart addon, it'll create an extended 2dContext,
+  // with a chainable API, and these extra methods:
+  //
+  //    .useData(), .margin(), .xAxis(), .yAxis(), .drawEach(), .plotFn(), and more
+  //
+  // Inside `.drawEach()`, you get these drawing methods:
+  //
+  //    d.circle(), d.bar(), d.line(), d.pie(), d.arc(), d.candle()
+  //
+  Component.Ctx = Chart;
+
+  // define a new component
+  const myChart = new Component({ sizeX: 640, sizeY: 520 });
+
+  // define the "view", that draws to the components canvas
+  myChart.view = (props, ctx) => {
+
+    if (frame === 1) {
+      // set the canvas size (w, h, aspectRatio)
+      ctx.size(props.sizeX, props.sizeY)  // set width and height, ignore aspect ratio
+      //ctx.size(640, 480, null)   // same as above
+      //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 4.0
+      //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
+      //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
+      //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
+      //console.clear();
+      frame++;
+      return;
+    }
+
+    ctx.clear()
+
+    .translate(0.5,0.5) // crisp lines trick
+
+    // Pass in your data, an array of objects for simple bar charts, or
+    // (more useful for grouped bar charts & line charts) an object of arrays:
+    .useData([
+      { total: 2 },
+      { total: 5 },
+      { total: 4 },
+      { total: 7 },
+      { total: 6 },
+      { total: 9 },
+      { total: 3 },
+    ])
+
+    .margin(40,250,80,80)  // top, bottom, left, right
+
+    .setStyle({
+      font: 'Normal 1em Sans-Serif',
+    })
+
+    .yAxis({
+      range: [0,10],
+      scale: 1,
+      xPos: 44.8,
+      tickLength: 0,
+    })
+
+    // Also available, just FYI:
+    const { x, y, h, w, margin, xRange, yRange, xScale, yScale, xDistance, yDistance } = ctx.dimensions();
+    // Do whatever you like with these params, if anything..
+    //    x/y         = the x/y origins of the chart area, accounting for margins
+    //    w/h         = the x/y end points of the chart area, accounting for margins
+    //    margin      = the space in px outside the chart area, in format { top, bottom, left, right }
+    //    x/yRange    = the min/max data values of the x/y axes
+    //    x/yScale    = the number by which axis values are multiplied
+    //    x/yDistance = the tick distance (in px) along the x and y axes
+
+    ctx.drawEach( (country, name, i) => {
+      // Now we can work with some "decorated" chart data, ${data}.
+      // You might wanna use your top-level ${data} here - e.g. to draw a legend
+      //
+      // Now lets go over each bit of "decorated" data for this country
+      country.forEach((data, n) => {
+        ctx.save().globalCompositeOperation("destination-over"); // draw stuff *under* the axis
+        data.pie({
+          px: 295,
+          py: 270,
+          slice: data.total,
+          radius: data.total*yDistance,
+          style: { fill: colors[n] },
+        });
+        ctx.restore();
+      });
+    })
+
+    // only for polar area chart - now lets draw the custom radial axis,
+    for (let num = 0; num<=yRange[1]; num++) {
+      ctx
+        .save()
+        .globalCompositeOperation("destination-over") // draw it *under* everything else
+        .beginPath()
+        .lineWidth(1)
+        .strokeStyle('#888')
+        .globalAlpha(0.3)
+        .arc(w/2+margin.left-25, 270, Math.round(num*yDistance), 0, Math.PI*2)
+        .stroke()
+        .closePath()
+        .restore()
+    }
+
+    frame++;
+  };
+
+
+  // render to a canvas, and attach its context (`ctx`) to our component
+  myChart.render('.container', '2d');
+
+</script>
+</body>
+</html>

@@ -5,8 +5,6 @@
 
 // @TODO Fixes and improvements:
 //
-// - new: style and tickStyle params for axes ?
-//
 // - demo: radial bar chart            - just a bunch of arc charts, wrapped round like russian dolls (https://nivo.rocks/radial-bar/)
 // - demo: heatmap charts              - series of stacked bars, all stacked bits same size, covers whole area w, coloured by data
 // - demo: parallel charts             - like this one: https://datavizcatalogue.com/methods/parallel_coordinates.html
@@ -572,6 +570,31 @@ const extraMethods = {
     drawLines();
   },
 
+  // adapted from http://javascripter.net/faq/plotafunctiongraph.htm
+  plotFn: function(func, opts = {}) {
+    const { x, y, h, w, margin, xDistance } = getDimensions(this);
+    let xx,
+        yy,
+        dx = 2,
+        x0 = (opts.x||0) + (this.canvas.width/2),
+        y0 = (opts.y||0) + (this.canvas.height/2),
+        scale = xDistance,
+        iMax = Math.round((w-x0)/dx),
+        iMin = Math.round(-x0/dx);
+
+    this.beginPath();
+    setStyle(this, opts)
+    for (let i = iMin; i <= iMax; i++) {
+      xx = x+(dx*i);
+      yy = scale*func(xx/scale);
+      if ((y0-yy) <= margin.top+h && (y0+yy) <= y) { // prevents drawing outside of chart area
+        i === iMin ? this.moveTo(x0+xx,y0-yy) : this.lineTo(x0+xx,y0-yy);
+      }
+    }
+    this.stroke();
+    this.closePath();
+  },
+
   margin: function(t,b,l,r){
     this.margin = {
       top: t,
@@ -720,9 +743,7 @@ const Chart = function(origCtx, c) {
   this.canvas = origCtx.canvas;
 
 
-  // add more methods to the extended context - they're added here cos they're
-  // nested/namespaced under ctx.image.* and ctx.video.* and the above
-  // loops that make methods chainable don't handle nested objects
+  // you can add more methods to the extended context here
 
   this.context.margin = {
     top: 0,
