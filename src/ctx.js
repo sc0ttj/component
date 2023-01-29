@@ -365,29 +365,23 @@ const extraMethods = {
   },
   size: function(w, h, a) {
     if (this.w === w && this.h === h) return; // if no new size, just return
-    // if width or height not given, get them from aspect ratio
-    this.w = w ? w : h * a;
-    this.h = h ? h : w * a;
-    // respect device pixel ratio
-    this.canvas.width = this.w * PIXEL_RATIO;
-    this.canvas.height = this.h * PIXEL_RATIO;
-    // update the CSS too
-    this.canvas.style.width = this.w + 'px';
-    this.canvas.style.height = this.h + 'px';
-    this.canvas.style.objectFit = a ? 'contain' : null;
-    // make shadow canvas same dimensions and scale as main canvas
-    shadowCtx.w = this.w;
-    shadowCtx.h = this.h;
-    shadowCanvas.height = this.canvas.height;
-    shadowCanvas.width = this.canvas.width;
-    shadowCanvas.style.height = this.canvas.style.height;
-    shadowCanvas.style.width = this.canvas.style.width;
-    shadowCanvas.style.objectFit = a ? 'contain' : null;
-    // adjust scale for pixel ratio
-    if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
-      this.scale(PIXEL_RATIO, PIXEL_RATIO);
-      shadowCtx.scale(PIXEL_RATIO, PIXEL_RATIO);
-    }
+    // for both real and shadow canvas:
+    [ this, shadowCtx ].forEach(c => {
+      // if width or height not given, get them from aspect ratio
+      c.w = w ? w : h * a;
+      c.h = h ? h : w * a;
+      // respect device pixel ratio
+      c.canvas.width = c.w * PIXEL_RATIO;
+      c.canvas.height = c.h * PIXEL_RATIO;
+      // update the CSS too
+      c.canvas.style.width = c.w + 'px';
+      c.canvas.style.height = c.h + 'px';
+      c.canvas.style.objectFit = a ? 'contain' : null;
+      // adjust scale for pixel ratio
+      if (c.contextType === '2d' && PIXEL_RATIO !== 1) {
+        c.scale(PIXEL_RATIO, PIXEL_RATIO);
+      }
+    });
   },
 
   // a simple "camera"
