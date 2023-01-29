@@ -184,8 +184,26 @@ const DEG2RAD = PI / 180;
       const hoverColor = ctx.getImageData(x, y, 1, 1).data;
       const hoverObject = tracker.lookup(hoverColor);
 
+      How does it work?
+
+      There are four basic steps:
+
+      First draw each component on it's own little temporary "patch" canvas
+
+      Draw all the patches onto the main visible canvas.
+
+      Assign each component it's own unique color and swap out all non-transparent
+      pixels on the patch canvases with those unique colors, masking the original pixels.
+
+      Draw all the patches onto a hidden event canvas.
+
+      Once those steps are complete then for any mouse event on the main visible
+      canvas you can just check the color of the corresponding pixel on the hidden
+      event canvas to know which component was interacted with!
 
 - easy events
+
+  - use the canvas-color-tracker above inside `ctx.create[someShape]` functions
 
       const rr = ctx.create.roundedRect(x,y,w,h,r);  // caches and returns {x,y,w,h,r}
       rr.draw();
@@ -318,6 +336,9 @@ const drawHead = function(ctx,x0,y0,x1,y1,x2,y2,style) {
 };
 
 
+const shadowCanvas = document.createElement('canvas');
+const shadowCtx = shadowCanvas.getContext('2d');
+
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
 
@@ -325,6 +346,7 @@ const extraMethods = {
   clear: function(resetTransform) {
     if (resetTransform === true) this.setTransform(1, 0, 0, 1, 0, 0);
     this.clearRect(0, 0, this.canvas.width * PIXEL_RATIO, this.canvas.height * PIXEL_RATIO);
+    shadowCtx.clearRect(0, 0, shadowCtx.canvas.width * PIXEL_RATIO, shadowCtx.canvas.height * PIXEL_RATIO);
   },
   fullscreen: function() {
     if (!document.fullscreenElement) this.canvas.requestFullscreen();
@@ -353,9 +375,18 @@ const extraMethods = {
     this.canvas.style.width = this.w + 'px';
     this.canvas.style.height = this.h + 'px';
     this.canvas.style.objectFit = a ? 'contain' : null;
+    // make shadow canvas same dimensions and scale as main canvas
+    shadowCtx.w = this.w;
+    shadowCtx.h = this.h;
+    shadowCtx.canvas.height = this.canvas.height;
+    shadowCtx.canvas.width = this.canvas.width;
+    shadowCtx.canvas.style.height = this.canvas.style.height;
+    shadowCtx.canvas.style.width = this.canvas.style.width;
+    shadowCtx.canvas.style.objectFit = a ? 'contain' : null;
     // adjust scale for pixel ratio
     if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
       this.scale(PIXEL_RATIO, PIXEL_RATIO);
+      shadowCtx.scale(PIXEL_RATIO, PIXEL_RATIO);
     }
   },
 
@@ -962,20 +993,36 @@ const Ctx = function(origCtx, c) {
    * @type CanvasRenderingContext2D
    */
   this.context = origCtx;
+  this.canvas = origCtx.canvas;
+
+  // interactive canvas
+  // ctx.create[shape](...)
+  // draws as usual, but also draws to the off-screen canvas, with unique
+  // color, and remembers the object id/color, for looking up later
+
+  // create an offscreen canvas, so we can:
+  // * draw things to it, always with a unique color
+  // * lookup a color to know which object/shape it refers to
+  this.shadowCanvas = shadowCanvas;
+  //document.body.append(this.shadowCanvas);
+  this.shadowCtx = shadowCtx;
+  this.shadowCtx.canvas.height = this.canvas.height;
+  this.shadowCtx.canvas.width = this.canvas.width;
+  this.shadowCtx.canvas.style.height = this.canvas.style.height;
+  this.shadowCtx.canvas.style.width = this.canvas.style.width;
+  this.shadowCanvas.setAttribute('class', 'shadow-canvas');
 
   //wrap methods
   while(n--) {
   	curProp = ctxMethods[n];
   	this[curProp] = chainMethod(origCtx[curProp], origCtx, this);
   }
-
   // wrap the extra methods
   n = extraMethodNames.length;
   while(n--) {
   	curProp = extraMethodNames[n];
   	this[curProp] = chainMethod(extraMethods[curProp], origCtx, this);
   }
-
   //convert properties into methods (getter/setter)
   n = ctxProps.length;
   while(n--) {
@@ -986,7 +1033,6 @@ const Ctx = function(origCtx, c) {
   // the above code replaces context properties with methods in our new
   // context, so put back the reference to the canvas element, cos we want it
   this.canvas = origCtx.canvas;
-
 
   // add more methods to the extended context - they're added here cos they're
   // nested/namespaced under ctx.image.* and ctx.video.* and the above
@@ -1089,6 +1135,128 @@ const Ctx = function(origCtx, c) {
       }, 64);
     }
   };
+
+  this.create = {}
+
+  n = ctxMethods.length;
+  while(n--) {
+  	curProp = ctxMethods[n];
+    if (!curProp) continue;
+  	console.log('ctxMethods[n]: ', ctxMethods[n]);
+
+  	this.create['rect'] = (...props) => {
+  	  // define our object
+  	 const obj = {
+  	    props: [...props],
+  	    update: (...props) => obj.props = [...props],
+  	    draw: (style) => {
+  	      const props = obj.props;
+  	      this['rect'](...props);
+      	  if (style) {
+      	    this.fillStyle(style.fill || style.fillStyle);
+      	    this.strokeStyle(style.stroke || style.strokeStyle);
+      	    this.fill();
+      	    this.stroke();
+      	  }
+      	  // draw `obj` to an off-screen canvas, using the unique color
+      	  this.shadowCtx.beginPath();
+      	  this.shadowCtx.fillStyle = obj.id;
+      	  this.shadowCtx['rect'](...props);
+      	  this.shadowCtx.fill();
+  	    },
+  	  };
+  	  // get the unique color as an id
+  	  obj.id = this.register(obj);
+  	  console.log('obj.id', obj.id, obj);
+  	  if (!obj.id) return Error('registry is full');
+
+  	  // draw on regular and shadow canvas
+  	  obj.draw(...props)
+
+      return obj;
+  	};
+
+  }
+
+  n = extraMethodNames.length;
+  while(n--) {
+  	curProp = extraMethodNames[n];
+    if (!curProp) continue;
+  	console.log('extraMethodNames[n]: ', extraMethodNames[n]);
+
+  	this.create['roundedRect'] = (...props) => {
+  	  // define our object
+  	 const obj = {
+  	    props: [...props],
+  	    update: (...props) => obj.props = [...props],
+  	    draw: () => {
+  	      const props = obj.props;
+  	      this['roundedRect'](...props);
+      	  this.fill();
+  	      this.stroke();
+      	  // draw `obj` to an off-screen canvas, using the unique color
+      	  this.shadowCtx.beginPath();
+      	  this.shadowCtx.fillStyle = obj.id;
+      	  this.shadowCtx['roundedRect'](...props);
+      	  this.shadowCtx.fill();
+      	  this.shadowCtx.stroke();
+  	    },
+  	  };
+  	  // get the unique color as an id
+  	  obj.id = this.register(obj);
+  	  if (!obj.id) return Error('registry is full');
+  	  // draw on regular canvas
+  	  obj.draw(...props);
+
+      return obj;
+  	};
+
+  }
+
+  //console.log('this.create', this.create);
+
+  // unique color for every item drawn to off-screen canvas:
+  // * shamelessly stolen from https://github.com/vasturiano/canvas-color-tracker
+  const ENTROPY = 123; // Raise numbers to prevent collisions in lower indexes
+  const checksum = (n, csBits) => (n * ENTROPY) % Math.pow(2, csBits);
+  const int2HexColor = num => `#${Math.min(num, Math.pow(2, 24)).toString(16).padStart(6, '0')}`;
+  const rgb2Int = (r, g, b) => (r << 16) + (g << 8) + b;
+  const csBits = 6;
+
+  // remember all canvas objects in this registry:
+  const registry = ['__reserved_for_background__'];
+
+  // add obj to registry, returns the objects unique color:
+  this.register = (obj) => {
+    if (registry.length >= Math.pow(2, 24 - csBits)) { // color has 24 bits (-checksum)
+      return null; // Registry is full
+    }
+    const idx = registry.length;
+    const cs = checksum(idx, csBits);
+    const color = int2HexColor(idx + (cs << (24 - csBits)));
+    registry.push(obj);
+    return color;
+  };
+
+  // returns the pixel color of the given x,y location on the shadowCanvas,
+  // which can be passed to ctx.lookup():
+  // example:  const hoverObject = ctx.lookup(ctx.pxColor(mouseX, mouseY));
+  this.pxColor = (x, y) => {
+    const d = this.shadowCtx.getImageData(x, y, 1, 1).data;
+    return [d[0], d[1], d[2]];
+  };
+
+  // lookup which obj owns the given color:
+  // example: ctx.lookup(ctx.pxColor(20,50))
+  this.lookup = (color) => {
+    const n = typeof color === 'string' ? Error('no strings') : rgb2Int(...color);
+    if (!n) return null; // 0 index is reserved for background
+    const idx = n & (Math.pow(2, 24 - csBits) - 1); // registry index
+    const cs = (n >> (24 - csBits)) & (Math.pow(2, csBits) - 1); // extract bits reserved for checksum
+    if (checksum(idx, csBits) !== cs || idx >= registry.length) return null; // failed checksum or registry out of bounds
+    return registry[idx];
+  };
+
 
   return;
 };
