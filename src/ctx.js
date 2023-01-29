@@ -857,7 +857,7 @@ const extraMethods = {
 
   // styling helpers
   setStyle: function(obj) {
-    for(i in obj) {
+    for(let i in obj) {
       this[i] = obj[i];
     };
   },
@@ -954,11 +954,6 @@ const Ctx = function(origCtx, c) {
    */
   this.context = origCtx;
   this.canvas = origCtx.canvas;
-
-  // interactive canvas
-  // ctx.create[shape](...)
-  // draws as usual, but also draws to the off-screen canvas, with unique
-  // color, and remembers the object id/color, for looking up later
 
   // create an offscreen canvas, so we can:
   // * draw things to it, always with a unique color
@@ -1117,13 +1112,14 @@ const Ctx = function(origCtx, c) {
   	 const obj = {
   	    props: [...props],
   	    update: (...props) => obj.props = [...props],
-  	    draw: (style) => {
+  	    draw: (styles) => {
   	      const props = obj.props;
   	      this[fnName](...props);
-          if (style) {
+          if (styles) {
       	    this.save();
-      	    this.fillStyle(style.fill || style.fillStyle);
-      	    this.strokeStyle(style.stroke || style.strokeStyle);
+            for (let [key, value] of Object.entries(styles)) {
+      	      this[key](value);
+            }
       	    this.fill();
       	    this.stroke();
       	    this.restore();
