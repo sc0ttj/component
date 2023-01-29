@@ -1113,17 +1113,17 @@ const Ctx = function(origCtx, c) {
   	    props: [...props],
   	    update: (...props) => obj.props = [...props],
   	    draw: (styles) => {
-  	      const props = obj.props;
-  	      this[fnName](...props);
+          const props = obj.props;
+          this.save();
           if (styles) {
-      	    this.save();
             for (let [key, value] of Object.entries(styles)) {
-      	      this[key](value);
+              this[key](value);
             }
-      	    this.fill();
-      	    this.stroke();
-      	    this.restore();
-      	  }
+          }
+          this[fnName](...props);
+          this.fill();
+          this.stroke();
+          this.restore();
       	  // draw `obj` to an off-screen canvas, using the unique color
       	  this.shadowCtx.beginPath();
       	  this.shadowCtx.fillStyle = obj.id;
@@ -1131,6 +1131,7 @@ const Ctx = function(origCtx, c) {
       	  this.shadowCtx.fill();
   	    },
   	  };
+
   	  // get the unique color as an id
   	  obj.id = this.register(obj);
   	  if (!obj.id) return Error('registry is full');
