@@ -26,11 +26,6 @@
   <!-- <video crossorigin="*" controls></video> -->
 
 <script>
-  let context; // will be a reference to Foo.ctx, so we can access it outside the components view
-  let frame = 1; // frame count
-  const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
-
-
   // Enable the enhanced canvas 2dContext API (optional).
   // The extended `ctx` enables:
   //  - HDPI aware size() method
@@ -43,12 +38,15 @@
   // define a new component
   const Foo = new Component({ x: 280, y: 100 });
 
+  let context; // will be a reference to Foo.ctx, so we can access it outside the components view
+  let frame = 1; // frame count
+  const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
+
   // define objects and properties used by our interactive canvas
   const mousePos = { x: 0, y: 0 };
   let mouseDown = false;
   let hoverObj, clickedObj;
-  let filledRect;
-
+  let filledRect, myStar;
 
   // define a "view", that draws to the components canvas
   Foo.view = (props, ctx) => {
@@ -64,8 +62,10 @@
       //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
 
 
-      // create an interactive object, using `ctx.create`
+      // create interactive objects, using `ctx.create`
       filledRect = ctx.create.rect(0, 0, 100, 100)
+      myStar = ctx.create.strokeStar(200, 200, 50, 5, 0)
+
     }
 
     ctx
@@ -199,11 +199,17 @@
 
 
       // interactive canvas element
-      filledRect.update(0, 0, 100+frame, 100)
+      filledRect.update(0+frame, 0, 100, 100)
+      myStar.update(200+frame, 200, 50, 5, 0)
 
       filledRect.draw({
         fill: '#0000cc',
         stroke: '#00cc00',
+      })
+
+      myStar.draw({
+        fill: '#cccc77',
+        stroke: '#88cc00',
       })
 
 
@@ -226,17 +232,20 @@
       mousePos.x = event.offsetX;
       mousePos.y = event.offsetY;
       // Get px color of mouse position from shadow canvas
-      const pxColor = Array.from(context.shadowCtx.getImageData(mousePos.x, mousePos.y, 1, 1).data);
+      const pxColor = context.shadowCtx.getImageData(mousePos.x, mousePos.y, 1, 1).data;
       // Retrieve original object by px color
       const hoverObj = context.lookup(pxColor);
       const tooltip = document.querySelector('.tooltip');
+      tooltip.innerHTML = ``;
       if (hoverObj) {
-        console.log('mousePos ', mousePos);
-        console.log('pxColor ', pxColor);
-        console.log('hoverObj ', hoverObj);
-        tooltip.innerHTML = `${pxColor} = Rect id: ${hoverObj.id}<br>x,y: ${hoverObj.props[0]},${hoverObj.props[1]}`;
-      } else {
-        tooltip.innerHTML = ``;
+        //console.log('mousePos ', mousePos);
+        //console.log('pxColor ', pxColor);
+        //console.log('hoverObj ', hoverObj);
+        tooltip.innerHTML = `
+          <br>Mouse  x,y: ${mousePos.x}, ${mousePos.y}
+          <br>Object  id: ${hoverObj.id}
+          <br>Object x,y: ${hoverObj.props[0]},${hoverObj.props[1]}
+        `;
       }
 
     }, false);
