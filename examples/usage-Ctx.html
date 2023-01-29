@@ -54,18 +54,16 @@
       context = ctx;
       context.canvas = ctx.canvas;
       // set the canvas size (w, h, aspectRatio)
-      ctx.size(640, 480)           // set width and height, ignore aspect ratio
+      ctx.size(640, 480);          // set width and height, ignore aspect ratio
       //ctx.size(640, 480, null)   // same as above
       //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 480
       //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
       //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
       //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
 
-
       // create interactive objects, using `ctx.create`
-      filledRect = ctx.create.rect(0, 0, 100, 100)
-      myStar = ctx.create.strokeStar(200, 200, 50, 5, 0)
-
+      filledRect = ctx.create.rect(0, 0, 100, 100);
+      myStar = ctx.create.strokeStar(200, 200, 50, 5, 0);
     }
 
     ctx
@@ -79,7 +77,9 @@
       //.camera(640, 480, 2, 0)
       //.camera(320, 240, 4-(1+frame/400), 0)
 
+
 /*
+
       .beginPath()
       .drawGrid(12)
 
@@ -169,7 +169,6 @@
 
       .drawImg('https://i.imgur.com/yL240c7.png', 100+frame, 300, 150, 150)
 
-*/
       // pacman
       ctx.circle(320, 360, 50, 0+frame, false) // x, y, radius, degrees, antiClockwise
       ctx.fillStyle("yellow");
@@ -186,6 +185,8 @@
 
       .spiral(500, 100,  80, 300,  frame, 2, '#c44')
 
+*/
+
       // uncomment one of the lines below to try the "chroma key" filtering
 
       //.chromaKey(200, [255,0,0]) // make red pixels transparent, with a tolerance of 200
@@ -198,7 +199,7 @@
       //console.log(`Random number from arr: ${ctx.randomFrom(arr)}`)
 
 
-      // interactive canvas element
+      // interactive canvas elements
       filledRect.update(0+frame, 0, 100, 100)
       myStar.update(200+frame, 200, 50, 5, 0)
 
@@ -208,10 +209,9 @@
       })
 
       myStar.draw({
-        fill: '#cccc77',
-        stroke: '#88cc00',
+        fill: 'yellow',
+        stroke: 'orange',
       })
-
 
       frame++;
   };
@@ -232,9 +232,9 @@
       mousePos.x = event.offsetX;
       mousePos.y = event.offsetY;
       // Get px color of mouse position from shadow canvas
-      const pxColor = context.shadowCtx.getImageData(mousePos.x, mousePos.y, 1, 1).data;
-      // Retrieve original object by px color
-      const hoverObj = context.lookup(pxColor);
+      const objID = context.pxColor(mousePos.x, mousePos.y);
+      // Retrieve original object by objID (px color)
+      const hoverObj = context.lookup(objID);
       const tooltip = document.querySelector('.tooltip');
       tooltip.innerHTML = ``;
       if (hoverObj) {
@@ -253,21 +253,21 @@
     context.canvas.addEventListener('mousedown', event => {
       mouseDown = true;
       // Get px color of mouse position from shadow canvas
-      const pxColor = Array.from(context.shadowCtx.getImageData(mousePos.x, mousePos.y, 1, 1).data);
-      // Retrieve original object by px color
-      const hoverObj = context.lookup(pxColor);
+      const objID = context.pxColor(mousePos.x, mousePos.y);
+      // Retrieve original object by objID (px color)
+      const hoverObj = context.lookup(objID);
       if (hoverObj) {
+        //console.log('hoverObj clicked!', );
         clickedObj = hoverObj;
-        console.log('hoverObj clicked!', );
         const tooltip = document.querySelector('.tooltip');
         tooltip.innerHTML += `<br>Clicked`;
       }
     }, false);
 
     context.canvas.addEventListener('mouseup', event => {
+      //console.log('mouseup');
       mouseDown = false;
       clickedObj = null
-      //console.log('mouseup');
     }, false);
 
   }, 20);
