@@ -378,11 +378,11 @@ const extraMethods = {
     // make shadow canvas same dimensions and scale as main canvas
     shadowCtx.w = this.w;
     shadowCtx.h = this.h;
-    shadowCtx.canvas.height = this.canvas.height;
-    shadowCtx.canvas.width = this.canvas.width;
-    shadowCtx.canvas.style.height = this.canvas.style.height;
-    shadowCtx.canvas.style.width = this.canvas.style.width;
-    shadowCtx.canvas.style.objectFit = a ? 'contain' : null;
+    shadowCanvas.height = this.canvas.height;
+    shadowCanvas.width = this.canvas.width;
+    shadowCanvas.style.height = this.canvas.style.height;
+    shadowCanvas.style.width = this.canvas.style.width;
+    shadowCanvas.style.objectFit = a ? 'contain' : null;
     // adjust scale for pixel ratio
     if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
       this.scale(PIXEL_RATIO, PIXEL_RATIO);
