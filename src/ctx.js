@@ -1005,14 +1005,15 @@ const Ctx = function(origCtx, c) {
   // * lookup a color to know which object/shape it refers to
   this.shadowCanvas = shadowCanvas;
   //document.body.append(this.shadowCanvas);
-  this.shadowCtx = shadowCtx;
-  this.shadowCtx.canvas.height = this.canvas.height;
-  this.shadowCtx.canvas.width = this.canvas.width;
-  this.shadowCtx.canvas.style.height = this.canvas.style.height;
-  this.shadowCtx.canvas.style.width = this.canvas.style.width;
+  this.shadowCanvas.height = this.canvas.height;
+  this.shadowCanvas.width = this.canvas.width;
+  this.shadowCanvas.style.height = this.canvas.style.height;
+  this.shadowCanvas.style.width = this.canvas.style.width;
   this.shadowCanvas.setAttribute('class', 'shadow-canvas');
+  this.shadowCtx = shadowCtx;
 
-  //wrap methods
+  // wrap methods
+  n = ctxMethods.length
   while(n--) {
   	curProp = ctxMethods[n];
   	this[curProp] = chainMethod(origCtx[curProp], origCtx, this);
@@ -1023,12 +1024,16 @@ const Ctx = function(origCtx, c) {
   	curProp = extraMethodNames[n];
   	this[curProp] = chainMethod(extraMethods[curProp], origCtx, this);
   }
-  //convert properties into methods (getter/setter)
+  // convert properties into methods (getter/setter)
   n = ctxProps.length;
   while(n--) {
   	curProp = ctxProps[n];
   	this[curProp] = chainProperty(curProp, origCtx, this);
   }
+  // add missing methods to shadow canvas
+  extraMethodNames.forEach(fnName => {
+    this.shadowCtx[fnName] = chainMethod(extraMethods[fnName], this.shadowCtx, this);
+  });
 
   // the above code replaces context properties with methods in our new
   // context, so put back the reference to the canvas element, cos we want it
@@ -1136,38 +1141,42 @@ const Ctx = function(origCtx, c) {
     }
   };
 
-  this.create = {}
+  // interactive canvas
 
-  n = ctxMethods.length;
-  while(n--) {
-  	curProp = ctxMethods[n];
-    if (!curProp) continue;
-  	console.log('ctxMethods[n]: ', ctxMethods[n]);
+  this.create = {}; // will be ctx.create.rect(), ctx.create.circle(), etc
 
-  	this.create['rect'] = (...props) => {
-  	  // define our object
+  // Add methods to the `ctx.create` object - one for each
+  // supported Ctx drawing method
+  [...ctxMethods, ...extraMethodNames].forEach(fnName => {
+  	// Create the ctx.create.rect() (etc) methods
+  	// - each method:
+  	//    - returns an object with methods .update(props) and .draw(style)
+  	//    - registers the object on a shadow canvas with a unique color (id)
+  	this.create[fnName] = (...props) => {
+  	  // Inside obj, `this` refers to the extended context
   	 const obj = {
   	    props: [...props],
   	    update: (...props) => obj.props = [...props],
   	    draw: (style) => {
   	      const props = obj.props;
-  	      this['rect'](...props);
-      	  if (style) {
+  	      this[fnName](...props);
+          if (style) {
+      	    this.save();
       	    this.fillStyle(style.fill || style.fillStyle);
       	    this.strokeStyle(style.stroke || style.strokeStyle);
       	    this.fill();
       	    this.stroke();
+      	    this.restore();
       	  }
       	  // draw `obj` to an off-screen canvas, using the unique color
       	  this.shadowCtx.beginPath();
       	  this.shadowCtx.fillStyle = obj.id;
-      	  this.shadowCtx['rect'](...props);
+      	  this.shadowCtx[fnName](...props);
       	  this.shadowCtx.fill();
   	    },
   	  };
   	  // get the unique color as an id
   	  obj.id = this.register(obj);
-  	  console.log('obj.id', obj.id, obj);
   	  if (!obj.id) return Error('registry is full');
 
   	  // draw on regular and shadow canvas
@@ -1175,45 +1184,7 @@ const Ctx = function(origCtx, c) {
 
       return obj;
   	};
-
-  }
-
-  n = extraMethodNames.length;
-  while(n--) {
-  	curProp = extraMethodNames[n];
-    if (!curProp) continue;
-  	console.log('extraMethodNames[n]: ', extraMethodNames[n]);
-
-  	this.create['roundedRect'] = (...props) => {
-  	  // define our object
-  	 const obj = {
-  	    props: [...props],
-  	    update: (...props) => obj.props = [...props],
-  	    draw: () => {
-  	      const props = obj.props;
-  	      this['roundedRect'](...props);
-      	  this.fill();
-  	      this.stroke();
-      	  // draw `obj` to an off-screen canvas, using the unique color
-      	  this.shadowCtx.beginPath();
-      	  this.shadowCtx.fillStyle = obj.id;
-      	  this.shadowCtx['roundedRect'](...props);
-      	  this.shadowCtx.fill();
-      	  this.shadowCtx.stroke();
-  	    },
-  	  };
-  	  // get the unique color as an id
-  	  obj.id = this.register(obj);
-  	  if (!obj.id) return Error('registry is full');
-  	  // draw on regular canvas
-  	  obj.draw(...props);
-
-      return obj;
-  	};
-
-  }
-
-  //console.log('this.create', this.create);
+  });
 
   // unique color for every item drawn to off-screen canvas:
   // * shamelessly stolen from https://github.com/vasturiano/canvas-color-tracker
@@ -1249,7 +1220,7 @@ const Ctx = function(origCtx, c) {
   // lookup which obj owns the given color:
   // example: ctx.lookup(ctx.pxColor(20,50))
   this.lookup = (color) => {
-    const n = typeof color === 'string' ? Error('no strings') : rgb2Int(...color);
+    const n = rgb2Int(...color);
     if (!n) return null; // 0 index is reserved for background
     const idx = n & (Math.pow(2, 24 - csBits) - 1); // registry index
     const cs = (n >> (24 - csBits)) & (Math.pow(2, csBits) - 1); // extract bits reserved for checksum
