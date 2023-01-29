@@ -6,26 +6,27 @@
   <!-- include an enhanced canvas 2dContext API add-on -->
   <script src="../dist/ctx.min.js"></script>
   <style>
-    .container, video, .shadow-canvas {
+    .container, video {
       border: 1px solid #222;
       margin: 1em;
       width: 640px;
       height: 480px;
-      user-select: none;
     }
-    .tooltip {
-      user-select: none;
-     }
   </style>
 </head>
 <body>
 
   <canvas class="container"></canvas>
-  <div class="tooltip"></div>
   <br>
-  <!-- <video crossorigin="*" controls></video> -->
+  <video crossorigin="*" controls></video>
 
 <script>
+  let context; // will be a reference to Foo.ctx, so we can access it outside the components view
+  let frame = 1; // frame count
+  const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
+
+
+
   // Enable the enhanced canvas 2dContext API (optional).
   // The extended `ctx` enables:
   //  - HDPI aware size() method
@@ -37,34 +38,19 @@
 
   // define a new component
   const Foo = new Component({ x: 280, y: 100 });
-
-  let context; // will be a reference to Foo.ctx, so we can access it outside the components view
-  let frame = 1; // frame count
-  const arr = [ 1,2,3,4,5,6,7,8,9,0 ]; // used in a maths helper example later on
-
-  // define objects and properties used by our interactive canvas
-  const mousePos = { x: 0, y: 0 };
-  let mouseDown = false;
-  let hoverObj, clickedObj;
-  let filledRect, myStar;
-
   // define a "view", that draws to the components canvas
   Foo.view = (props, ctx) => {
     if (frame === 1) {
       context = ctx;
-      context.canvas = ctx.canvas;
       // set the canvas size (w, h, aspectRatio)
-      ctx.size(640, 480);          // set width and height, ignore aspect ratio
+      ctx.size(640, 480)           // set width and height, ignore aspect ratio
       //ctx.size(640, 480, null)   // same as above
       //ctx.size(null, 480, 4/3)   // set as 4:3,  grow till height = 480
       //ctx.size(null, 480, 16/9)  // set as 16:9, grow till height = 480
       //ctx.size(640, null, 3/4)   // set as 4:3, crop till width = 640
       //ctx.size(640, null, 9/16)  // set as 16:9, crop till width = 640
-
-      // create interactive objects, using `ctx.create`
-      filledRect = ctx.create.rect(0, 0, 100, 100);
-      myStar = ctx.create.star(200, 200, 50, 5, 0);
     }
+
 
     ctx
       .clear()  // using `clear(true)` will clear transforms too
@@ -76,9 +62,6 @@
       //.camera(320, 240, 2, 0)
       //.camera(640, 480, 2, 0)
       //.camera(320, 240, 4-(1+frame/400), 0)
-
-
-/*
 
       .beginPath()
       .drawGrid(12)
@@ -185,8 +168,6 @@
 
       .spiral(500, 100,  80, 300,  frame, 2, '#c44')
 
-*/
-
       // uncomment one of the lines below to try the "chroma key" filtering
 
       //.chromaKey(200, [255,0,0]) // make red pixels transparent, with a tolerance of 200
@@ -198,82 +179,19 @@
       //console.log(`The distance from 0,0 to 0,${props.y} is`, ctx.distance(0, 0, 0, props.y))
       //console.log(`Random number from arr: ${ctx.randomFrom(arr)}`)
 
-
-      // interactive canvas elements
-      filledRect.update(0+frame, 0, 100, 100);
-      myStar.update(200+frame, 200, 50, 5, 0);
-
-      filledRect.draw({
-        fillStyle: 'lightblue',
-        strokeStyle: 'red',
-        lineWidth: 3,
-      });
-
-      myStar.draw({
-        fillStyle: 'yellow',
-        strokeStyle: 'orange',
-        lineWidth: 5,
-      });
-
       frame++;
   };
+
 
   // render to a canvas, and attach its context (`ctx`) to our component
   Foo.render('.container', '2d');
 
+
   // ..after the first frame renders (takes about 16 milliseconds)
   // we can access `ctx` outside this components view, as `context`
   setTimeout(() => {
-    //context.video.record(60); // start recording a video @60fps
-
-    // Interactive canvas - setup events
-
-    // Track mouse position and click in variables our ctx above can access
-    context.canvas.addEventListener('mousemove', event => {
-      // Get latest mouse position
-      mousePos.x = event.offsetX;
-      mousePos.y = event.offsetY;
-      // Get px color of mouse position from shadow canvas
-      const objID = context.pxColor(mousePos.x, mousePos.y);
-      // Retrieve original object by objID (px color)
-      const hoverObj = context.lookup(objID);
-      const tooltip = document.querySelector('.tooltip');
-      tooltip.innerHTML = ``;
-      if (hoverObj) {
-        //console.log('mousePos ', mousePos);
-        //console.log('pxColor ', pxColor);
-        //console.log('hoverObj ', hoverObj);
-        tooltip.innerHTML = `
-          <br>Mouse  x,y: ${mousePos.x}, ${mousePos.y}
-          <br>Object  id: ${hoverObj.id}
-          <br>Object x,y: ${hoverObj.props[0]},${hoverObj.props[1]}
-        `;
-      }
-
-    }, false);
-
-    context.canvas.addEventListener('mousedown', event => {
-      mouseDown = true;
-      // Get px color of mouse position from shadow canvas
-      const objID = context.pxColor(mousePos.x, mousePos.y);
-      // Retrieve original object by objID (px color)
-      const hoverObj = context.lookup(objID);
-      if (hoverObj) {
-        //console.log('hoverObj clicked!', );
-        clickedObj = hoverObj;
-        const tooltip = document.querySelector('.tooltip');
-        tooltip.innerHTML += `<br>Clicked`;
-      }
-    }, false);
-
-    context.canvas.addEventListener('mouseup', event => {
-      //console.log('mouseup');
-      mouseDown = false;
-      clickedObj = null
-    }, false);
-
+    context.video.record(60); // start recording a video @60fps
   }, 20);
-
 
 
   // move stuff around a bit in an animated loop
@@ -284,7 +202,7 @@
     });
   }, 1000 / 60);
 
-/*
+
   // after 5 seconds, stop loop, stop recording the canvas to video,
   // and offer to download it
   setTimeout(() => {
@@ -294,12 +212,65 @@
     //context.video.saveAs('canvas-as-video.webm');
   }, 5500);
 
-*/
-  setTimeout(() => {
-    clearInterval(loop);
-  }, 1000);
-
 </script>
 </body>
 </html>
 
+<!--
+
+
+    ctx
+      chart(someArrayOfObjects)
+        .position(0, 0)
+        .title('How many hours did you work each week this year?')
+        .width(800)
+        .height(600)
+        .margins([24, 24, 24, 24])
+        .xAxis({
+          title: { text: 'Days', position: 'below' },
+          range: [0, 365],
+          labels: ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'],
+          ticks: {
+            length: 4,
+            color: '#444',
+            position: 'above',
+          },
+        })
+        .yAxis({
+          title: { text: 'Hours', position: 'left' },
+          range: [0, 24],
+          ticks: {
+            length: 4,
+            color: '#444',
+            position: 'right',
+          },
+        })
+        .draw(d => {
+          // this = chart object
+          // Here are the properties and methods available inside draw()
+          this.width
+          this.height
+          this.margin
+          this.xAxis
+          this.yAxis
+          //
+
+          // background grid
+          this.grid(cellSize, lineColor, lineWidth)
+          // scatter plot
+          this.circle(x,y)     // radius based on d.value
+          // bar charts
+          this.rect(x,y)       // h based on d.value, w based on number of bars
+          // pie charts
+          this.pieSlice(x,y)   // start + end rotations based on d.value and data index
+          // line charts
+          this.line(x,y)       //
+
+
+        })
+
+
+
+
+
+-->

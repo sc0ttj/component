@@ -1,0 +1,153 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - canvas demo</title>
+  <script src="../dist/component.min.js"></script>
+  <!-- include an enhanced canvas 2dContext API add-on -->
+  <script src="../dist/ctx.min.js"></script>
+  <style>
+    .container, video, .shadow-canvas {
+      border: 1px solid #222;
+      margin: 1em;
+      width: 640px;
+      height: 480px;
+      user-select: none;
+    }
+    .tooltip {
+      user-select: none;
+     }
+  </style>
+</head>
+<body>
+
+  <canvas class="container"></canvas>
+  <div class="tooltip"></div>
+
+<script>
+  // Enable the enhanced canvas 2dContext API (optional).
+  // The extended `ctx` enables:
+  //  - HDPI aware size() method
+  //  - new drawing methods
+  //  - most methods are chainable
+  //  - save to image, record to video
+  Component.Ctx = Ctx;
+
+
+  // define a new component
+  const Foo = new Component({ x: 280, y: 100 });
+
+  let context; // will be a reference to Foo.ctx, so we can access it outside the components view
+  let frame = 1; // frame count
+
+  // define objects and properties used by our interactive canvas
+  const mousePos = { x: 0, y: 0 };
+  let mouseDown = false;
+  let hoverObj, clickedObj;
+  let filledRect, myStar;
+
+  // define a "view", that draws to the components canvas
+  Foo.view = (props, ctx) => {
+    if (frame === 1) {
+      // set the canvas size (w, h, aspectRatio)
+      ctx.size(640, 480);
+      // keep references for outside the Foo component
+      context = ctx;
+
+      // create interactive objects, using `ctx.create`
+      filledRect = ctx.create.rect(0, 0, 100, 100);
+      myStar = ctx.create.star(200, 200, 50, 5, 0);
+    }
+
+    ctx.clear(true)  // using `clear(true)` will clear transforms too
+
+    // interactive canvas elements:
+
+    filledRect.update(0+frame, 0, 100, 100);
+    myStar.update(200+frame, 200, 50, 5, 0);
+
+    filledRect.draw({
+      fillStyle: 'lightblue',
+      strokeStyle: 'red',
+      lineWidth: 3,
+    });
+
+    myStar.draw({
+      fillStyle: 'yellow',
+      strokeStyle: 'orange',
+      lineWidth: 5,
+    });
+
+    frame++;
+  };
+
+  // render to a canvas, and attach its context (`ctx`) to our component
+  Foo.render('.container', '2d');
+
+
+  // ....
+
+
+  // ..after the first frame renders (takes about 16 milliseconds)
+  // we can access `ctx` outside this components view, as `context`
+  setTimeout(() => {
+    // Interactive canvas - setup events
+
+    // Track mouse position and click in variables our ctx above can access
+    context.canvas.addEventListener('mousemove', event => {
+      // Get latest mouse position
+      mousePos.x = event.offsetX;
+      mousePos.y = event.offsetY;
+      // Get px color of mouse position from shadow canvas
+      const objID = context.pxColor(mousePos.x, mousePos.y);
+      // Retrieve original object by objID (px color)
+      const hoverObj = context.lookup(objID);
+      const tooltip = document.querySelector('.tooltip');
+      tooltip.innerHTML = ``;
+      if (hoverObj) {
+        //console.log({ mousePos, pxColor, hoverObj });
+        tooltip.innerHTML = `
+          <br>  Mouse  x,y: ${mousePos.x}, ${mousePos.y}
+          <br>   Object id: ${hoverObj.id}
+          <br>Object props: ${hoverObj.props}
+        `;
+      }
+
+    }, false);
+
+    context.canvas.addEventListener('mousedown', event => {
+      mouseDown = true;
+      const objID = context.pxColor(mousePos.x, mousePos.y);
+      const hoverObj = context.lookup(objID);
+      const tooltip = document.querySelector('.tooltip');
+      if (hoverObj) {
+        clickedObj = hoverObj;
+        tooltip.innerHTML += `<br>Clicked`;
+      }
+    }, false);
+
+    context.canvas.addEventListener('mouseup', event => {
+      mouseDown = false;
+      clickedObj = null
+    }, false);
+
+  }, 20);
+
+
+
+  // move stuff around a bit in an animated loop
+  const loop = setInterval(() => {
+    Foo.setState({
+      x: 300,
+      y: Foo.state.y += 1
+    });
+  }, 1000 / 60);
+
+  // cancel animation
+  setTimeout(() => {
+    clearInterval(loop);
+  }, 3000);
+
+</script>
+</body>
+</html>
+
