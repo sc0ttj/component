@@ -41,8 +41,7 @@
 
   // define objects and properties used by our interactive canvas
   const mousePos = { x: 0, y: 0 };
-  let mouseDown = false;
-  let hoverObj, clickedObj;
+  let hoverObj = { id: 0 };
   let filledRect, myStar;
 
   // define a "view", that draws to the components canvas
@@ -66,14 +65,14 @@
     myStar.update(200+frame, 200, 50, 5, 0);
 
     filledRect.draw({
-      fillStyle: 'lightblue',
-      strokeStyle: 'red',
+      fillStyle: filledRect.id === hoverObj.id ? 'green' : 'lightblue',
+      strokeStyle: filledRect.id === hoverObj.id ? 'green' : 'red',
       lineWidth: 3,
     });
 
     myStar.draw({
-      fillStyle: 'yellow',
-      strokeStyle: 'orange',
+      fillStyle: myStar.clicked ? 'green' : 'yellow',
+      strokeStyle: myStar.clicked ? 'red' : 'orange',
       lineWidth: 5,
     });
 
@@ -97,13 +96,12 @@
       // Get latest mouse position
       mousePos.x = event.offsetX;
       mousePos.y = event.offsetY;
-      // Get px color of mouse position from shadow canvas
-      const objID = context.pxColor(mousePos.x, mousePos.y);
-      // Retrieve original object by objID (px color)
-      const hoverObj = context.lookup(objID);
       const tooltip = document.querySelector('.tooltip');
       tooltip.innerHTML = ``;
-      if (hoverObj) {
+      // Retrieve original object by objID (px color)
+      const objID = context.pxColor(mousePos.x, mousePos.y);
+      hoverObj = context.lookup(objID);
+      if (hoverObj && hoverObj.id) {
         //console.log({ mousePos, pxColor, hoverObj });
         tooltip.innerHTML = `
           <br>  Mouse  x,y: ${mousePos.x}, ${mousePos.y}
@@ -115,19 +113,19 @@
     }, false);
 
     context.canvas.addEventListener('mousedown', event => {
-      mouseDown = true;
       const objID = context.pxColor(mousePos.x, mousePos.y);
       const hoverObj = context.lookup(objID);
       const tooltip = document.querySelector('.tooltip');
-      if (hoverObj) {
-        clickedObj = hoverObj;
+      if (hoverObj && hoverObj.id) {
+        hoverObj.clicked = true;
         tooltip.innerHTML += `<br>Clicked`;
       }
     }, false);
 
     context.canvas.addEventListener('mouseup', event => {
-      mouseDown = false;
-      clickedObj = null
+      const objID = context.pxColor(mousePos.x, mousePos.y);
+      hoverObj = context.lookup(objID);
+      if (hoverObj && hoverObj.id) hoverObj.clicked = false;
     }, false);
 
   }, 20);

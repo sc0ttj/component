@@ -1178,7 +1178,7 @@ const Ctx = function(origCtx, c) {
   // example: ctx.lookup(ctx.pxColor(20,50))
   this.lookup = (color) => {
     const n = rgb2Int(...color);
-    if (!n) return null; // 0 index is reserved for background
+    if (!n) return { id: 0 }; // 0 index is reserved for background
     const idx = n & (Math.pow(2, 24 - csBits) - 1); // registry index
     const cs = (n >> (24 - csBits)) & (Math.pow(2, csBits) - 1); // extract bits reserved for checksum
     if (checksum(idx, csBits) !== cs || idx >= registry.length) return null; // failed checksum or registry out of bounds
