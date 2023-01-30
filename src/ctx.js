@@ -167,25 +167,9 @@ const DEG2RAD = PI / 180;
   - narrow phase (actual detecting of collisions)
     - ?
 
-
-- https://github.com/vasturiano/canvas-color-tracker
-  - enables hover detection for canvas objects
-  - uses same method as threeJS (colours as hit areas):
-    - draws each object to shadow screen canvas, using a unique color
-    - assigns that color to the drawn object
-    - on mouse move,
-      - gets the colour under mouse x,y (from shadow canvas)
-      - looks up the object associated with that colour
-
-      const tracker = new ColorTracker();
-      const obj = { x,y,w,h,..etc };
-      const objColor = tracker.register(myObject);
-      // ...later
-      const hoverColor = ctx.getImageData(x, y, 1, 1).data;
-      const hoverObject = tracker.lookup(hoverColor);
-
-
 - easy events
+
+  - use the canvas-color-tracker above inside `ctx.create[someShape]` functions
 
       const rr = ctx.create.roundedRect(x,y,w,h,r);  // caches and returns {x,y,w,h,r}
       rr.draw();
@@ -318,13 +302,18 @@ const drawHead = function(ctx,x0,y0,x1,y1,x2,y2,style) {
 };
 
 
+const shadowCanvas = document.createElement('canvas');
+const shadowCtx = shadowCanvas.getContext('2d');
+
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
 
   // general helper funcs
   clear: function(resetTransform) {
     if (resetTransform === true) this.setTransform(1, 0, 0, 1, 0, 0);
-    this.clearRect(0, 0, this.canvas.width * PIXEL_RATIO, this.canvas.height * PIXEL_RATIO);
+    [ this, shadowCtx ].forEach(c => {
+      c.clearRect(0, 0, c.canvas.width * PIXEL_RATIO, c.canvas.height * PIXEL_RATIO);
+    });
   },
   fullscreen: function() {
     if (!document.fullscreenElement) this.canvas.requestFullscreen();
@@ -343,29 +332,34 @@ const extraMethods = {
   },
   size: function(w, h, a) {
     if (this.w === w && this.h === h) return; // if no new size, just return
-    // if width or height not given, get them from aspect ratio
-    this.w = w ? w : h * a;
-    this.h = h ? h : w * a;
-    // respect device pixel ratio
-    this.canvas.width = this.w * PIXEL_RATIO;
-    this.canvas.height = this.h * PIXEL_RATIO;
-    // update the CSS too
-    this.canvas.style.width = this.w + 'px';
-    this.canvas.style.height = this.h + 'px';
-    this.canvas.style.objectFit = a ? 'contain' : null;
-    // adjust scale for pixel ratio
-    if (this.contextType === '2d' && PIXEL_RATIO !== 1) {
-      this.scale(PIXEL_RATIO, PIXEL_RATIO);
-    }
+    // for both real and shadow canvas:
+    [ this, shadowCtx ].forEach(c => {
+      // if width or height not given, get them from aspect ratio
+      c.w = w ? w : h * a;
+      c.h = h ? h : w * a;
+      // respect device pixel ratio
+      c.canvas.width = c.w * PIXEL_RATIO;
+      c.canvas.height = c.h * PIXEL_RATIO;
+      // update the CSS too
+      c.canvas.style.width = c.w + 'px';
+      c.canvas.style.height = c.h + 'px';
+      c.canvas.style.objectFit = a ? 'contain' : null;
+      // adjust scale for pixel ratio
+      if (c.contextType === '2d' && PIXEL_RATIO !== 1) {
+        c.scale(PIXEL_RATIO, PIXEL_RATIO);
+      }
+    });
   },
 
   // a simple "camera"
   camera: function(x = 0, y = 0, scale = 1, degrees = 0) {
-    this.resetTransform();
-    this.translate(x, y);
-    this.rotate(degrees * DEG2RAD);
-    this.scale(scale, scale);
-    this.translate(-x, -y);
+    [ this, shadowCtx ].forEach(c => {
+      c.resetTransform();
+      c.translate(x, y);
+      c.rotate(degrees * DEG2RAD);
+      c.scale(scale, scale);
+      c.translate(-x, -y);
+    });
   },
 
   // "green screen" filter - replaces green (by default) pixels with transparent ones
@@ -866,7 +860,7 @@ const extraMethods = {
 
   // styling helpers
   setStyle: function(obj) {
-    for(i in obj) {
+    for(let i in obj) {
       this[i] = obj[i];
     };
   },
@@ -929,9 +923,11 @@ const extraMethods = {
     return extraMethods.random.apply(this, [1, arr.length])
   },
   rotateAt: function(x, y, deg) {
-    this.translate(x, y);
-    this.rotate(deg * DEG2RAD);
-    this.translate(-x, -y);
+    [ this, shadowCtx ].forEach(c => {
+      c.translate(x, y);
+      c.rotate(deg * DEG2RAD);
+      c.translate(-x, -y);
+    });
   },
   toRad: function(deg) { // degrees to radians
     return deg * DEG2RAD;
@@ -962,31 +958,46 @@ const Ctx = function(origCtx, c) {
    * @type CanvasRenderingContext2D
    */
   this.context = origCtx;
+  this.canvas = origCtx.canvas;
 
-  //wrap methods
+  // create an offscreen canvas, so we can:
+  // * draw things to it, always with a unique color
+  // * lookup a color to know which object/shape it refers to
+  //document.body.append(shadowCanvas);
+  shadowCanvas.height = this.canvas.height;
+  shadowCanvas.width = this.canvas.width;
+  shadowCanvas.style.height = this.canvas.style.height;
+  shadowCanvas.style.width = this.canvas.style.width;
+  shadowCanvas.setAttribute('class', 'shadow-canvas');
+  this.shadowCanvas = shadowCanvas;
+  this.shadowCtx = shadowCtx;
+
+  // wrap methods
+  n = ctxMethods.length
   while(n--) {
   	curProp = ctxMethods[n];
   	this[curProp] = chainMethod(origCtx[curProp], origCtx, this);
   }
-
   // wrap the extra methods
   n = extraMethodNames.length;
   while(n--) {
   	curProp = extraMethodNames[n];
   	this[curProp] = chainMethod(extraMethods[curProp], origCtx, this);
   }
-
-  //convert properties into methods (getter/setter)
+  // convert properties into methods (getter/setter)
   n = ctxProps.length;
   while(n--) {
   	curProp = ctxProps[n];
   	this[curProp] = chainProperty(curProp, origCtx, this);
   }
+  // add missing methods to shadow canvas
+  extraMethodNames.forEach(fnName => {
+    this.shadowCtx[fnName] = chainMethod(extraMethods[fnName], this.shadowCtx, this);
+  });
 
   // the above code replaces context properties with methods in our new
   // context, so put back the reference to the canvas element, cos we want it
   this.canvas = origCtx.canvas;
-
 
   // add more methods to the extended context - they're added here cos they're
   // nested/namespaced under ctx.image.* and ctx.video.* and the above
@@ -1089,6 +1100,124 @@ const Ctx = function(origCtx, c) {
       }, 64);
     }
   };
+
+  // interactive canvas
+
+  this.create = {}; // will be ctx.create.rect(), ctx.create.circle(), etc
+
+  // Add methods to the `ctx.create` object - one for each
+  // supported Ctx drawing method
+  [...ctxMethods, ...extraMethodNames].forEach(fnName => {
+  	// Create the ctx.create.rect() (etc) methods
+  	// - each method:
+  	//    - returns an object with methods .update(props) and .draw(style)
+  	//    - registers the object on a shadow canvas with a unique color (id)
+  	this.create[fnName] = (...props) => {
+  	  // Inside obj, `this` refers to the extended context
+  	  const obj = {
+  	    props: [...props],
+  	    update: (...props) => obj.props = [...props],
+  	    draw: (styles) => {
+  	      const props = obj.props;
+  	      this.save();
+  	      if (styles) {
+  	        for (let [key, value] of Object.entries(styles)) {
+  	          this[key](value);
+  	        }
+  	      }
+  	      this[fnName](...props);
+  	      this.fill();
+  	      this.stroke();
+  	      this.restore();
+  	      // draw `obj` to an off-screen canvas, using the unique color
+  	      this.shadowCtx.beginPath();
+  	      this.shadowCtx.fillStyle = obj.id;
+  	      this.shadowCtx[fnName](...props);
+  	      this.shadowCtx.fill();
+  	    },
+  	  };
+
+  	  // get the unique color as an id
+  	  obj.id = this.register(obj);
+  	  if (!obj.id) return Error('registry is full')
+
+  	  // draw on regular and shadow canvas
+  	  obj.draw(...props)
+
+  	  return obj;
+  	};
+  });
+
+  // unique color for every item drawn to off-screen canvas:
+  // * shamelessly stolen from https://github.com/vasturiano/canvas-color-tracker
+  const ENTROPY = 123; // Raise numbers to prevent collisions in lower indexes
+  const checksum = (n, csBits) => (n * ENTROPY) % Math.pow(2, csBits);
+  const int2HexColor = num => `#${Math.min(num, Math.pow(2, 24)).toString(16).padStart(6, '0')}`;
+  const rgb2Int = (r, g, b) => (r << 16) + (g << 8) + b;
+  const csBits = 6;
+
+  // remember all canvas objects in this registry:
+  const registry = ['__reserved_for_background__'];
+
+  // add obj to registry, returns the objects unique color:
+  this.register = (obj) => {
+    if (registry.length >= Math.pow(2, 24 - csBits)) { // color has 24 bits (-checksum)
+      return null; // Registry is full
+    }
+    const idx = registry.length;
+    const cs = checksum(idx, csBits);
+    const color = int2HexColor(idx + (cs << (24 - csBits)));
+    registry.push(obj);
+    return color;
+  };
+
+  // returns the pixel color of the given x,y location on the shadowCanvas,
+  // which can be passed to ctx.lookup():
+  // example:  const hoverObject = ctx.lookup(ctx.pxColor(mouseX, mouseY));
+  this.pxColor = (x, y) => {
+    const d = this.shadowCtx.getImageData(x, y, 1, 1).data;
+    return [d[0], d[1], d[2]];
+  };
+
+  // lookup which obj owns the given color:
+  // example: ctx.lookup(ctx.pxColor(20,50))
+  this.lookup = (color) => {
+    const n = rgb2Int(...color);
+    if (!n) return { id: 0 }; // 0 index is reserved for background
+    const idx = n & (Math.pow(2, 24 - csBits) - 1); // registry index
+    const cs = (n >> (24 - csBits)) & (Math.pow(2, csBits) - 1); // extract bits reserved for checksum
+    if (checksum(idx, csBits) !== cs || idx >= registry.length) return null; // failed checksum or registry out of bounds
+    return registry[idx];
+  };
+
+  // get object at x,y
+  this.objectAt = (x,y) => this.lookup(this.pxColor(x,y));
+
+  // event listeners
+
+  this.mousePos = { x: 0, y: 0 };
+  this.hoverObj = { id: 0, clicked: false, hover: false };
+
+  // define event listeners, set vars we can access in our canvas drawing code
+  this.canvas.addEventListener('mousemove', event => {
+    this.mousePos.x = event.offsetX;
+    this.mousePos.y = event.offsetY;
+    if (this.hoverObj) this.hoverObj.hover = false;
+    this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
+    if (this.hoverObj && this.hoverObj.id) {
+      this.hoverObj.hover = true;
+    } else {
+      this.hoverObj = null;
+    }
+  }, false);
+
+  this.canvas.addEventListener('mousedown', event => {
+    if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = true;
+  }, false);
+
+  this.canvas.addEventListener('mouseup', event => {
+    if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = false;
+  }, false);
 
   return;
 };

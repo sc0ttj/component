@@ -1,0 +1,120 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Component - canvas demo</title>
+  <script src="../dist/component.min.js"></script>
+  <!-- include an enhanced canvas 2dContext API add-on -->
+  <script src="../dist/ctx.min.js"></script>
+  <style>
+    .container, video, .shadow-canvas {
+      border: 1px solid #222;
+      margin: 1em;
+      width: 640px;
+      height: 480px;
+      user-select: none;
+    }
+    .tooltip {
+      user-select: none;
+     }
+  </style>
+</head>
+<body>
+
+  <canvas class="container"></canvas>
+  <div class="tooltip"></div>
+
+<script>
+// Enable the enhanced canvas 2dContext API (optional).
+// The extended `ctx` enables:
+//  - HDPI aware size() method
+//  - new drawing methods
+//  - most methods are chainable
+//  - save to image, record to video
+Component.Ctx = Ctx;
+
+
+// define a new component
+const Foo = new Component({ frame: 0, x: 280, y: 100 });
+
+let context;            // a reference to Foo.ctx, so we can access it outside the components view
+let filledRect, myStar; // objects used by our interactive canvas
+
+// define a "view", that draws to the components canvas
+Foo.view = (props, ctx) => {
+  const frame = props.frame;
+  if (frame === 0) {
+    // set the canvas size (w, h, aspectRatio)
+    ctx.size(640, 480);
+    // keep references for outside the Foo component
+    context = ctx;
+    // create interactive objects, using `ctx.create`
+    filledRect = ctx.create.rect(0, 0, 100, 100);
+    myStar = ctx.create.star(200, 200, 50, 5, 0);
+  }
+
+  ctx.clear()  // using `clear(true)` will clear transforms too
+
+  filledRect.update(0+frame, 0, 100, 100);
+  myStar.update(200+frame, 200, 50, 5, 0);
+
+  filledRect.draw({
+    fillStyle: filledRect.hover ? 'green' : 'lightblue',
+    strokeStyle: filledRect.hover ? 'green' : 'red',
+    lineWidth: 3,
+  });
+
+  myStar.draw({
+    fillStyle: myStar.clicked ? 'green' : 'yellow',
+    strokeStyle: myStar.clicked ? 'red' : 'orange',
+    lineWidth: 5,
+  });
+};
+
+// render to a canvas, and attach its context (`ctx`) to our component
+Foo.render('.container', '2d');
+
+
+// ..after the first frame renders (takes about 16 milliseconds)
+// we can access `ctx` outside this components view, as `context`
+setTimeout(() => {
+
+  // update a toolip with object info on hover and click
+  const tooltip = document.querySelector('.tooltip');
+
+  context.canvas.addEventListener('mousemove', event => {
+    // clear tooltip
+    tooltip.innerHTML = ``;
+    // if we are hovering on an object in the canvas
+    if (context.hoverObj) {
+      tooltip.innerHTML = `
+        <br>  Mouse  x,y: ${event.offsetX}, ${event.offsetY}
+        <br>   Object id: ${context.hoverObj.id}
+        <br>Object props: ${context.hoverObj.props}
+      `;
+    }
+  }, false);
+
+  context.canvas.addEventListener('mousedown', event => {
+    if (context.hoverObj) tooltip.innerHTML += `<br>Clicked`;
+  }, false);
+
+}, 20);
+
+
+
+// move stuff around a bit in an animated loop
+const loop = setInterval(() => {
+  Foo.setState({
+    frame: Foo.state.frame + 1,
+  });
+}, 1000 / 60);
+
+// cancel animation
+setTimeout(() => {
+  clearInterval(loop);
+}, 6000);
+
+</script>
+</body>
+</html>
+
