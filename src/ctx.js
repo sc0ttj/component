@@ -1188,6 +1188,30 @@ const Ctx = function(origCtx, c) {
   // get object at x,y
   this.objectAt = (x,y) => this.lookup(this.pxColor(x,y));
 
+  // event listeners
+
+  this.mousePos = { x: 0, y: 0 };
+  this.hoverObj = { id: 0, clicked: false, hover: false };
+
+  // define event listeners, set vars we can access in our canvas drawing code
+  this.canvas.addEventListener('mousemove', event => {
+    this.mousePos.x = event.offsetX;
+    this.mousePos.y = event.offsetY;
+    this.hoverObj.hover = false;
+    this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
+    if (this.hoverObj && this.hoverObj.id) this.hoverObj.hover = true;
+  }, false);
+
+  this.canvas.addEventListener('mousedown', event => {
+    this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
+    if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = true;
+  }, false);
+
+  this.canvas.addEventListener('mouseup', event => {
+    this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
+    if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = false;
+  }, false);
+
   return;
 };
 

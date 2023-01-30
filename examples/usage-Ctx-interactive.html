@@ -89,26 +89,19 @@
   // ..after the first frame renders (takes about 16 milliseconds)
   // we can access `ctx` outside this components view, as `context`
   setTimeout(() => {
-    // Interactive canvas - setup events
+    // Interactive canvas - mouse events
 
     // Track mouse position and click in variables our ctx above can access
     context.canvas.addEventListener('mousemove', event => {
-      // Get latest mouse position
-      mousePos.x = event.offsetX;
-      mousePos.y = event.offsetY;
       // setup tooltip
       const tooltip = document.querySelector('.tooltip');
       tooltip.innerHTML = ``;
       // see if we are hovering on an object in the canvas
-      hoverObj.hover = false;
-      hoverObj = context.objectAt(mousePos.x, mousePos.y);
-      if (hoverObj && hoverObj.id) {
-        hoverObj.hover = true;
-        //console.log({ mousePos, hoverObj });
+      if (context.hoverObj && context.hoverObj.id) {
         tooltip.innerHTML = `
           <br>  Mouse  x,y: ${mousePos.x}, ${mousePos.y}
-          <br>   Object id: ${hoverObj.id}
-          <br>Object props: ${hoverObj.props}
+          <br>   Object id: ${context.hoverObj.id}
+          <br>Object props: ${context.hoverObj.props}
         `;
       }
 
@@ -116,16 +109,9 @@
 
     context.canvas.addEventListener('mousedown', event => {
       const tooltip = document.querySelector('.tooltip');
-      hoverObj = context.objectAt(mousePos.x, mousePos.y);
-      if (hoverObj && hoverObj.id) {
-        hoverObj.clicked = true;
+      if (context.hoverObj && context.hoverObj.id) {
         tooltip.innerHTML += `<br>Clicked`;
       }
-    }, false);
-
-    context.canvas.addEventListener('mouseup', event => {
-      hoverObj = context.objectAt(mousePos.x, mousePos.y);
-      if (hoverObj && hoverObj.id) hoverObj.clicked = false;
     }, false);
 
   }, 20);
