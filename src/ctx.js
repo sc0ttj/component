@@ -311,8 +311,9 @@ const extraMethods = {
   // general helper funcs
   clear: function(resetTransform) {
     if (resetTransform === true) this.setTransform(1, 0, 0, 1, 0, 0);
-    this.clearRect(0, 0, this.canvas.width * PIXEL_RATIO, this.canvas.height * PIXEL_RATIO);
-    shadowCtx.clearRect(0, 0, shadowCtx.canvas.width * PIXEL_RATIO, shadowCtx.canvas.height * PIXEL_RATIO);
+    [ this, shadowCtx ].forEach(c => {
+      c.clearRect(0, 0, c.canvas.width * PIXEL_RATIO, c.canvas.height * PIXEL_RATIO);
+    });
   },
   fullscreen: function() {
     if (!document.fullscreenElement) this.canvas.requestFullscreen();
@@ -352,11 +353,13 @@ const extraMethods = {
 
   // a simple "camera"
   camera: function(x = 0, y = 0, scale = 1, degrees = 0) {
-    this.resetTransform();
-    this.translate(x, y);
-    this.rotate(degrees * DEG2RAD);
-    this.scale(scale, scale);
-    this.translate(-x, -y);
+    [ this, shadowCtx ].forEach(c => {
+      c.resetTransform();
+      c.translate(x, y);
+      c.rotate(degrees * DEG2RAD);
+      c.scale(scale, scale);
+      c.translate(-x, -y);
+    });
   },
 
   // "green screen" filter - replaces green (by default) pixels with transparent ones
@@ -920,9 +923,11 @@ const extraMethods = {
     return extraMethods.random.apply(this, [1, arr.length])
   },
   rotateAt: function(x, y, deg) {
-    this.translate(x, y);
-    this.rotate(deg * DEG2RAD);
-    this.translate(-x, -y);
+    [ this, shadowCtx ].forEach(c => {
+      c.translate(x, y);
+      c.rotate(deg * DEG2RAD);
+      c.translate(-x, -y);
+    });
   },
   toRad: function(deg) { // degrees to radians
     return deg * DEG2RAD;
