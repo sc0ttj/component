@@ -1677,11 +1677,12 @@ Just use `ctx.create.rect()` instead of `ctx.rect()` (etc) and an interactive "c
 Component.Ctx = Ctx;
 
 // define a new component
-const Foo = new Component({ x: 0, y: 0 });
+const Foo = new Component({ x: 0, y: 0, frame: 0 });
 
 // define an interactive "canvas object"
 const myStar = ctx.create.star(x, y, radius, numOfSides, degrees);
 
+// define a "view"
 Foo.view = (props, ctx) => {
   // update "canvas object" properties
   myStar.update(x, y, radius, numOfSides, degrees);
@@ -1692,6 +1693,8 @@ Foo.view = (props, ctx) => {
     fillStyle: myStar.clicked ? 'yellow' : 'lightgreen',
   });
 };
+
+// ...increment Foo.state.frame in a loop to keep re-rendering the view
 ```
 
 Optionally interact with the canvas inside your own "mousemove", "mousedown", "mouseup" event handlers:
