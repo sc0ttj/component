@@ -61,12 +61,12 @@
 
     // interactive canvas elements:
 
-    filledRect.update(0+frame, 0, 100, 100);
-    myStar.update(200+frame, 200, 50, 5, 0);
+    filledRect.update(0+frame/2, 0, 100, 100);
+    myStar.update(200+frame/2, 200, 50, 5, 0);
 
     filledRect.draw({
-      fillStyle: filledRect.id === hoverObj.id ? 'green' : 'lightblue',
-      strokeStyle: filledRect.id === hoverObj.id ? 'green' : 'red',
+      fillStyle: filledRect.hover ? 'green' : 'lightblue',
+      strokeStyle: filledRect.hover ? 'green' : 'red',
       lineWidth: 3,
     });
 
@@ -99,9 +99,11 @@
       // setup tooltip
       const tooltip = document.querySelector('.tooltip');
       tooltip.innerHTML = ``;
-      // Retrieve original object by objID (px color)
+      // see if we are hovering on an object in the canvas
+      hoverObj.hover = false;
       hoverObj = context.objectAt(mousePos.x, mousePos.y);
       if (hoverObj && hoverObj.id) {
+        hoverObj.hover = true;
         //console.log({ mousePos, hoverObj });
         tooltip.innerHTML = `
           <br>  Mouse  x,y: ${mousePos.x}, ${mousePos.y}
@@ -141,7 +143,7 @@
   // cancel animation
   setTimeout(() => {
     clearInterval(loop);
-  }, 3000);
+  }, 6000);
 
 </script>
 </body>
