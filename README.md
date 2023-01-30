@@ -1572,6 +1572,9 @@ If using a `<canvas>` to render components, you can **optionally** extend it usi
 
 Features:
 
+- interactive canvas:
+  - create "canvas objects" using very simple API
+  - re-style "canvas objects" on `hover` and `click`
 - extra drawing methods: 
   - arrows and arced arrows
   - cardinals splines (smooth curves, with segments and optional points) 
@@ -1664,6 +1667,60 @@ Foo.render('.some-canvas', '2d')
 ```
 
 See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more information.
+
+### Example of an interactive canvas
+
+Just use `ctx.create.rect()` instead of `ctx.rect()` (etc) and an interactive "canvas object" will be returned.
+
+```js
+// enable the enhanced canvas 2dContext API
+Component.Ctx = Ctx;
+
+// define a new component
+const Foo = new Component({ x: 0, y: 0 });
+
+// define an interactive "canvas object"
+const myStar = ctx.create.star(x, y, radius, numOfSides, degrees);
+
+Foo.view = (props, ctx) => {
+  // update "canvas object" properties
+  myStar.update(x, y, radius, numOfSides, degrees);
+
+  // draw "canvas object" with the given styles
+  myStar.draw({
+    strokeStyle: myStar.hover ? 'red' : 'orange',
+    fillStyle: myStar.clicked ? 'yellow' : 'lightgreen',
+  });
+};
+```
+
+Optionally interact with the canvas inside your own "mousemove", "mousedown", "mouseup" event handlers:
+
+```js
+// update a toolip with object info on hover and click
+const tooltip = document.querySelector('.tooltip');
+
+ctx.canvas.addEventListener('mousemove', event => {
+  // clear tooltip
+  tooltip.innerHTML = ``;
+  // if we are hovering on an object in the canvas
+  if (ctx.hoverObj) {
+    tooltip.innerHTML = `
+      <br>  Mouse  x,y: ${event.offsetX}, ${event.offsetY}
+      <br>   Object id: ${ctx.hoverObj.id}
+      <br>Object props: ${ctx.hoverObj.props}
+    `;
+  }
+
+}, false);
+
+ctx.canvas.addEventListener('mousedown', event => {
+  if (ctx.hoverObj) tooltip.innerHTML += `<br>Clicked`;
+}, false);
+```
+
+See [examples/usage-Ctx-interactive.html](examples/usage-Ctx-interactive.html) for more information.
+
 
 ### Additional methods provided by `Ctx`
 
