@@ -1199,7 +1199,11 @@ const Ctx = function(origCtx, c) {
     this.mousePos.y = event.offsetY;
     if (this.hoverObj) this.hoverObj.hover = false;
     this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
-    if (this.hoverObj && this.hoverObj.id) this.hoverObj.hover = true;
+    if (this.hoverObj && this.hoverObj.id) {
+      this.hoverObj.hover = true;
+    } else {
+      this.hoverObj = null;
+    }
   }, false);
 
   this.canvas.addEventListener('mousedown', event => {

@@ -96,7 +96,7 @@
       const tooltip = document.querySelector('.tooltip');
       tooltip.innerHTML = ``;
       // see if we are hovering on an object in the canvas
-      if (context.hoverObj && context.hoverObj.id) {
+      if (context.hoverObj) {
         tooltip.innerHTML = `
           <br>  Mouse  x,y: ${mousePos.x}, ${mousePos.y}
           <br>   Object id: ${context.hoverObj.id}
@@ -108,7 +108,7 @@
 
     context.canvas.addEventListener('mousedown', event => {
       const tooltip = document.querySelector('.tooltip');
-      if (context.hoverObj && context.hoverObj.id) {
+      if (context.hoverObj) {
         tooltip.innerHTML += `<br>Clicked`;
       }
     }, false);
