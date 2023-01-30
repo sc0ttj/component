@@ -1185,6 +1185,8 @@ const Ctx = function(origCtx, c) {
     return registry[idx];
   };
 
+  // get object at x,y
+  this.objectAt = (x,y) => this.lookup(this.pxColor(x,y));
 
   return;
 };

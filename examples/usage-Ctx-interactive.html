@@ -96,13 +96,13 @@
       // Get latest mouse position
       mousePos.x = event.offsetX;
       mousePos.y = event.offsetY;
+      // setup tooltip
       const tooltip = document.querySelector('.tooltip');
       tooltip.innerHTML = ``;
       // Retrieve original object by objID (px color)
-      const objID = context.pxColor(mousePos.x, mousePos.y);
-      hoverObj = context.lookup(objID);
+      hoverObj = context.objectAt(mousePos.x, mousePos.y);
       if (hoverObj && hoverObj.id) {
-        //console.log({ mousePos, pxColor, hoverObj });
+        //console.log({ mousePos, hoverObj });
         tooltip.innerHTML = `
           <br>  Mouse  x,y: ${mousePos.x}, ${mousePos.y}
           <br>   Object id: ${hoverObj.id}
@@ -113,9 +113,8 @@
     }, false);
 
     context.canvas.addEventListener('mousedown', event => {
-      const objID = context.pxColor(mousePos.x, mousePos.y);
-      const hoverObj = context.lookup(objID);
       const tooltip = document.querySelector('.tooltip');
+      hoverObj = context.objectAt(mousePos.x, mousePos.y);
       if (hoverObj && hoverObj.id) {
         hoverObj.clicked = true;
         tooltip.innerHTML += `<br>Clicked`;
@@ -123,8 +122,7 @@
     }, false);
 
     context.canvas.addEventListener('mouseup', event => {
-      const objID = context.pxColor(mousePos.x, mousePos.y);
-      hoverObj = context.lookup(objID);
+      hoverObj = context.objectAt(mousePos.x, mousePos.y);
       if (hoverObj && hoverObj.id) hoverObj.clicked = false;
     }, false);
 
