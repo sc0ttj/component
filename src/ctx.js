@@ -1109,26 +1109,26 @@ const Ctx = function(origCtx, c) {
   	//    - registers the object on a shadow canvas with a unique color (id)
   	this.create[fnName] = (...props) => {
   	  // Inside obj, `this` refers to the extended context
-  	 const obj = {
+  	  const obj = {
   	    props: [...props],
   	    update: (...props) => obj.props = [...props],
   	    draw: (styles) => {
-          const props = obj.props;
-          this.save();
-          if (styles) {
-            for (let [key, value] of Object.entries(styles)) {
-              this[key](value);
-            }
-          }
-          this[fnName](...props);
-          this.fill();
-          this.stroke();
-          this.restore();
-      	  // draw `obj` to an off-screen canvas, using the unique color
-      	  this.shadowCtx.beginPath();
-      	  this.shadowCtx.fillStyle = obj.id;
-      	  this.shadowCtx[fnName](...props);
-      	  this.shadowCtx.fill();
+  	      const props = obj.props;
+  	      this.save();
+  	      if (styles) {
+  	        for (let [key, value] of Object.entries(styles)) {
+  	          this[key](value);
+  	        }
+  	      }
+  	      this[fnName](...props);
+  	      this.fill();
+  	      this.stroke();
+  	      this.restore();
+  	      // draw `obj` to an off-screen canvas, using the unique color
+          this.shadowCtx.beginPath();
+          this.shadowCtx.fillStyle = obj.id;
+          this.shadowCtx[fnName](...props);
+          this.shadowCtx.fill();
   	    },
   	  };
 
