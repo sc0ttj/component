@@ -1197,18 +1197,16 @@ const Ctx = function(origCtx, c) {
   this.canvas.addEventListener('mousemove', event => {
     this.mousePos.x = event.offsetX;
     this.mousePos.y = event.offsetY;
-    this.hoverObj.hover = false;
+    if (this.hoverObj) this.hoverObj.hover = false;
     this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
     if (this.hoverObj && this.hoverObj.id) this.hoverObj.hover = true;
   }, false);
 
   this.canvas.addEventListener('mousedown', event => {
-    this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
     if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = true;
   }, false);
 
   this.canvas.addEventListener('mouseup', event => {
-    this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
     if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = false;
   }, false);
 
