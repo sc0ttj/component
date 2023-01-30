@@ -39,9 +39,7 @@
   let context; // will be a reference to Foo.ctx, so we can access it outside the components view
   let frame = 1; // frame count
 
-  // define objects and properties used by our interactive canvas
-  const mousePos = { x: 0, y: 0 };
-  let hoverObj = { id: 0 };
+  // define objects used by our interactive canvas
   let filledRect, myStar;
 
   // define a "view", that draws to the components canvas
@@ -83,9 +81,6 @@
   Foo.render('.container', '2d');
 
 
-  // ....
-
-
   // ..after the first frame renders (takes about 16 milliseconds)
   // we can access `ctx` outside this components view, as `context`
   setTimeout(() => {
@@ -98,7 +93,7 @@
       // see if we are hovering on an object in the canvas
       if (context.hoverObj) {
         tooltip.innerHTML = `
-          <br>  Mouse  x,y: ${mousePos.x}, ${mousePos.y}
+          <br>  Mouse  x,y: ${event.offsetX}, ${event.offsetY}
           <br>   Object id: ${context.hoverObj.id}
           <br>Object props: ${context.hoverObj.props}
         `;
