@@ -1125,21 +1125,21 @@ const Ctx = function(origCtx, c) {
   	      this.stroke();
   	      this.restore();
   	      // draw `obj` to an off-screen canvas, using the unique color
-          this.shadowCtx.beginPath();
-          this.shadowCtx.fillStyle = obj.id;
-          this.shadowCtx[fnName](...props);
-          this.shadowCtx.fill();
+  	      this.shadowCtx.beginPath();
+  	      this.shadowCtx.fillStyle = obj.id;
+  	      this.shadowCtx[fnName](...props);
+  	      this.shadowCtx.fill();
   	    },
   	  };
 
   	  // get the unique color as an id
   	  obj.id = this.register(obj);
-  	  if (!obj.id) return Error('registry is full');
+  	  if (!obj.id) return Error('registry is full')
 
   	  // draw on regular and shadow canvas
   	  obj.draw(...props)
 
-      return obj;
+  	  return obj;
   	};
   });
 
