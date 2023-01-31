@@ -36,8 +36,15 @@ Component.Ctx = Ctx;
 // define a new component
 const Foo = new Component({ frame: 0, x: 280, y: 100 });
 
-let context;            // a reference to Foo.ctx, so we can access it outside the components view
-let filledRect, myStar; // objects used by our interactive canvas
+// a reference to Foo.ctx, so we can access it outside the components view
+let context,
+    // objects used by our interactive canvas
+    filledRect,
+    myStar,
+    myStarFill,
+    myStarStroke,
+    myStarX = 200,
+    myStarY = 400;
 
 // define a "view", that draws to the components canvas
 Foo.view = (props, ctx) => {
@@ -48,24 +55,33 @@ Foo.view = (props, ctx) => {
     // keep references for outside the Foo component
     context = ctx;
     // create interactive objects, using `ctx.create`
-    filledRect = ctx.create.rect(0, 0, 100, 100);
-    myStar = ctx.create.star(200, 200, 50, 5, 0);
+    filledRect = ctx.create.rect(30, 30, 200, 200);
+    myStar = ctx.create.star(myStarX, myStarY, 50, 5, 0);
   }
 
   ctx.clear()  // using `clear(true)` will clear transforms too
 
-  filledRect.update(0+frame, 0, 100, 100);
-  myStar.update(200+frame, 200, 50, 5, 0);
+  filledRect.update(30+frame, 30, 200, 200);
 
   filledRect.draw({
-    fillStyle: filledRect.hover ? 'green' : 'lightblue',
-    strokeStyle: filledRect.hover ? 'green' : 'red',
+    fillStyle: filledRect.hover ? 'lightgreen' : 'lightblue',
+    strokeStyle: filledRect.hover ? 'red' : 'blue',
     lineWidth: 3,
   });
 
+
+  myStarFill = myStar.click ? 'lightgreen' : 'yellow';
+  myStarStroke = myStar.hover ? 'red' : 'orange';
+  if (myStar.drag) {
+    myStarX = ctx.mousePos.x;
+    myStarY = ctx.mousePos.y + myStar.props[2]/4;
+  }
+
+  myStar.update(myStarX, myStarY, 50, 5, 0);
+
   myStar.draw({
-    fillStyle: myStar.clicked ? 'green' : 'yellow',
-    strokeStyle: myStar.clicked ? 'red' : 'orange',
+    fillStyle: myStarFill,
+    strokeStyle: myStarStroke,
     lineWidth: 5,
   });
 };
@@ -90,6 +106,7 @@ setTimeout(() => {
         <br>  Mouse  x,y: ${event.offsetX}, ${event.offsetY}
         <br>   Object id: ${context.hoverObj.id}
         <br>Object props: ${context.hoverObj.props}
+        <br>Object drag: ${context.hoverObj.drag}
       `;
     }
   }, false);

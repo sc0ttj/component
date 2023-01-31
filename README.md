@@ -1573,8 +1573,8 @@ If using a `<canvas>` to render components, you can **optionally** extend it usi
 Features:
 
 - interactive canvas:
-  - create "canvas objects" using very simple API
-  - re-style "canvas objects" on `hover` and `click`
+  - create interactive "canvas objects" using very simple API
+  - re-style the "canvas objects" on `hover`, `click` and `drag`
 - extra drawing methods: 
   - arrows and arced arrows
   - cardinals splines (smooth curves, with segments and optional points) 
@@ -1690,7 +1690,7 @@ Foo.view = (props, ctx) => {
   // draw "canvas object" with the given styles
   myStar.draw({
     strokeStyle: myStar.hover ? 'red' : 'orange',
-    fillStyle: myStar.clicked ? 'yellow' : 'lightgreen',
+    fillStyle: myStar.click ? 'yellow' : 'lightgreen',
   });
 };
 
@@ -1712,6 +1712,7 @@ ctx.canvas.addEventListener('mousemove', event => {
       <br>  Mouse  x,y: ${event.offsetX}, ${event.offsetY}
       <br>   Object id: ${ctx.hoverObj.id}
       <br>Object props: ${ctx.hoverObj.props}
+      <br>Object drag: ${ctx.hoverObj.drag}
     `;
   }
 

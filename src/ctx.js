@@ -1195,28 +1195,53 @@ const Ctx = function(origCtx, c) {
 
   // event listeners
 
-  this.mousePos = { x: 0, y: 0 };
-  this.hoverObj = { id: 0, clicked: false, hover: false };
+  this.mousePos = {
+    x: 0,
+    y: 0,
+    dragStart: null, // will be an object:  { x, y }
+    dragEnd: null,   // will be an object:  { x, y }
+  };
+  this.hoverObj = { id: 0 };
 
   // define event listeners, set vars we can access in our canvas drawing code
-  this.canvas.addEventListener('mousemove', event => {
-    this.mousePos.x = event.offsetX;
-    this.mousePos.y = event.offsetY;
+  this.canvas.addEventListener('mousemove', e => {
+    this.mousePos.x = e.offsetX;
+    this.mousePos.y = e.offsetY;
     if (this.hoverObj) this.hoverObj.hover = false;
-    this.hoverObj = this.objectAt(this.mousePos.x, this.mousePos.y);
+    this.hoverObj = this.objectAt(e.offsetX, e.offsetY);
     if (this.hoverObj && this.hoverObj.id) {
       this.hoverObj.hover = true;
+      // drag and drop
+      const { dragStart, dragEnd } = this.mousePos;
+      this.hoverObj.drag = false;
+      if (dragStart && !dragEnd) {
+        if (dragStart.x != e.offsetX || dragStart.y != e.offsetY) {
+          // we started dragging, and we moved away from the original x,y location
+          this.hoverObj.drag = true;
+        }
+      }
     } else {
       this.hoverObj = null;
     }
   }, false);
 
-  this.canvas.addEventListener('mousedown', event => {
-    if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = true;
+  this.canvas.addEventListener('mousedown', e => {
+    this.hoverObj = this.objectAt(e.offsetX, e.offsetY);
+    if (this.hoverObj && this.hoverObj.id) this.hoverObj.click = true;
+    // drag n drop
+    this.mousePos.dragEnd = null;
+    // if we didnt start dragging yet, start dragging
+    if (!this.mousePos.dragStart) this.mousePos.dragStart = { x: e.offsetX, y: e.offsetY };
   }, false);
 
-  this.canvas.addEventListener('mouseup', event => {
-    if (this.hoverObj && this.hoverObj.id) this.hoverObj.clicked = false;
+  this.canvas.addEventListener('mouseup', e => {
+    this.hoverObj = this.objectAt(e.offsetX, e.offsetY);
+    if (this.hoverObj && this.hoverObj.id) {
+      this.hoverObj.click = false;
+      this.hoverObj.drag = false;
+    }
+    // drag n drop: if we were dragging the cursor, end dragging
+    if (this.mousePos.dragStart) this.mousePos.dragEnd = { x: e.offsetX, y: e.offsetY };
   }, false);
 
   return;
