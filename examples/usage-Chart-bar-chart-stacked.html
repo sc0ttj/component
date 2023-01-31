@@ -128,9 +128,9 @@
       labelBelow: true,
       yPos: 0,
       tickLength: -3,
-      tickCentered: true,
+      tickCentered: false,
       tickLabelCentered: true,
-      //tickLabels: label => '',
+      tickLabels: (label, i) => (i === 0 || i === 8) ? '' : label,
     })
 
     .yAxis({
