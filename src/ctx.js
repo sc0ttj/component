@@ -963,6 +963,7 @@ const Ctx = function(origCtx, c) {
   // create an offscreen canvas, so we can:
   // * draw things to it, always with a unique color
   // * lookup a color to know which object/shape it refers to
+  // * use the above to "interactive canvas objects"
   //document.body.append(shadowCanvas);
   shadowCanvas.height = this.canvas.height;
   shadowCanvas.width = this.canvas.width;
@@ -1101,8 +1102,10 @@ const Ctx = function(origCtx, c) {
     }
   };
 
-  // interactive canvas
-
+  // interactive "canvas objects"
+  //
+  // This function generates "canvas objects" which can be
+  // hovered, clicked, dragged, etc, using `ctx.create`
   const generateCanvasObject = (fnName, props, drawFn) => {
 	  // Inside obj, `this` refers to the extended context
 	  const obj = {
@@ -1150,6 +1153,8 @@ const Ctx = function(origCtx, c) {
 	  return obj;
   }
 
+  // Allow creating create custom "canvas objects" with
+  // `ctx.create('shape', drawingFunc)`,
   this.create = (fnName, fn) => {
     // add this method to shadow canvas
     this.shadowCtx[fnName] = (...props) => fn.apply(this.shadowCtx, [...props]);
@@ -1158,9 +1163,8 @@ const Ctx = function(origCtx, c) {
     return this.create[fnName];
   }
 
-  // Add methods to the `ctx.create` object - one for each
-  // supported Ctx drawing method
-
+  // Add methods to the `ctx.create` API object - one for each
+  // existing ctx drawing method
   [...ctxMethods, ...extraMethodNames].forEach(fnName => {
   	// Create the ctx.create.rect() (etc) methods
   	// - each method:
