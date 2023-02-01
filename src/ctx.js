@@ -963,7 +963,7 @@ const Ctx = function(origCtx, c) {
   // create an offscreen canvas, so we can:
   // * draw things to it, always with a unique color
   // * lookup a color to know which object/shape it refers to
-  document.body.append(shadowCanvas);
+  //document.body.append(shadowCanvas);
   shadowCanvas.height = this.canvas.height;
   shadowCanvas.width = this.canvas.width;
   shadowCanvas.style.height = this.canvas.style.height;

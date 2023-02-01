@@ -78,7 +78,7 @@ Foo.view = (props, ctx) => {
   myMickey.onClick(props => console.log('mickey CLICK!'));
   myMickey.onHover(props => console.log('mickey HOVER!'));
   if (myMickey.drag) {
-    myMickey.update(ctx.mouse.x, ctx.mouse.y, 100);
+    myMickey.update(ctx.mouse.x, ctx.mouse.y, 80);
   }
   myMickey.draw({
     fillStyle: myMickey.hover ? '#c0c' : '#333',
