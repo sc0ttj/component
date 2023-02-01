@@ -224,7 +224,7 @@ const DEG2RAD = PI / 180;
 
      function getMousePos(event) {
         var rect = ctx.canvas.getBoundingClientRect();
-        ctx.mousePos = {x:(event.clientX-rect.left)/ctx.canvas.scale, y:(event.clientY-rect.top)/ctx.canvas.scale};
+        ctx.mouse = {x:(event.clientX-rect.left)/ctx.canvas.scale, y:(event.clientY-rect.top)/ctx.canvas.scale};
       }
 
 - node graph
@@ -963,7 +963,7 @@ const Ctx = function(origCtx, c) {
   // create an offscreen canvas, so we can:
   // * draw things to it, always with a unique color
   // * lookup a color to know which object/shape it refers to
-  //document.body.append(shadowCanvas);
+  document.body.append(shadowCanvas);
   shadowCanvas.height = this.canvas.height;
   shadowCanvas.width = this.canvas.width;
   shadowCanvas.style.height = this.canvas.style.height;
@@ -1103,49 +1103,70 @@ const Ctx = function(origCtx, c) {
 
   // interactive canvas
 
-  this.create = {}; // will be ctx.create.rect(), ctx.create.circle(), etc
+  const generateCanvasObject = (fnName, props, drawFn) => {
+	  // Inside obj, `this` refers to the extended context
+	  const obj = {
+	    shape: fnName,
+	    props: [...props],
+	    update: (...props) => obj.props = [...props],
+	    draw: (styles) => {
+	      const props = obj.props;
+	      if (styles) {
+	        for (let [key, value] of Object.entries(styles)) {
+	          this[key](value);
+	        }
+	      }
+	      if (typeof this[fnName] === 'function') {
+	        this.beginPath();
+	        this.save();
+	        this[fnName](...props);
+          this.fill();
+          this.stroke();
+          this.closePath();
+  	      this.restore();
+	      } else {
+          drawFn(...props);
+	      }
+	      // draw `obj` to an off-screen canvas, using the unique color
+	      this.shadowCtx.beginPath();
+	      this.shadowCtx.fillStyle = obj.id;
+	      this.shadowCtx[fnName](...props);
+	      this.shadowCtx.fill();
+	    },
+	    // event handlers
+	    onHover: fn => obj.hoverHandler = fn,
+	    onClick: fn => obj.clickHandler = fn,
+	    onRelease: fn => obj.releaseHandler = fn,
+	    onDrag: fn => obj.dragHandler = fn,
+	  };
+
+	  // get the unique color as an id
+	  obj.id = this.register(obj);
+	  if (!obj.id) return Error('registry is full')
+
+	  // draw on regular and shadow canvas
+	  obj.draw(...props)
+
+	  return obj;
+  }
+
+  this.create = (fnName, fn) => {
+    // add this method to shadow canvas
+    this.shadowCtx[fnName] = (...props) => fn.apply(this.shadowCtx, [...props]);
+    // add the new method to the `ctx.create` API
+    this.create[fnName] = (...props) => generateCanvasObject(fnName, props, fn);
+    return this.create[fnName];
+  }
 
   // Add methods to the `ctx.create` object - one for each
   // supported Ctx drawing method
+
   [...ctxMethods, ...extraMethodNames].forEach(fnName => {
   	// Create the ctx.create.rect() (etc) methods
   	// - each method:
   	//    - returns an object with methods .update(props) and .draw(style)
   	//    - registers the object on a shadow canvas with a unique color (id)
-  	this.create[fnName] = (...props) => {
-  	  // Inside obj, `this` refers to the extended context
-  	  const obj = {
-  	    props: [...props],
-  	    update: (...props) => obj.props = [...props],
-  	    draw: (styles) => {
-  	      const props = obj.props;
-  	      this.save();
-  	      if (styles) {
-  	        for (let [key, value] of Object.entries(styles)) {
-  	          this[key](value);
-  	        }
-  	      }
-  	      this[fnName](...props);
-  	      this.fill();
-  	      this.stroke();
-  	      this.restore();
-  	      // draw `obj` to an off-screen canvas, using the unique color
-  	      this.shadowCtx.beginPath();
-  	      this.shadowCtx.fillStyle = obj.id;
-  	      this.shadowCtx[fnName](...props);
-  	      this.shadowCtx.fill();
-  	    },
-  	  };
-
-  	  // get the unique color as an id
-  	  obj.id = this.register(obj);
-  	  if (!obj.id) return Error('registry is full')
-
-  	  // draw on regular and shadow canvas
-  	  obj.draw(...props)
-
-  	  return obj;
-  	};
+  	this.create[fnName] = (...props) => generateCanvasObject(fnName, props);
   });
 
   // unique color for every item drawn to off-screen canvas:
@@ -1154,20 +1175,26 @@ const Ctx = function(origCtx, c) {
   const checksum = (n, csBits) => (n * ENTROPY) % Math.pow(2, csBits);
   const int2HexColor = num => `#${Math.min(num, Math.pow(2, 24)).toString(16).padStart(6, '0')}`;
   const rgb2Int = (r, g, b) => (r << 16) + (g << 8) + b;
+  const hex2rgb = (hex) => {
+    const rgb = parseInt(hex.replace('#',''), 16),
+          r = (rgb >> 16) & 0xFF,
+          g = (rgb >> 8) & 0xFF,
+          b = rgb & 0xFF;
+    return [r,g,b];
+  };
   const csBits = 6;
-
   // remember all canvas objects in this registry:
-  const registry = ['__reserved_for_background__'];
+  this.registry = ['__reserved_for_background__'];
 
   // add obj to registry, returns the objects unique color:
   this.register = (obj) => {
-    if (registry.length >= Math.pow(2, 24 - csBits)) { // color has 24 bits (-checksum)
+    if (this.registry.length >= Math.pow(2, 24 - csBits)) { // color has 24 bits (-checksum)
       return null; // Registry is full
     }
-    const idx = registry.length;
+    const idx = this.registry.length;
     const cs = checksum(idx, csBits);
     const color = int2HexColor(idx + (cs << (24 - csBits)));
-    registry.push(obj);
+    this.registry.push(obj);
     return color;
   };
 
@@ -1186,16 +1213,19 @@ const Ctx = function(origCtx, c) {
     if (!n) return { id: 0 }; // 0 index is reserved for background
     const idx = n & (Math.pow(2, 24 - csBits) - 1); // registry index
     const cs = (n >> (24 - csBits)) & (Math.pow(2, csBits) - 1); // extract bits reserved for checksum
-    if (checksum(idx, csBits) !== cs || idx >= registry.length) return null; // failed checksum or registry out of bounds
-    return registry[idx];
+    if (checksum(idx, csBits) !== cs || idx >= this.registry.length) return null; // failed checksum or registry out of bounds
+    return this.registry[idx];
   };
 
   // get object at x,y
   this.objectAt = (x,y) => this.lookup(this.pxColor(x,y));
 
+  // get object from an id (unique color)
+  this.getObject = (id) => this.lookup(hex2rgb(id));
+
   // event listeners
 
-  this.mousePos = {
+  this.mouse = {
     x: 0,
     y: 0,
     dragStart: null, // will be an object:  { x, y }
@@ -1205,20 +1235,26 @@ const Ctx = function(origCtx, c) {
 
   // define event listeners, set vars we can access in our canvas drawing code
   this.canvas.addEventListener('mousemove', e => {
-    this.mousePos.x = e.offsetX;
-    this.mousePos.y = e.offsetY;
+    const m = this.mouse;
+    m.x = e.offsetX;
+    m.y = e.offsetY;
     if (this.hoverObj) this.hoverObj.hover = false;
     this.hoverObj = this.objectAt(e.offsetX, e.offsetY);
-    if (this.hoverObj && this.hoverObj.id) {
-      this.hoverObj.hover = true;
+    const o = this.hoverObj;
+    if (o && o.id) {
+      o.hover = true;
       // drag and drop
-      const { dragStart, dragEnd } = this.mousePos;
-      this.hoverObj.drag = false;
+      const { dragStart, dragEnd } = m;
+      o.drag = false;
       if (dragStart && !dragEnd) {
-        if (dragStart.x != e.offsetX || dragStart.y != e.offsetY) {
-          // we started dragging, and we moved away from the original x,y location
-          this.hoverObj.drag = true;
-        }
+        // we started dragging, and we moved away from the original x,y location
+        // run event handler
+        if (o.onDrag && o.dragHandler) o.dragHandler(o);
+        o.drag = true;
+      }
+      // run event handler
+      if (o.onHover && o.hoverHandler && !o.drag) {
+        o.hoverHandler(o);
       }
     } else {
       this.hoverObj = null;
@@ -1227,21 +1263,31 @@ const Ctx = function(origCtx, c) {
 
   this.canvas.addEventListener('mousedown', e => {
     this.hoverObj = this.objectAt(e.offsetX, e.offsetY);
-    if (this.hoverObj && this.hoverObj.id) this.hoverObj.click = true;
+    const m = this.mouse,
+          o = this.hoverObj;
+    if (o && o.id) {
+      o.click = true;
+      // run event handler
+      if (o.onClick && o.clickHandler) o.clickHandler(o);
+    }
     // drag n drop
-    this.mousePos.dragEnd = null;
+    m.dragEnd = null;
     // if we didnt start dragging yet, start dragging
-    if (!this.mousePos.dragStart) this.mousePos.dragStart = { x: e.offsetX, y: e.offsetY };
+    if (!m.dragStart) m.dragStart = { x: e.offsetX, y: e.offsetY };
   }, false);
 
   this.canvas.addEventListener('mouseup', e => {
     this.hoverObj = this.objectAt(e.offsetX, e.offsetY);
-    if (this.hoverObj && this.hoverObj.id) {
-      this.hoverObj.click = false;
-      this.hoverObj.drag = false;
+    const m = this.mouse,
+          o = this.hoverObj;
+    if (o && o.id) {
+      o.click = false;
+      o.drag = false;
+      // run event handler
+      if (o.onRelease && o.releaseHandler) o.releaseHandler(o);
     }
     // drag n drop: if we were dragging the cursor, end dragging
-    if (this.mousePos.dragStart) this.mousePos.dragEnd = { x: e.offsetX, y: e.offsetY };
+    if (m.dragStart) m.dragEnd = { x: e.offsetX, y: e.offsetY };
   }, false);
 
   return;
