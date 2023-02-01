@@ -40,8 +40,7 @@ const Foo = new Component({ frame: 0, x: 280, y: 100 });
 let context,
     // objects used by our interactive canvas
     filledRect,
-    mouse,
-    myMouse,
+    myMickey,
     myStar,
     myStarFill,
     myStarStroke,
@@ -59,30 +58,30 @@ Foo.view = (props, ctx) => {
     // create interactive objects, using `ctx.create`
     filledRect = ctx.create.rect(30, 30, 200, 200);
     myStar = ctx.create.star(myStarX, myStarY, 50, 5, 0);
-
-    // extend the ctx.create API with our a drawing function:
+    // extend the ctx.create API with a new drawing function:
     // * all 3 circles will be seen as _one_ "canvas object"
     ctx.create('mickey', function(x, y, r) {
       [ctx, ctx.shadowCtx ].forEach(c => {
-        c.fillCircle(x,y,r/2, 360, false);         // head
-        c.fillCircle(x-r/2,y-y/2,r/3, 360, false); // ear 1
-        c.fillCircle(x+r/2,y-y/2,r/3, 360, false); // ear 2
+        c.beginPath();
+        c.fillCircle(x,y,r/2, 360, true);         // head
+        c.fillCircle(x-r/2,y-r/2,r/3, 360, true); // ear 1
+        c.fillCircle(x+r/2,y-r/2,r/3, 360, true); // ear 2
+        c.closePath();
       });
     });
     // now lets use it
-    myMouse = ctx.create.mickey(100, 100, 80);
+    myMickey = ctx.create.mickey(100, 100, 80);
   }
 
   ctx.clear()  // using `clear(true)` will clear transforms too
 
-
-
-  myMouse.update(30+frame/4, 100, 100);
-  myMouse.onClick(props => console.log('mickey CLICK!'));
-  myMouse.onHover(props => console.log('mickey HOVER!'));
-  myMouse.draw({
-    strokeStyle: myMouse.click ? 'red' : 'black',
-    fillStyle: myMouse.hover ? 'lightgreen' : 'black',
+  myMickey.onClick(props => console.log('mickey CLICK!'));
+  myMickey.onHover(props => console.log('mickey HOVER!'));
+  if (myMickey.drag) {
+    myMickey.update(ctx.mouse.x, ctx.mouse.y, 100);
+  }
+  myMickey.draw({
+    fillStyle: myMickey.hover ? '#c0c' : '#333',
   });
 
 
@@ -127,7 +126,7 @@ Foo.view = (props, ctx) => {
     lineWidth: 5,
   });
 
-  if (frame > 250) return;
+  if (frame > 1000) return;
 
   // re-render in a loop
   Foo.setState({
