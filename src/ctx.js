@@ -1113,30 +1113,30 @@ const Ctx = function(origCtx, c) {
 	    props: [...props],
 	    update: (...props) => obj.props = [...props],
 	    draw: (styles) => {
-	      const props = obj.props;
+	      const props = obj.props,
+	            c = this.shadowCtx;
 	      if (styles) {
 	        for (let [key, value] of Object.entries(styles)) {
 	          this[key](value);
 	        }
 	      }
-	      if (typeof this[fnName] === 'function') {
-	        this.beginPath();
-	        this.save();
-	        this[fnName](...props);
-          this.fill();
-          this.stroke();
-          this.closePath();
-  	      this.restore();
+	      if (!drawFn) {
+	        this.beginPath().save();
+	        this[fnName](...props)
+            .fill()
+            .stroke()
+            .closePath()
+            .restore();
 	      } else {
           drawFn(...props);
 	      }
 	      // draw `obj` to an off-screen canvas, using the unique color
-	      this.shadowCtx.beginPath();
-	      this.shadowCtx.fillStyle = obj.id;
-	      this.shadowCtx[fnName](...props);
-	      this.shadowCtx.fill();
+	      c.beginPath();
+	      c.fillStyle = obj.id;
+	      c[fnName](...props);
+	      c.fill();
 	    },
-	    // event handlers
+	    // let user set event handlers
 	    onHover: fn => obj.hoverHandler = fn,
 	    onClick: fn => obj.clickHandler = fn,
 	    onRelease: fn => obj.releaseHandler = fn,
@@ -1251,10 +1251,9 @@ const Ctx = function(origCtx, c) {
       const { dragStart, dragEnd } = m;
       o.drag = false;
       if (dragStart && !dragEnd) {
-        // we started dragging, and we moved away from the original x,y location
+        o.drag = true;
         // run event handler
         if (o.onDrag && o.dragHandler) o.dragHandler(o);
-        o.drag = true;
       }
       // run event handler
       if (o.onHover && o.hoverHandler && !o.drag) {
