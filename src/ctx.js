@@ -1122,13 +1122,9 @@ const Ctx = function(origCtx, c) {
 	      }
 	      if (!drawFn) {
 	        this.beginPath().save();
-	        this[fnName](...props)
-            .fill()
-            .stroke()
-            .closePath()
-            .restore();
+	        this[fnName](...props).fill().stroke().closePath().restore();
 	      } else {
-          drawFn(...props);
+	        drawFn(...props);
 	      }
 	      // draw `obj` to an off-screen canvas, using the unique color
 	      c.beginPath();
