@@ -95,13 +95,11 @@ Foo.view = (props, ctx) => {
     myMickey.y = ctx.mouse.y;
   }
 
+  // you can also update props and styles using functions
   if (myMickey.hover) {
-    // you can also update props and styles using functions
-    myMickey.fillStyle = prop => {
-      const xynum  = myMickey.x - myMickey.y,
-            hexnum = +prop.replace('#', '0x');
-      return ctx.int2hex(hexnum/2 - xynum*2);
-    }
+    myMickey.r = r => (r < 100) ? r + 2 : r; // grow the radius up to 100
+  } else {
+    myMickey.r = r => (r >  80) ? r - 2 : r; // shrink radius down to 80
   }
 
   // look out - any styles passed into draw() override all others

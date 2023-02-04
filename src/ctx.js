@@ -1137,10 +1137,7 @@ const Ctx = function(origCtx, c) {
 	      if (!drawFn) {
 	        this.beginPath().save();
 	        this[fnName](...props);
-	        if (appliedStyles) {
-	          this.fill();
-	          this.stroke();
-	        }
+	        if (appliedStyles) this.fill().stroke();
 	        this.closePath().restore();
 	      } else {
 	        drawFn(...props);
@@ -1252,8 +1249,6 @@ const Ctx = function(origCtx, c) {
 
   // get object from an id (unique color)
   this.getObject = (id) => this.lookup(hex2rgb(id));
-
-  this.int2hex = int2hex;
 
   // event listeners
 
