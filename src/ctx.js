@@ -80,49 +80,12 @@ IDEA - keyboard handlers
     ctx.keyDown
     ctx.keyUp
 
-
-DONE IDEA - alternative way to update a "canvas object"
-
-    myStar.update(0, 0, 100)  // set the props to the values given - DONE
-    myStar.adjust(1, -1, 0)   // adjust the props by values given
-
-DONE IDEA - alternative way to update "canvas object" styles
-
-    myStar.fillStyle = '#c00';
-    myStar.draw()      // styles optional, will override others if given (as object)
-
-DONE IDEA - optionally define NAMED props ("canvas object" props as object)
-
-  ctx.create('fooShape', ({ x: 0, y: 0, r: 0 }) => {
-    // draw stuff
-  });
-  const myShape = ctx.create.fooShape({ x: 10, y: 10, r: 50 });
-
-  myShape.props  // returns { x: 10, y: 10, r: 50 }
-
-  myShape.update({ x: 0, y: 0, r: 50 }); // update all props
-  myShape.update({ r: 50 });             // update specific props
-  myShape.adjust({ r: 10 });             // adjust specific props
-
-  myShape.r                  // return myShape.props.r
-  myShape.r = 50;            // update myShape.props.r
-
-
-
-GREAT LERP DEMO (nice flowing circle movement):
-
-  https://codepen.io/ma77os/pen/OJPVrP?editors=0010
-
 Useful funcs:
 
     const isBrowserTabInView = () => document.hidden;
     const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-
-
-
-
-- responsive canvas:
+Responsive canvas:
   - auto resize on screen/orientation change
   - option to maintain aspect ratio
   - see https://github.com/Nelkor/ctx-2d/blob/master/index.js#L18
@@ -140,21 +103,20 @@ Useful funcs:
         }
       }
 
-- various goodies: colour, maths, seeded randoms, vectors, engine objects/entities, etc
+Various goodies: colour, maths, seeded randoms, vectors, engine objects/entities, etc
   - https://github.com/KilledByAPixel/LittleJS/blob/main/engine/engine.all.js
 
-- undo/redo:
+Undo/redo:
   - see https://github.com/jussi-kalliokoski/canvas-history.js
 
 
-- play/replay:
+Play/replay:
   - https://github.com/despeset/ctxShark/blob/master/ctxShark.js
 
+Interpolate colors and numbers:
+  - https://github.com/worksbyscott/Interpolator/blob/main/interpolator.js
 
-
-- interpolate colors and numbers: https://github.com/worksbyscott/Interpolator/blob/main/interpolator.js
-
-- lerp for 2d coordinates
+Lerp for 2d coordinates
 
       function lerp2d([x0, y0] = [], [x1, y1] = [], t) {
         return [
@@ -1154,16 +1116,19 @@ const Ctx = function(origCtx, c) {
 
 	      // apply any styles attached as props
 	      ctxProps.forEach(key => {
-	        if (obj[key]) {
-	          this[key](obj[key]);
+	        const v = obj[key];
+	        if (v) {
+	          const val = typeof v === 'function' ? v(this[key]()) : v;
+	          this[key](val);
 	          appliedStyles += 1;
 	        }
 	      });
 	      // apply any styles passed into draw()
 	      if (styles) {
-	        for (let [key, value] of Object.entries(styles)) {
+	        for (let [key, v] of Object.entries(styles)) {
 	          if (this[key]) {
-	            this[key](value);
+	            const val = typeof v === 'function' ? v(this[key]()) : v;
+	            this[key](val);
               appliedStyles += 1;
             }
 	        }
@@ -1195,9 +1160,12 @@ const Ctx = function(origCtx, c) {
 	  //   myShape.x = 50; // update myShape.props.x
 	  if (propsIsObj) {
 	    Object.keys(props[0]).forEach((key, i) => {
-	      Object.defineProperty(obj, `${key}`,
+	      Object.defineProperty(obj, `${key}`, {
 	        get() { return this.props[key]; },
-	        set(value) { this.props[key] = value; },
+	        set(v) { // v for value
+	          const val = typeof v === 'function' ? v(this.props[key]) : v;
+	          this.props[key] = val;
+	        },
 	        enumerable: true,
 	        configurable: true,
 	      });
@@ -1235,7 +1203,7 @@ const Ctx = function(origCtx, c) {
   // * shamelessly stolen from https://github.com/vasturiano/canvas-color-tracker
   const ENTROPY = 123; // Raise numbers to prevent collisions in lower indexes
   const checksum = (n, csBits) => (n * ENTROPY) % Math.pow(2, csBits);
-  const int2HexColor = num => `#${Math.min(num, Math.pow(2, 24)).toString(16).padStart(6, '0')}`;
+  const int2hex = num => `#${Math.min(num, Math.pow(2, 24)).toString(16).padStart(6, '0')}`;
   const rgb2Int = (r, g, b) => (r << 16) + (g << 8) + b;
   const hex2rgb = (hex) => {
     const rgb = parseInt(hex.replace('#',''), 16),
@@ -1255,7 +1223,7 @@ const Ctx = function(origCtx, c) {
     }
     const idx = this.registry.length;
     const cs = checksum(idx, csBits);
-    const color = int2HexColor(idx + (cs << (24 - csBits)));
+    const color = int2hex(idx + (cs << (24 - csBits)));
     this.registry.push(obj);
     return color;
   };
@@ -1284,6 +1252,8 @@ const Ctx = function(origCtx, c) {
 
   // get object from an id (unique color)
   this.getObject = (id) => this.lookup(hex2rgb(id));
+
+  this.int2hex = int2hex;
 
   // event listeners
 

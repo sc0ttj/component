@@ -57,7 +57,7 @@ Foo.view = (props, ctx) => {
     myStar = ctx.create.star({ x: 200, y: 400, radius: 50, points: 5, angle: 0 });
     myRect = ctx.create.rect({ x: 30, y: 30, w: 200, h: 200 });
 
-    // Lets define a *new*, custom "interactive canvas object":
+    // Lets define a new, _custom_ "interactive canvas object":
     //  ...all 3 circles will be seen as _one_ object
     ctx.create('mickey', function(x, y, r) {
       [ctx, ctx.shadowCtx ].forEach(c => {
@@ -70,15 +70,22 @@ Foo.view = (props, ctx) => {
     });
     myMickey = ctx.create.mickey({ x: 100, y: 100, r: 80 });
 
+    // debug
     console.log('myStar', myStar);
     console.log('myRect', myRect);
     console.log('myMickey', myMickey);
   }
 
+  //
+  // Let's start drawing in a loop from here
+  //
   ctx.clear()  // using `clear(true)` will clear transforms too
 
   myMickey.on('click', props => console.log('mickey CLICK!'));
   myMickey.on('hover', props => console.log('mickey HOVER!'));
+
+  // any ctx style props can be added to a "canvas object"
+  myMickey.fillStyle = myMickey.hover ? 'lightgreen' : 'cyan';
 
   if (myMickey.drag) {
     // update the props
@@ -88,13 +95,21 @@ Foo.view = (props, ctx) => {
     myMickey.y = ctx.mouse.y;
   }
 
-  // any ctx style props can be added to a "canvas object"
-  myMickey.fillStyle = myMickey.hover ? 'lightgreen' : 'cyan';
+  if (myMickey.hover) {
+    // you can also update props and styles using functions
+    myMickey.fillStyle = prop => {
+      const xynum  = myMickey.x - myMickey.y,
+            hexnum = +prop.replace('#', '0x');
+      return ctx.int2hex(hexnum/2 - xynum*2);
+    }
+  }
 
-  // any styles passed into draw() override all others
+  // look out - any styles passed into draw() override all others
   myMickey.draw({
-    fillStyle: myMickey.hover ? '#c0c' : '#333',
+    //fillStyle: myMickey.hover ? '#c0c' : '#333',
   });
+
+  // ...
 
   // lets use `adjust`: adds the given values to its current properties
   myRect.adjust({ x: 0.25, y: 0, w: 0, h: 0 });
