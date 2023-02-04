@@ -39,12 +39,9 @@ const Foo = new Component({ frame: 0, x: 280, y: 100 });
 // a reference to Foo.ctx, so we can access it outside the components view
 let context,
     // objects used by our interactive canvas
-    filledRect,
-    myStar,
-    myStarFill,
-    myStarStroke,
-    myStarX = 200,
-    myStarY = 400;
+    myRect,
+    myMickey,
+    myStar;
 
 // define a "view", that draws to the components canvas
 Foo.view = (props, ctx) => {
@@ -54,35 +51,120 @@ Foo.view = (props, ctx) => {
     ctx.size(640, 480);
     // keep references for outside the Foo component
     context = ctx;
-    // create interactive objects, using `ctx.create`
-    filledRect = ctx.create.rect(30, 30, 200, 200);
-    myStar = ctx.create.star(myStarX, myStarY, 50, 5, 0);
+
+    // Create interactive objects, using `ctx.create`
+    //myStar = ctx.create.star(100, 100, 50, 5, 0);
+    myStar = ctx.create.star({ x: 200, y: 400, radius: 50, points: 5, angle: 0 });
+    myRect = ctx.create.rect({ x: 30, y: 30, w: 200, h: 200 });
+
+    // Lets define a new, _custom_ "interactive canvas object":
+    //  ...all 3 circles will be seen as _one_ object
+    ctx.create('mickey', function(x, y, r) {
+      [ctx, ctx.shadowCtx ].forEach(c => {
+        c.beginPath();
+        c.fillCircle(x,y,r/2, 360, true);         // head
+        c.fillCircle(x-r/2,y-r/2,r/3, 360, true); // ear 1
+        c.fillCircle(x+r/2,y-r/2,r/3, 360, true); // ear 2
+        c.closePath();
+      });
+    });
+    myMickey = ctx.create.mickey({ x: 100, y: 100, r: 80 });
+
+    // debug
+    console.log('myStar', myStar);
+    console.log('myRect', myRect);
+    console.log('myMickey', myMickey);
   }
 
+  //
+  // Let's start drawing in a loop from here
+  //
   ctx.clear()  // using `clear(true)` will clear transforms too
 
-  filledRect.update(30+frame, 30, 200, 200);
-
-  filledRect.draw({
-    fillStyle: filledRect.hover ? 'lightgreen' : 'lightblue',
-    strokeStyle: filledRect.hover ? 'red' : 'blue',
+  // update a shape, but dont redraw it
+  myRect.update({ w: 160 });
+  // lets use `adjust`: adds the given values to its current properties
+  myRect.adjust({ x: 0.25, y: 0, w: 0, h: -0.15 });
+  // which is the same as:
+  myRect.adjust({ x: 0.25, h: -0.15 });
+  // now render, optionally pass in some styles if needed/desired
+  myRect.draw({
+    fillStyle: myRect.hover ? 'yellow' : 'lightblue',
+    strokeStyle: myRect.hover ? 'red' : 'blue',
     lineWidth: 3,
   });
 
+  // ...
 
-  myStarFill = myStar.click ? 'lightgreen' : 'yellow';
-  myStarStroke = myStar.hover ? 'red' : 'orange';
-  if (myStar.drag) {
-    myStarX = ctx.mousePos.x;
-    myStarY = ctx.mousePos.y + myStar.props[2]/4;
+  myMickey.on('click', props => console.log('mickey CLICK!'));
+  myMickey.on('hover', props => console.log('mickey HOVER!'));
+
+  // any ctx style props can be added to a "canvas object"
+  myMickey.fillStyle = myMickey.hover ? 'lightgreen' : 'cyan';
+
+  if (myMickey.drag) {
+    // update the props
+    myMickey.update({ x: ctx.mouse.x, y: ctx.mouse.y });
+    // ...or set using the *named* props (only works if we defined the props as an object)
+    myMickey.x = ctx.mouse.x;
+    myMickey.y = ctx.mouse.y;
   }
 
-  myStar.update(myStarX, myStarY, 50, 5, 0);
+  // you can also update props and styles using functions
+  if (myMickey.click) {
+    myMickey.r = r => (r < 100) ? r + 2 : r; // grow the radius up to 100
+  } else {
+    myMickey.r = r => (r >  80) ? r - 2 : r; // shrink radius down to 80
+  }
 
-  myStar.draw({
-    fillStyle: myStarFill,
-    strokeStyle: myStarStroke,
-    lineWidth: 5,
+  // careful, any styles passed into draw() override all others
+  myMickey.draw({
+    //fillStyle: myMickey.hover ? '#c0c' : '#333',
+  });
+
+  // ...
+
+  if (myStar.drag) {
+    // now update it
+    myStar.update({ x: ctx.mouse.x, y: ctx.mouse.y });
+    // or simply (same as above)
+    myStar.x = ctx.mouse.x;
+    myStar.y = ctx.mouse.y;
+    // ...optionally interpolate the values
+    //myStar.x += (ctx.mouse.x - myStar.x) * 0.1;
+    //myStar.y += (ctx.mouse.y - myStar.y) * 0.1;
+    // ..which is the same as
+    //myStar.x =  ctx.lerp(myStar.x, ctx.mouse.x, 0.01);
+    //myStar.y =  ctx.lerp(myStar.y, ctx.mouse.y, 0.01);
+  }
+
+  // or use event handlers
+  myStar.on('hover', d => {
+    console.log('myStar hover', d.shape);
+  });
+  myStar.on('click', d => {
+    console.log('myStar clicked', d.id);
+  });
+  myStar.on('release', d => {
+    console.log('myStar released', d.id);
+  });
+  myStar.on('drag', d => {
+    console.log('myStar dragging', d.props);
+    // note that using `myStar.drag` (as above) works better than `onDrag()`
+    //myStar.update({ x: ctx.mouse.x, y: ctx.mouse.y });
+  });
+
+  myStar.lineWidth = 5;
+  myStar.strokeStyle = myStar.hover ? 'crimson'    : 'orange';
+  myStar.fillStyle   = myStar.click ? 'lightgreen' : 'yellow';
+
+  myStar.draw();
+
+  if (frame > 1000) return;
+
+  // re-render in a loop
+  Foo.setState({
+    frame: frame + 1,
   });
 };
 
@@ -105,10 +187,12 @@ setTimeout(() => {
       tooltip.innerHTML = `
         <br>  Mouse  x,y: ${event.offsetX}, ${event.offsetY}
         <br>   Object id: ${context.hoverObj.id}
-        <br>Object props: ${context.hoverObj.props}
-        <br>Object drag: ${context.hoverObj.drag}
+        <br>Object props: ${typeof context.hoverObj.props === 'object' ? JSON.stringify(context.hoverObj.props) : context.hoverObj.props}
+        <br>Object drag: ${!!context.hoverObj.drag}
       `;
     }
+    // you can also check `myShape.drag` here
+
   }, false);
 
   context.canvas.addEventListener('mousedown', event => {
@@ -120,11 +204,13 @@ setTimeout(() => {
 
 
 // move stuff around a bit in an animated loop
-const loop = setInterval(() => {
-  Foo.setState({
-    frame: Foo.state.frame + 1,
-  });
-}, 1000 / 60);
+//const loop = setInterval(() => {
+//  if (Foo.state.frame < 500) {
+//    Foo.setState({
+//      frame: Foo.state.frame + 1,
+//    });
+//  }
+//}, 1000 / 30);
 
 </script>
 </body>
