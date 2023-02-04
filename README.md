@@ -1574,8 +1574,13 @@ Features:
 
 - interactive canvas:
   - create interactive "canvas objects" using very simple API
-  - re-style the "canvas objects" on `hover`, `click` and `drag`
-- extra drawing methods: 
+  - update "canvas objects" on `hover`, `click`, `drag` and `release`
+  - easily style your "canvas objects"
+  - define your own, custom "canvas objects" to interact with
+  - flexible syntax and extendable API
+- a simple camera:
+  - pan, scale, rotate
+- extra drawing methods built-in: 
   - arrows and arced arrows
   - cardinals splines (smooth curves, with segments and optional points) 
   - circles & ellipses 
@@ -1588,18 +1593,15 @@ Features:
   - stars
   - triangles
   - more..
-- a simple camera:
-  - pan, scale, rotate
 - chainable API:
   - all methods are chainable unless they return something (see regular canvas API)
 - maths helper functions:
-  - convert between radians/degrees, get distances, etc
+  - convert between radians/degrees, get distances, angles, lerp, etc
 - save to image and video:
   - embed SVG as code, Element or file with `ctx.drawImg()`, which handles caching for you
   - save canvas as an image with `ctx.canvas.image.saveAs('filename.png')`
   - record canvas to video with `ctx.canvas.video.record()`
   - save the video with `ctx.canvas.video.saveAs('filename.webm')`
-- less than 5kb, minified & gzipped
 
 Note: 
 
@@ -1723,7 +1725,7 @@ ctx.canvas.addEventListener('mousedown', event => {
 }, false);
 ```
 
-See [examples/usage-Ctx-interactive.html](examples/usage-Ctx-interactive.html) for more information.
+There's loads more features - see [examples/usage-Ctx-interactive.html](examples/usage-Ctx-interactive.html) for more information.
 
 
 ### Additional methods provided by `Ctx`
