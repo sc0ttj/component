@@ -39,13 +39,9 @@ const Foo = new Component({ frame: 0, x: 280, y: 100 });
 // a reference to Foo.ctx, so we can access it outside the components view
 let context,
     // objects used by our interactive canvas
-    filledRect,
+    myRect,
     myMickey,
-    myStar,
-    myStarFill,
-    myStarStroke,
-    myStarX = 200,
-    myStarY = 400;
+    myStar;
 
 // define a "view", that draws to the components canvas
 Foo.view = (props, ctx) => {
@@ -55,11 +51,14 @@ Foo.view = (props, ctx) => {
     ctx.size(640, 480);
     // keep references for outside the Foo component
     context = ctx;
-    // create interactive objects, using `ctx.create`
-    filledRect = ctx.create.rect(30, 30, 200, 200);
-    myStar = ctx.create.star(myStarX, myStarY, 50, 5, 0);
-    // extend the ctx.create API with a new drawing function:
-    // * all 3 circles will be seen as _one_ "canvas object"
+
+    // Create interactive objects, using `ctx.create`
+    //myStar = ctx.create.star(100, 100, 50, 5, 0);
+    myStar = ctx.create.star({ x: 200, y: 400, radius: 50, points: 5, angle: 0 });
+    myRect = ctx.create.rect({ x: 30, y: 30, w: 200, h: 200 });
+
+    // Lets define a *new*, custom "interactive canvas object":
+    //  ...all 3 circles will be seen as _one_ object
     ctx.create('mickey', function(x, y, r) {
       [ctx, ctx.shadowCtx ].forEach(c => {
         c.beginPath();
@@ -69,62 +68,80 @@ Foo.view = (props, ctx) => {
         c.closePath();
       });
     });
-    // now lets use it
-    myMickey = ctx.create.mickey(100, 100, 80);
+    myMickey = ctx.create.mickey({ x: 100, y: 100, r: 80 });
+
+    console.log('myStar', myStar);
+    console.log('myRect', myRect);
+    console.log('myMickey', myMickey);
   }
 
   ctx.clear()  // using `clear(true)` will clear transforms too
 
-  myMickey.onClick(props => console.log('mickey CLICK!'));
-  myMickey.onHover(props => console.log('mickey HOVER!'));
+  myMickey.on('click', props => console.log('mickey CLICK!'));
+  myMickey.on('hover', props => console.log('mickey HOVER!'));
+
   if (myMickey.drag) {
-    myMickey.update(ctx.mouse.x, ctx.mouse.y, 80);
+    // update the props
+    //myMickey.update({ x: ctx.mouse.x, y: ctx.mouse.y });
+    // ...or set using the *named* props (only works if we defined props as an object)
+    myMickey.x = ctx.mouse.x;
+    myMickey.y = ctx.mouse.y;
   }
+
+  // any ctx style props can be added to a "canvas object"
+  myMickey.fillStyle = myMickey.hover ? 'lightgreen' : 'cyan';
+
+  // any styles passed into draw() override all others
   myMickey.draw({
     fillStyle: myMickey.hover ? '#c0c' : '#333',
   });
 
+  // lets use `adjust`: adds the given values to its current properties
+  myRect.adjust({ x: 0.25, y: 0, w: 0, h: 0 });
+  // which is the same as:
+  myRect.adjust({ x: 0.25 });
 
-  filledRect.update(30+(frame/2), 30, 200, 200);
-
-  filledRect.draw({
-    fillStyle: filledRect.hover ? 'yellow' : 'lightblue',
-    strokeStyle: filledRect.hover ? 'red' : 'blue',
+  myRect.draw({
+    fillStyle: myRect.hover ? 'yellow' : 'lightblue',
+    strokeStyle: myRect.hover ? 'red' : 'blue',
     lineWidth: 3,
   });
 
-  myStarFill = myStar.click ? 'lightgreen' : 'yellow';
-  myStarStroke = myStar.hover ? 'red' : 'orange';
-
   if (myStar.drag) {
-    myStarX = ctx.mouse.x;
-    myStarY = ctx.mouse.y + myStar.props[2]/4;
-    myStar.update(myStarX, myStarY, 50, 5, 0);
+    // now update it
+    myStar.update({ x: ctx.mouse.x, y: ctx.mouse.y });
+    // or simply (same as above)
+    myStar.x = ctx.mouse.x;
+    myStar.y = ctx.mouse.y;
+    // ...optionally interpolate the values
+    //myStar.x += (ctx.mouse.x - myStar.x) * 0.1;
+    //myStar.y += (ctx.mouse.y - myStar.y) * 0.1;
+    // ..which is the same as
+    //myStar.x =  ctx.lerp(myStar.x, ctx.mouse.x, 0.01);
+    //myStar.y =  ctx.lerp(myStar.y, ctx.mouse.y, 0.01);
   }
 
   // or use event handlers  -  onHover, onClick, onDrag
-  myStar.onHover(d => {
+  myStar.on('hover', d => {
     console.log('myStar hover', d.shape);
   });
-  myStar.onClick(d => {
+  myStar.on('click', d => {
     console.log('myStar clicked', d.id);
   });
-  myStar.onRelease(d => {
+  myStar.on('release', d => {
     console.log('myStar released', d.id);
   });
-  myStar.onDrag(d => {
+  myStar.on('drag', d => {
     console.log('myStar dragging', d.props);
-    // note that using `myStar.drag` (as above) works better
-    //myStarX = ctx.mouse.x;
-    //myStarY = ctx.mouse.y + d.props[2]/4;
-    //myStar.update(myStarX, myStarY, 50, 5, 0);
+    // note that using `myStar.drag` (as above) works better than `onDrag()`
+    //myStar.update({ x: ctx.mouse.x, y: ctx.mouse.y });
   });
 
-  myStar.draw({
-    fillStyle: myStarFill,
-    strokeStyle: myStarStroke,
-    lineWidth: 5,
-  });
+  myStar.lineWidth = 5;
+  myStar.strokeStyle = myStar.hover ? 'crimson'    : 'orange';
+  myStar.fillStyle   = myStar.click ? 'lightgreen' : 'yellow';
+
+  myStar.draw();
 
   if (frame > 1000) return;
 
@@ -153,15 +170,11 @@ setTimeout(() => {
       tooltip.innerHTML = `
         <br>  Mouse  x,y: ${event.offsetX}, ${event.offsetY}
         <br>   Object id: ${context.hoverObj.id}
-        <br>Object props: ${context.hoverObj.props}
-        <br>Object drag: ${context.hoverObj.drag}
+        <br>Object props: ${typeof context.hoverObj.props === 'object' ? JSON.stringify(context.hoverObj.props) : context.hoverObj.props}
+        <br>Object drag: ${!!context.hoverObj.drag}
       `;
     }
-    //if (myStar && myStar.drag) {
-    //  myStarX = context.mouse.x;
-    //  myStarY = context.mouse.y + myStar.props[2]/4;
-    //  myStar.update(myStarX, myStarY, 50, 5, 0);
-    //}
+    // you can also check `myShape.drag` here
 
   }, false);
 

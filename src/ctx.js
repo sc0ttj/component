@@ -72,6 +72,56 @@ const DEG2RAD = PI / 180;
 
 /* TODO
 
+IDEA - unified touch/mouse/pointer events (mattdesl)
+
+IDEA - keyboard handlers
+
+    ctx.keyCodes   // null if none, or array of keyCode pressed
+    ctx.keyDown
+    ctx.keyUp
+
+
+DONE IDEA - alternative way to update a "canvas object"
+
+    myStar.update(0, 0, 100)  // set the props to the values given - DONE
+    myStar.adjust(1, -1, 0)   // adjust the props by values given
+
+DONE IDEA - alternative way to update "canvas object" styles
+
+    myStar.fillStyle = '#c00';
+    myStar.draw()      // styles optional, will override others if given (as object)
+
+DONE IDEA - optionally define NAMED props ("canvas object" props as object)
+
+  ctx.create('fooShape', ({ x: 0, y: 0, r: 0 }) => {
+    // draw stuff
+  });
+  const myShape = ctx.create.fooShape({ x: 10, y: 10, r: 50 });
+
+  myShape.props  // returns { x: 10, y: 10, r: 50 }
+
+  myShape.update({ x: 0, y: 0, r: 50 }); // update all props
+  myShape.update({ r: 50 });             // update specific props
+  myShape.adjust({ r: 10 });             // adjust specific props
+
+  myShape.r                  // return myShape.props.r
+  myShape.r = 50;            // update myShape.props.r
+
+
+
+GREAT LERP DEMO (nice flowing circle movement):
+
+  https://codepen.io/ma77os/pen/OJPVrP?editors=0010
+
+Useful funcs:
+
+    const isBrowserTabInView = () => document.hidden;
+    const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+
+
+
+
 - responsive canvas:
   - auto resize on screen/orientation change
   - option to maintain aspect ratio
@@ -101,28 +151,19 @@ const DEG2RAD = PI / 180;
   - https://github.com/despeset/ctxShark/blob/master/ctxShark.js
 
 
-- maths:
-    - axes:
-      - generic X and Y axis generation, with ticks and labels
 
-    - plotting
-      - http://javascripter.net/faq/plotafunctiongraph.htm
-      - see https://github.com/d12/QuickPlotJS
+- interpolate colors and numbers: https://github.com/worksbyscott/Interpolator/blob/main/interpolator.js
 
-    - https://github.com/mattdesl/canvas-sketch-util/blob/master/docs/math.md
+- lerp for 2d coordinates
 
-    - interpolate colors and numbers: https://github.com/worksbyscott/Interpolator/blob/main/interpolator.js
-
-    - lerp for 2d coordinates
-
-          function lerp2d([x0, y0] = [], [x1, y1] = [], t) {
-            return [
-              lerp(x0, x1, t),
-              lerp(y0, y1, t),
-            ];
-          }
-          // usage
-          lerp2d([px,py], [x,y])
+      function lerp2d([x0, y0] = [], [x1, y1] = [], t) {
+        return [
+          lerp(x0, x1, t),
+          lerp(y0, y1, t),
+        ];
+      }
+      // usage
+      lerp2d([px,py], [x,y])
 
 
 === STUFF BELOW NEEDS ANIMATION LOOP ===
@@ -167,18 +208,6 @@ const DEG2RAD = PI / 180;
   - narrow phase (actual detecting of collisions)
     - ?
 
-- easy events
-
-  - use the canvas-color-tracker above inside `ctx.create[someShape]` functions
-
-      const rr = ctx.create.roundedRect(x,y,w,h,r);  // caches and returns {x,y,w,h,r}
-      rr.draw();
-      rr.on('mouseover', function(e) {
-        this // equals rr
-        e    // equals event
-      });
-
-
 - map/background generator and tiler
     - https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps
     - https://developer.mozilla.org/en-US/docs/Games/Techniques/Tilemaps/Square_tilemaps_implementation:_Static_maps
@@ -219,13 +248,6 @@ const DEG2RAD = PI / 180;
 - field of view
     - see https://legends2k.github.io/2d-fov/  and  https://github.com/legends2k/2d-fov
 
-
-- mouse interactivity - add properties that can be used by a useControls() addon
-
-     function getMousePos(event) {
-        var rect = ctx.canvas.getBoundingClientRect();
-        ctx.mouse = {x:(event.clientX-rect.left)/ctx.canvas.scale, y:(event.clientY-rect.top)/ctx.canvas.scale};
-      }
 
 - node graph
   - see https://github.com/paulfears/Graphs
@@ -1107,44 +1129,84 @@ const Ctx = function(origCtx, c) {
   // This function generates "canvas objects" which can be
   // hovered, clicked, dragged, etc, using `ctx.create`
   const generateCanvasObject = (fnName, props, drawFn) => {
-	  // Inside obj, `this` refers to the extended context
+    // The `props` may be an object, or array of values, so lets handle that now
+    const propsIsObj = props.length === 1 && typeof props[0] === 'object';
+	  // Inside `obj`, `this` refers to our extended context (ctx)
 	  const obj = {
 	    shape: fnName,
-	    props: [...props],
-	    update: (...props) => obj.props = [...props],
+	    // used internally  -  the params given when creating the "canvas object"
+	    props: propsIsObj ? props[0] : [...props],
+	    // myShape.update(props)  -  where props is an object or multiple separate params
+	    update: (...props) => obj.props = propsIsObj ? { ...obj.props, ...props[0] } : [...props],
+	    // myShape.adjust(props)  -  where props is an object or multiple separate params
+	    adjust: (...props) => {
+	      if (propsIsObj) {
+          Object.keys(props[0]).forEach(key => obj.props[key] += props[0][key]);
+	      } else {
+	        props.forEach((prop, i) => obj.props[i] += prop);
+	      }
+	    },
+	    // myShape.draw(stylesObj)  -  stylesObj is optional
 	    draw: (styles) => {
-	      const props = obj.props,
+	      const props = propsIsObj ? Object.values(obj.props) : [...obj.props],
 	            c = this.shadowCtx;
+	      let appliedStyles = 0;
+
+	      // apply any styles attached as props
+	      ctxProps.forEach(key => {
+	        if (obj[key]) {
+	          this[key](obj[key]);
+	          appliedStyles += 1;
+	        }
+	      });
+	      // apply any styles passed into draw()
 	      if (styles) {
 	        for (let [key, value] of Object.entries(styles)) {
-	          this[key](value);
+	          if (this[key]) {
+	            this[key](value);
+              appliedStyles += 1;
+            }
 	        }
 	      }
+	      // run the draw function for this shape
 	      if (!drawFn) {
 	        this.beginPath().save();
-	        this[fnName](...props).fill().stroke().closePath().restore();
+	        this[fnName](...props);
+	        if (appliedStyles) {
+	          this.fill();
+	          this.stroke();
+	        }
+	        this.closePath().restore();
 	      } else {
 	        drawFn(...props);
 	      }
-	      // draw `obj` to an off-screen canvas, using the unique color
+	      // draw `obj` to shadow canvas using the unique color
 	      c.beginPath();
 	      c.fillStyle = obj.id;
 	      c[fnName](...props);
 	      c.fill();
 	    },
 	    // let user set event handlers
-	    onHover: fn => obj.hoverHandler = fn,
-	    onClick: fn => obj.clickHandler = fn,
-	    onRelease: fn => obj.releaseHandler = fn,
-	    onDrag: fn => obj.dragHandler = fn,
+	    on: (name, fn) => obj[`${name}Handler`] = fn,
 	  };
+
+	  // If `obj.props` is an object, add getters/setters for each prop to `obj`:
+	  //   myShape.x       // return myShape.props.x
+	  //   myShape.x = 50; // update myShape.props.x
+	  if (propsIsObj) {
+	    Object.keys(props[0]).forEach((key, i) => {
+	      Object.defineProperty(obj, `${key}`,
+	        get() { return this.props[key]; },
+	        set(value) { this.props[key] = value; },
+	        enumerable: true,
+	        configurable: true,
+	      });
+	    });
+	  }
 
 	  // get the unique color as an id
 	  obj.id = this.register(obj);
 	  if (!obj.id) return Error('registry is full')
-
-	  // draw on regular and shadow canvas
-	  obj.draw(...props)
 
 	  return obj;
   }
@@ -1242,19 +1304,17 @@ const Ctx = function(origCtx, c) {
     this.hoverObj = this.objectAt(e.offsetX, e.offsetY);
     const o = this.hoverObj;
     if (o && o.id) {
-      o.hover = true;
       // drag and drop
       const { dragStart, dragEnd } = m;
-      o.drag = false;
+      //o.drag = false;
       if (dragStart && !dragEnd) {
         o.drag = true;
         // run event handler
-        if (o.onDrag && o.dragHandler) o.dragHandler(o);
+        if (o.dragHandler) o.dragHandler(o);
       }
+      o.hover = true;
       // run event handler
-      if (o.onHover && o.hoverHandler && !o.drag) {
-        o.hoverHandler(o);
-      }
+      if (o.hoverHandler && !o.drag) o.hoverHandler(o);
     } else {
       this.hoverObj = null;
     }
@@ -1266,12 +1326,10 @@ const Ctx = function(origCtx, c) {
           o = this.hoverObj;
     if (o && o.id) {
       o.click = true;
-      // run event handler
-      if (o.onClick && o.clickHandler) o.clickHandler(o);
+      if (o.clickHandler) o.clickHandler(o);
     }
-    // drag n drop
-    m.dragEnd = null;
     // if we didnt start dragging yet, start dragging
+    m.dragEnd = null;
     if (!m.dragStart) m.dragStart = { x: e.offsetX, y: e.offsetY };
   }, false);
 
@@ -1281,11 +1339,10 @@ const Ctx = function(origCtx, c) {
           o = this.hoverObj;
     if (o && o.id) {
       o.click = false;
+      if (o.releaseHandler) o.releaseHandler(o);
       o.drag = false;
-      // run event handler
-      if (o.onRelease && o.releaseHandler) o.releaseHandler(o);
     }
-    // drag n drop: if we were dragging the cursor, end dragging
+    // if we were dragging, end dragging
     if (m.dragStart) m.dragEnd = { x: e.offsetX, y: e.offsetY };
   }, false);
 
