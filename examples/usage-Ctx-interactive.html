@@ -81,6 +81,21 @@ Foo.view = (props, ctx) => {
   //
   ctx.clear()  // using `clear(true)` will clear transforms too
 
+  // update a shape, but dont redraw it
+  myRect.update({ w: 160 });
+  // lets use `adjust`: adds the given values to its current properties
+  myRect.adjust({ x: 0.25, y: 0, w: 0, h: -0.15 });
+  // which is the same as:
+  myRect.adjust({ x: 0.25, h: -0.15 });
+  // now render, optionally pass in some styles if needed/desired
+  myRect.draw({
+    fillStyle: myRect.hover ? 'yellow' : 'lightblue',
+    strokeStyle: myRect.hover ? 'red' : 'blue',
+    lineWidth: 3,
+  });
+
+  // ...
+
   myMickey.on('click', props => console.log('mickey CLICK!'));
   myMickey.on('hover', props => console.log('mickey HOVER!'));
 
@@ -89,36 +104,25 @@ Foo.view = (props, ctx) => {
 
   if (myMickey.drag) {
     // update the props
-    //myMickey.update({ x: ctx.mouse.x, y: ctx.mouse.y });
-    // ...or set using the *named* props (only works if we defined props as an object)
+    myMickey.update({ x: ctx.mouse.x, y: ctx.mouse.y });
+    // ...or set using the *named* props (only works if we defined the props as an object)
     myMickey.x = ctx.mouse.x;
     myMickey.y = ctx.mouse.y;
   }
 
   // you can also update props and styles using functions
-  if (myMickey.hover) {
+  if (myMickey.click) {
     myMickey.r = r => (r < 100) ? r + 2 : r; // grow the radius up to 100
   } else {
     myMickey.r = r => (r >  80) ? r - 2 : r; // shrink radius down to 80
   }
 
-  // look out - any styles passed into draw() override all others
+  // careful, any styles passed into draw() override all others
   myMickey.draw({
     //fillStyle: myMickey.hover ? '#c0c' : '#333',
   });
 
   // ...
-
-  // lets use `adjust`: adds the given values to its current properties
-  myRect.adjust({ x: 0.25, y: 0, w: 0, h: 0 });
-  // which is the same as:
-  myRect.adjust({ x: 0.25 });
-
-  myRect.draw({
-    fillStyle: myRect.hover ? 'yellow' : 'lightblue',
-    strokeStyle: myRect.hover ? 'red' : 'blue',
-    lineWidth: 3,
-  });
 
   if (myStar.drag) {
     // now update it
@@ -134,7 +138,7 @@ Foo.view = (props, ctx) => {
     //myStar.y =  ctx.lerp(myStar.y, ctx.mouse.y, 0.01);
   }
 
-  // or use event handlers  -  onHover, onClick, onDrag
+  // or use event handlers
   myStar.on('hover', d => {
     console.log('myStar hover', d.shape);
   });
