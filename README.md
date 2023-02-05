@@ -1568,7 +1568,7 @@ function Foo(state, schema) {
 
 ## Using the `Ctx` module
 
-If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more. 
+If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds interactivity, new drawing methods & shapes, save as image and video, a chainable API and much more. 
 
 It is only 5.6kb minified and gzipped.
 
