@@ -21,6 +21,12 @@
  *
  */
 
+const isType = (v,t) => typeof v === t,
+      isFn = v => isType(v, 'function'),
+      isObj = v => isType(v, 'object'),
+      isNum = v => isType(v, 'number'),
+      isArray = v => Array.isArray(v);
+
 const ctxMethods = 'arc arcTo beginPath bezierCurveTo clearRect clip closePath createImageData createLinearGradient createRadialGradient createPattern drawFocusRing drawImage fill fillRect fillText getImageData isPointInPath lineTo measureText moveTo putImageData quadraticCurveTo rect restore rotate save scale setTransform stroke strokeRect strokeText transform translate'.split(' ');
 const ctxProps = 'canvas fillStyle font globalAlpha globalCompositeOperation lineCap lineJoin lineWidth miterLimit shadowOffsetX shadowOffsetY shadowBlur shadowColor strokeStyle textAlign textBaseline'.split(' ');
 
@@ -259,20 +265,20 @@ function downloadBlobAs(blob, name) {
 // draw arrow heads
 const drawHead = function(ctx,x0,y0,x1,y1,x2,y2,style) {
   // all cases do this.
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(x0,y0);
-  ctx.lineTo(x1,y1);
-  ctx.lineTo(x2,y2);
+  ctx.save()
+     .beginPath()
+     .moveTo(x0,y0)
+     .lineTo(x1,y1)
+     .lineTo(x2,y2);
   switch(style) {
     case 0:
       // straight filled, add the bottom as a line and fill.
-      ctx.beginPath();
-      ctx.moveTo(x0,y0);
-      ctx.lineTo(x1,y1);
-      ctx.lineTo(x2,y2);
-      ctx.lineTo(x0,y0);
-      ctx.fill();
+      ctx.beginPath()
+         .moveTo(x0,y0)
+         .lineTo(x1,y1)
+         .lineTo(x2,y2)
+         .lineTo(x0,y0)
+         .fill();
       break;
     case 1:
       //filled head, add the bottom as a quadraticCurveTo curve and fill
@@ -345,7 +351,6 @@ const extraMethods = {
       c.translate(-x, -y);
     });
   },
-
   // "green screen" filter - replaces green (by default) pixels with transparent ones
   chromaKey: function(tolerance = 150, color = [0,255,0]) {
     const t = tolerance > 250 ? 250 : tolerance; // more than 255 produces weird results
@@ -932,9 +937,9 @@ const extraMethodNames = Object.keys(extraMethods);
 * @param {Component} c	the @scottjarvis/component to which the ctx is attached (optional)
 */
 const Ctx = function(origCtx, c) {
-  let n = ctxMethods.length;
-  let curProp;
-  let chunks;
+  let n = ctxMethods.length,
+      curProp,
+      chunks;
   const supportedType = (!!window.MediaRecorder) ? getVideoMimeType() : false;
 
   /**
@@ -1092,7 +1097,7 @@ const Ctx = function(origCtx, c) {
   // hovered, clicked, dragged, etc, using `ctx.create`
   const generateCanvasObject = (fnName, props, drawFn) => {
     // The `props` may be an object, or array of values, so lets handle that now
-    const propsIsObj = props.length === 1 && typeof props[0] === 'object';
+    const propsIsObj = props.length === 1 && isObj(props[0]);
 	  // Inside `obj`, `this` refers to our extended context (ctx)
 	  const obj = {
 	    shape: fnName,
@@ -1118,7 +1123,7 @@ const Ctx = function(origCtx, c) {
 	      ctxProps.forEach(key => {
 	        const v = obj[key];
 	        if (v) {
-	          const val = typeof v === 'function' ? v(this[key]()) : v;
+	          const val = isFn(v) ? v(this[key]()) : v;
 	          this[key](val);
 	          appliedStyles += 1;
 	        }
@@ -1127,7 +1132,7 @@ const Ctx = function(origCtx, c) {
 	      if (styles) {
 	        for (let [key, v] of Object.entries(styles)) {
 	          if (this[key]) {
-	            const val = typeof v === 'function' ? v(this[key]()) : v;
+	            const val = isFn(v) ? v(this[key]()) : v;
 	            this[key](val);
               appliedStyles += 1;
             }
@@ -1160,8 +1165,7 @@ const Ctx = function(origCtx, c) {
 	      Object.defineProperty(obj, `${key}`, {
 	        get() { return this.props[key]; },
 	        set(v) { // v for value
-	          const val = typeof v === 'function' ? v(this.props[key]) : v;
-	          this.props[key] = val;
+	          this.props[key] = isFn(v) ? v(this.props[key]) : v;
 	        },
 	        enumerable: true,
 	        configurable: true,
@@ -1198,18 +1202,19 @@ const Ctx = function(origCtx, c) {
 
   // unique color for every item drawn to off-screen canvas:
   // * shamelessly stolen from https://github.com/vasturiano/canvas-color-tracker
-  const ENTROPY = 123; // Raise numbers to prevent collisions in lower indexes
-  const checksum = (n, csBits) => (n * ENTROPY) % Math.pow(2, csBits);
-  const int2hex = num => `#${Math.min(num, Math.pow(2, 24)).toString(16).padStart(6, '0')}`;
-  const rgb2Int = (r, g, b) => (r << 16) + (g << 8) + b;
-  const hex2rgb = (hex) => {
-    const rgb = parseInt(hex.replace('#',''), 16),
-          r = (rgb >> 16) & 0xFF,
-          g = (rgb >> 8) & 0xFF,
-          b = rgb & 0xFF;
-    return [r,g,b];
-  };
-  const csBits = 6;
+  const ENTROPY = 123, // Raise numbers to prevent collisions in lower indexes
+        csBits = 6,
+        checksum = (n, csBits) => (n * ENTROPY) % Math.pow(2, csBits),
+        int2hex = num => `#${Math.min(num, Math.pow(2, 24)).toString(16).padStart(6, '0')}`,
+        rgb2Int = (r, g, b) => (r << 16) + (g << 8) + b,
+        hex2rgb = (hex) => {
+          const rgb = parseInt(hex.replace('#',''), 16),
+                r = (rgb >> 16) & 0xFF,
+                g = (rgb >> 8) & 0xFF,
+                b = rgb & 0xFF;
+          return [r,g,b];
+        };
+
   // remember all canvas objects in this registry:
   this.registry = ['__reserved_for_background__'];
 
@@ -1218,9 +1223,9 @@ const Ctx = function(origCtx, c) {
     if (this.registry.length >= Math.pow(2, 24 - csBits)) { // color has 24 bits (-checksum)
       return null; // Registry is full
     }
-    const idx = this.registry.length;
-    const cs = checksum(idx, csBits);
-    const color = int2hex(idx + (cs << (24 - csBits)));
+    const idx = this.registry.length,
+          cs = checksum(idx, csBits),
+          color = int2hex(idx + (cs << (24 - csBits)));
     this.registry.push(obj);
     return color;
   };

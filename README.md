@@ -1570,6 +1570,8 @@ function Foo(state, schema) {
 
 If using a `<canvas>` to render components, you can **optionally** extend it using `Ctx`, which adds new drawing methods & shapes, save as image and video, a chainable API and more. 
 
+It is only 5.6kb minified and gzipped.
+
 Features:
 
 - interactive canvas:
@@ -1675,6 +1677,34 @@ See [examples/usage-Ctx.html](examples/usage-Ctx.html) for examples and more inf
 Just use `ctx.create.rect()` instead of `ctx.rect()` (etc) and an interactive "canvas object" will be returned.
 
 ```js
+// define an interactive "canvas object"
+const myRect = ctx.create.rect(x, y, w, h);
+```
+Your interactive canvas objects will have the following methods:
+
+- `myShape.update(...)` - set the objects params to new values
+- `myShape.adjust(...)` - update the current values by given amounts
+- `myShape.draw(...)` - render the object to the canvas, optionally pass in a styles object
+
+Your interactive canvas objects will have the following properties:
+
+- `myShape.hover`
+- `myShape.click`
+- `myShape.drag`
+- `myShape.release`
+
+You can check these properties to handle the interactivity.
+
+Or use the event handlers instead:
+
+- `myShape.on('hover', someFunc)` - run some function on hover
+- `myShape.on('click', someFunc)` - run some function on click
+- `myShape.on('drag', someFunc)` - run some function on drag
+- `myShape.on('release', someFunc)` - run some function on release
+
+Here's a usage example:
+
+```js
 // enable the enhanced canvas 2dContext API
 Component.Ctx = Ctx;
 
@@ -1725,7 +1755,7 @@ ctx.canvas.addEventListener('mousedown', event => {
 }, false);
 ```
 
-There's loads more features - see [examples/usage-Ctx-interactive.html](examples/usage-Ctx-interactive.html) for more information.
+There's loads more features too - see [examples/usage-Ctx-interactive.html](examples/usage-Ctx-interactive.html) for more information.
 
 
 ### Additional methods provided by `Ctx`
