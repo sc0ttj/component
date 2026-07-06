@@ -7,6 +7,45 @@
 // - https://github.com/afar/robinson_projection
 
 
+// should also learn/steal from these sources:
+
+// general
+// - https://github.com/chrisveness/geodesy ... the big daddy
+// - https://github.com/perfectline/geopoint/blob/master/geopoint.js  ... convert latlongs, decimal degrees <--> degrees, mins, seconds
+
+// conversions
+// - https://gist.github.com/simonredding/4faa1d26bf1ee700125c ... OS national grid (easting, northing)
+// - https://gist.github.com/onderaltintas/6649521 ... degrees2metres, metres2degrees
+
+// bearings
+// - https://gist.github.com/laminr/362f4c5b38cb70fadcaf   ... lat long, bearing, etc
+// - https://stackoverflow.com/a/68961818 ...  Get lat/long given current point, distance and bearing,
+
+// spherical stuff
+// - https://github.com/mapbox/sphericalmercator/
+// - https://stackoverflow.com/questions/10035150/html5-canvas-wireframe-sphere-in-2d  ... cool sphere
+// - https://github.com/NotWoods/spherical-geometry-js ... spherical geometry, readable, concise
+
+// gps
+// - https://stackoverflow.com/a/18618076 ... parse_gps(), a very small, versatile function
+
+// geojson
+// - https://stackoverflow.com/a/69129674 ... tiny, simple JSON to GeoJSON functions
+// - https://github.com/caseycesari/GeoJSON.js ... convert array of objects to GeoJSON
+// - https://github.com/johnpoh/json2geojson  ...  JSON to GeoJSON
+// - https://gist.github.com/IagoLast/d6575a79fa279f450947244bba81f098  ... tiny GeoJSON parser, very simple Web Mercator projection
+// - https://github.com/shubhgupta4u/geojson-parser-js/blob/master/models/geojson.js  ... more advanced GeoJSON parser
+// - https://github.com/DanElliottPalmer/GeoJSON-Parser ... GeoJSON and TopoJSON parser (rip out the Google Maps stuff)
+// - https://gist.github.com/seyuf/ab9c980776e4c2cb350a2d1e70976517 ... Calculate GeoJson polygon center in javascript
+// - https://github.com/eivinhb/geojson-flip  ... flip long/lat to lat/long if needed
+// - https://github.com/maxogden/geojson-js-utils ... geojson utils (check if lines overlap, if point inside feature, etc)
+
+
+
+// KML to GeoJSON
+// - https://github.com/mapbox/togeojson
+
+
 // some helpers
 const degToRad = Math.PI/180;
 //const radToDeg = 180/Math.PI;
@@ -203,8 +242,40 @@ const milesToKm = function(mi) {
 }
 
 
-const arr = [RobinsonMap, MercatorMap];
+// @TODO [WIP] draw GeoJSON to either map (robinson or mercator)
+const drawGeoJson = (geoJson, latLongToPx) => {
+  let i = 0;
+  function getColor() {
+      return `rgb(${i++ % 255}, ${180}, ${255})`;
+  }
+
+  /**
+   * Given a list of coordinates, draw into a rendering context a polygon.
+   */
+  function drawPolygon(ctx, coords, latLongToPx) {
+      ctx.fillStyle = getColor();
+      ctx.beginPath();
+      const initialCoords = coords.shift();
+      const initialPoint = latLongToPx(...initialCoords);
+      ctx.moveTo(initialPoint.x, initialPoint.y);
+      coords.map(latLongToPx).forEach(point => ctx.lineTo(point.x, point.y));
+      ctx.closePath();
+      ctx.fill();
+  }
+
+  geoJson.features.forEach(feature => {
+      if (feature.geometry.type === 'Polygon') {
+          drawPolygon(map, feature.geometry.coordinates[0]);
+      }
+      if (feature.geometry.type === 'MultiPolygon') {
+          feature.geometry.coordinates.forEach(coords => drawPolygon(map, coords[0]));
+      }
+  });
+
+};
+
 // add methods defined above to BOTH map prototypes
+const arr = [RobinsonMap, MercatorMap];
 arr.forEach(map => {
   const m = map.prototype;
   m.getDistanceInKm  = getDistanceInKm;

@@ -17,7 +17,7 @@ const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=
     replace(t, s = t) {
       const v = d.createElement("template")
       v.innerHTML = s
-      const vHTML = v.content.firstChild.nextElementSibling
+      const vHTML = v.content.firstElementChild
       if (vHTML.nodeName !== t.nodeName) {
         t.parentElement.replaceChild(vHTML, t)
         return
@@ -42,14 +42,14 @@ const domDiff = (t, s) => { // from https://codepen.io/tevko/pen/LzXjKE?editors=
         ) {
           this.checkCtx(tn, sn)
           tn.nodeType !== 3 &&
-            t.nodeType !== 8 &&
+            tn.nodeType !== 8 &&
             this.checkAttrs(tn, sn)
         }
       }
       if (tn && sn) {
         if (tn.childNodes && sn.childNodes) {
           this.cfg.lengthDiff = [
-            ...t.childNodes,
+            ...tn.childNodes,
             ...sn.childNodes
           ]
         } else {
@@ -148,7 +148,7 @@ function Component(state, schema) {
 
   c.reactive = true                   // if true, re-render on every state change
   c.immutable = true                  // if true, freeze the state object after updating it
-  c.debug = devtools ? true : false   //  if true, maintain a history of state changes in `.log`
+  c.debug = false   //  if true, maintain a history of state changes in `.log`
   c.scopedCss = true                  // auto prefix component css with a unique id
   c.state = state                     // component state
   if (schema) c.schema = schema       // component schema (optional)
@@ -174,6 +174,8 @@ function Component(state, schema) {
     w = window
     d = document  // TODO: support shadow DOM - check the root, set accordingly
     raf = requestAnimationFrame
+  } else {
+    raf = (logFn) => setTimeout(() => logFn(), 1)
   }
 
   /**
@@ -223,7 +225,7 @@ function Component(state, schema) {
     return x && y && tx === "object" && tx === ty
       ? ok(x).length === ok(y).length &&
           ok(x).every(key => c.eq(x[key], y[key]))
-      : String(x) === String(y)
+      : Object.is(x, y)
   })
 
   /**
@@ -231,13 +233,13 @@ function Component(state, schema) {
    * @param {object} newState - the new state to update to
    */
   c.setState = (newState, callback) => {
-    const nextState = { ...c.state, ...newState };
     // get initial state from localStorage, if it's in there
     if (strg && !c.done) {
-      const pState = strg.getItem(c, nextState);
+      const pState = strg.getItem(c, { ...c.state, ...newState });
       if (pState) newState = { ...newState, ...pState };
     }
     c.done = true;
+    const nextState = { ...c.state, ...newState };
 
     // enable schema validation using @scottjarvis/validator
     if (validator && c.schema) {
@@ -252,7 +254,7 @@ function Component(state, schema) {
 
     // update previous and current state
     c.prev = c.state
-    c.state = { ...c.state, ...nextState }
+    c.state = nextState
 
     if (!c.eq(c.state, c.prev)) {
 
@@ -269,8 +271,6 @@ function Component(state, schema) {
 
       // c.tt = component is "time travelling" (traversing state history)
       if (c.debug && c.tt !== true) {
-        // if node, just use setTimeout
-        if (c.isNode) raf = (logFn) => setTimeout(() => logFn(), 1)
         t = raf(() => {
           // we are not traversing state history, so add the new state to the log
           c.log.push({
@@ -451,7 +451,7 @@ function Component(state, schema) {
 
         // auto-prefix CSS styles with a unique id,to "scope" the
         // styles to the component only
-        if (c.scopedCss) {
+        if (c.scopedCss && c.container) {
           const p = c.container.id ? "#" : "."
           // get container id, or class if no id
           let u = c.container.id ? c.container.id : c.container.className
@@ -616,11 +616,7 @@ function Component(state, schema) {
         c.html.firstChild.setAttribute('data-uid', c.uid)
         devtools.populateUI(c.html)
       }
-      // we should (probably!) clear/reset the `html.funcs` array here,
-      // because once the view has rendered, we don't need to keep its
-      // list of the event handlers
-      if (typeof html == 'function' && Array.isArray(html.funcs)) html.funcs = [];
-    })
+      })
 
     // return the container element
     return c.html

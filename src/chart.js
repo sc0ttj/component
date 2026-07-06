@@ -5,9 +5,24 @@
 
 // @TODO Fixes and improvements:
 //
-// - demo: radial bar chart            - just a bunch of arc charts, wrapped round like russian dolls (https://nivo.rocks/radial-bar/)
-// - demo: heatmap charts              - series of stacked bars, all stacked bits same size, covers whole area w, coloured by data
-// - demo: parallel charts             - like this one: https://datavizcatalogue.com/methods/parallel_coordinates.html
+// - demo: normalised stack bar chart - rescale data of all all bars to fill whole height/width of chart area
+// - demo: radial bar chart           - just a bunch of arc charts, wrapped round like russian dolls (https://nivo.rocks/radial-bar/)
+// - demo: heatmap charts             - series of stacked bars, all stacked bits same size, covers whole area w, coloured by data
+// - demo: parallel charts            - like this one: https://datavizcatalogue.com/methods/parallel_coordinates.html
+// - idea: mergeData()                - create dataset containing diff values between two datasets, create range(s) from 0 to value(s), animate in the diff range to useData()
+
+
+// POSSIBLE IMPROVEMENTS:
+//
+// tiny, clean date parsing function (formatted dates in axes)
+// - https://github.com/xxczaki/light-date
+// - or this one: https://github.com/lukeed/tinydate
+
+
+
+//
+// begin
+//
 
 const ctxMethods = 'arc arcTo beginPath bezierCurveTo clearRect clip closePath createImageData createLinearGradient createRadialGradient createPattern drawFocusRing drawImage fill fillRect fillText getImageData isPointInPath lineTo measureText moveTo putImageData quadraticCurveTo rect restore rotate save scale setTransform stroke strokeRect strokeText transform translate'.split(' ');
 const ctxProps = 'canvas fillStyle font globalAlpha globalCompositeOperation lineCap lineJoin lineWidth miterLimit shadowOffsetX shadowOffsetY shadowBlur shadowColor strokeStyle textAlign textBaseline'.split(' ');
@@ -59,7 +74,7 @@ const isFn = v => typeof v ==='function',
       axisMin  = range => isArray(range) ? isAxisFlipped(range)?range[1]:range[0] : 0,
       getRange = range => isArray(range) ? isAxisFlipped(range)?range[0]-range[1]:range[1]-range[0]: 0,
       deg2rad = deg => +deg*Math.PI/180,
-      getSumTotal = (array, prop) => array.filter(item => item[prop]).reduce((prev, cur) => prev + cur[prop], 0);
+      getSumTotal = (array, prop) => { var s = 0; for (var i = 0; i < array.length; i++) { if (array[i].hasOwnProperty(prop)) s += array[i][prop]; } return s; };
 
 
 // returns the scaled value of the given position in the given range
@@ -166,7 +181,9 @@ const getTextWidth  = (ctx, t) => ctx.measureText(t).width;
 
 const getTextHeight = (ctx, t) => {
   const metrics = ctx.measureText(t);
-  return metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent;
+  return (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent) ||
+         (metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent) ||
+         16;
 }
 
 
@@ -309,17 +326,13 @@ const extraMethods = {
 
         // Drawing pie slices
         // - just pass in the slice, all others are optional
-        const drawPieSlice = ({ slice = 0, totalDegrees = 360, px, py, radius = w-(w/100*50), innerRadius = 0, rotation = 0, style }) => {
-          // dont draw anything if blank data
-          if (Object.keys(d).length <= 5) return;
+        const drawPieSlice = ({ slice = 0, prop, totalDegrees = 360, px, py, radius = w-(w/100*50), innerRadius = 0, rotation = 0, style }) => {
+          if (!slice) return;
 
           const paramX = px||x+w/2,
                 paramY = py||y-h/2,
-                // get name of key/prop that "slice" represents:
-                // dumb method - just find a prop in `d` with a matching value
-                prop = Object.keys(d).find(k=>d[k]===slice),
-                // get the sum total in our dataset for that prop
-                sumTotal = getSumTotal(data[key], prop),
+                propName = prop || Object.keys(d).find(k => d[k] === slice),
+                sumTotal = getSumTotal(data[key], propName),
                 sliceAsPercOfTotal = slice/(sumTotal)*100,
                 sliceInDeg = sliceAsPercOfTotal*totalDegrees/100;
 
@@ -611,7 +624,7 @@ const extraMethods = {
   xAxis: function({ range, scale = 1, yPos = 0, tickLength = 5, label = false, labelBelow = true, tickLabelCentered = false, tickCentered = true, tickLabels, style, tickStyle }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
-          theRange = getRange(range),
+          theRange = getRange(range) || 1,
           labelLength = getTextWidth(this, label),
           labelHeight = getTextHeight(this, label),
           distanceBetweenTicks = Math.abs(w / theRange);
@@ -654,7 +667,7 @@ const extraMethods = {
   yAxis: function({ range, scale = 1, xPos = 0, tickLength = 5, label = false, labelLeft = true, tickCentered = true, tickLabels, style, tickStyle }) {
     const { w, h, x, y } = getDimensions(this),
           flippedAxis = range[0] > range[1],
-          theRange = getRange(range),
+          theRange = getRange(range) || 1,
           labelWidth = getTextWidth(this, label),
           labelHeight = getTextHeight(this, label),
           distanceBetweenTicks = Math.abs(h / theRange);

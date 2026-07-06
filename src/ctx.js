@@ -91,7 +91,100 @@ Useful funcs:
     const isBrowserTabInView = () => document.hidden;
     const darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-Responsive canvas:
+
+!! Math for motion
+
+  - lovely cheat sheet showing animations, and the code used to make them below it
+  - https://soulwire.co.uk/math-for-motion/
+
+
+!! Very fast, lightweight WebGL backend for 2d canvas:
+
+  - https://github.com/bitnenfer/tiny-canvas
+  - looks easy to setup
+  - 1.5kb gzipped
+
+
+!! AnimationFrame (not a "fixed time step" game loop, but a quality, simple animation loop)
+
+  - control fps of the loop, provides `delta` to your function, that's it
+  - https://gist.github.com/addyosmani/5434533?permalink_comment_id=2057320#gistcomment-2057320
+
+      class AnimationFrame {
+        constructor(fps = 60, animate) {
+          this.requestID = 0;
+          this.fps = fps;
+          this.animate = animate;
+        }
+
+        start() {
+          let then = performance.now();
+          const interval = 1000 / this.fps;
+          const tolerance = 0.1;
+
+          const animateLoop = (now) => {
+            this.requestID = requestAnimationFrame(animateLoop);
+            const delta = now - then;
+
+            if (delta >= interval - tolerance) {
+              then = now - (delta % interval);
+              this.animate(delta);
+            }
+          };
+          this.requestID = requestAnimationFrame(animateLoop);
+        }
+
+        stop() {
+          cancelAnimationFrame(this.requestID);
+        }
+      }
+
+
+!! mini shadertoy:
+
+  - use it to import shadertoy shaders into canvas
+  - https://github.com/xem/MiniShadertoy
+  - https://github.com/xem/MiniShadertoy/blob/gh-pages/js1k.html
+  - tutorial: https://www.shadertoy.com/view/Md23DV
+
+!! ShaderToy offline:
+
+  - https://github.com/eiffie/ShaderDemo
+  - includes nice 3d racing game!
+
+
+!! mini 2d physics
+
+  - https://xem.github.io/codegolf/mini2Dphysics.html
+  - 1.5kb minified and gzipped
+
+
+!! CoffeePhysics:
+
+    - has different integrators, physics types, webgl renderer
+    - https://github.com/soulwire/Coffee-Physics
+    - https://github.com/blakerego/Angular-Physics
+    - 3kb minified and gzipped
+
+
+!! js sphere
+
+  - https://github.com/fpfaffendorf/javascript-sphere/blob/master/js/graphics3d.js
+  - might be able to use it to warp a grid to a sphere
+
+
+!! 3d racing game in 2kb
+
+  - https://frankforce.com/how-i-made-a-3d-game-in-only-2k-of-javascript/
+
+
+!! rescale and rotate whole "canvas objects"
+
+  - https://github.com/rgab1508/PixelCraft/blob/master/lib/Transformation.js
+
+
+!! Responsive canvas:
+
   - auto resize on screen/orientation change
   - option to maintain aspect ratio
   - see https://github.com/Nelkor/ctx-2d/blob/master/index.js#L18
@@ -292,16 +385,13 @@ const drawHead = function(ctx,x0,y0,x1,y1,x2,y2,style) {
 };
 
 
-const shadowCanvas = document.createElement('canvas');
-const shadowCtx = shadowCanvas.getContext('2d');
-
 // Now define the extra methods to add/bind to our extended 2d canvas context
 const extraMethods = {
 
   // general helper funcs
   clear: function(resetTransform) {
     if (resetTransform === true) this.setTransform(1, 0, 0, 1, 0, 0);
-    [ this, shadowCtx ].forEach(c => {
+    [ this, this.shadowCtx ].forEach(c => {
       c.clearRect(0, 0, c.canvas.width * PIXEL_RATIO, c.canvas.height * PIXEL_RATIO);
     });
   },
@@ -323,7 +413,7 @@ const extraMethods = {
   size: function(w, h, a) {
     if (this.w === w && this.h === h) return; // if no new size, just return
     // for both real and shadow canvas:
-    [ this, shadowCtx ].forEach(c => {
+    [ this, this.shadowCtx ].forEach(c => {
       // if width or height not given, get them from aspect ratio
       c.w = w ? w : h * a;
       c.h = h ? h : w * a;
@@ -343,7 +433,7 @@ const extraMethods = {
 
   // a simple "camera"
   camera: function(x = 0, y = 0, scale = 1, degrees = 0) {
-    [ this, shadowCtx ].forEach(c => {
+    [ this, this.shadowCtx ].forEach(c => {
       c.resetTransform();
       c.translate(x, y);
       c.rotate(degrees * DEG2RAD);
@@ -575,7 +665,7 @@ const extraMethods = {
     this.fill();
   },
   fillPolygon: function (points, dashPattern = []) {
-    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
+    extraMethods.polygon.apply(this, [points, dashPattern, false]);
     this.fill();
     this.restore(); // use this cos we used setLineDash() in polygon()
   },
@@ -638,11 +728,10 @@ const extraMethods = {
     this.beginPath();
     if (restore) this.save();
     this.setLineDash(dashPattern);
-    const x = points[0][0];
-    const y = points[0][1];
-    this.moveTo(x, y);
-    points.shift(); // remove first element, we just went there
-    points.forEach(point => this.lineTo(point[0], point[1]));
+    this.moveTo(points[0][0], points[0][1]);
+    for (var i = 1; i < points.length; i++) {
+      this.lineTo(points[i][0], points[i][1]);
+    }
     this.closePath();
     if (restore) this.restore(); // use this cos we used setLineDash()
   },
@@ -743,7 +832,7 @@ const extraMethods = {
     this.stroke();
   },
   strokePolygon: function (points, dashPattern = []) {
-    extraMethods.polyshape.apply(this, [points, dashPattern, false]);
+    extraMethods.polygon.apply(this, [points, dashPattern, false]);
     this.stroke();
     this.restore(); // use this cos we used setLineDash() in polygon()
   },
@@ -856,11 +945,6 @@ const extraMethods = {
 
   // maths helpers
   angleFromPoints: function(x1, x2, y1, y2) {
-    return Math.atan2(y2 - y1, x2 - x1) // returns radians
-    // see https://stackoverflow.com/a/1707251
-    // The * DEG2RAD converts radians to degrees,
-    // the + 180 makes sure its always positive i.e. 0-360 deg,
-    // rather than -180 to 180 deg
     return Math.atan2(y2 - y1, x2 - x1) * DEG2RAD + 180;
   },
   angleToTarget: function (x, y, x1, y1) {
@@ -909,10 +993,10 @@ const extraMethods = {
     return Math.floor(Math.random() * (max - min+1)) + min;
   },
   randomFrom(arr) {
-    return extraMethods.random.apply(this, [1, arr.length])
+    return arr[extraMethods.random.apply(this, [0, arr.length - 1])]
   },
   rotateAt: function(x, y, deg) {
-    [ this, shadowCtx ].forEach(c => {
+    [ this, this.shadowCtx ].forEach(c => {
       c.translate(x, y);
       c.rotate(deg * DEG2RAD);
       c.translate(-x, -y);
@@ -949,16 +1033,17 @@ const Ctx = function(origCtx, c) {
   this.context = origCtx;
   this.canvas = origCtx.canvas;
 
-  // create an offscreen canvas, so we can:
+  // create an offscreen canvas per instance, so we can:
   // * draw things to it, always with a unique color
   // * lookup a color to know which object/shape it refers to
-  // * use the above to "interactive canvas objects"
-  //document.body.append(shadowCanvas);
+  // * use the above for "interactive canvas objects"
+  var shadowCanvas = document.createElement('canvas');
   shadowCanvas.height = this.canvas.height;
   shadowCanvas.width = this.canvas.width;
   shadowCanvas.style.height = this.canvas.style.height;
   shadowCanvas.style.width = this.canvas.style.width;
   shadowCanvas.setAttribute('class', 'shadow-canvas');
+  var shadowCtx = shadowCanvas.getContext('2d');
   this.shadowCanvas = shadowCanvas;
   this.shadowCtx = shadowCtx;
 
