@@ -104,11 +104,11 @@
         // You should only define the attrs you want "joined" to your
         // data - and don't override any others!
         data.pie({
-          px: 310,
-          py: 260,
+          px: ctx.canvas.width / 2,
+          py: ctx.canvas.height / 2,
           slice: data.medals,
-          radius: 220,
-          //innerRadius: 120,
+          radius: ctx.canvas.width / 100 * 30,
+          //innerRadius: ctx.canvas.width / 100 * 20,
           style: { fill: colors[n] },
         });
 

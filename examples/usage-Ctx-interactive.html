@@ -150,7 +150,7 @@ Foo.view = (props, ctx) => {
   });
   myStar.on('drag', d => {
     console.log('myStar dragging', d.props);
-    // note that using `myStar.drag` (as above) works better than `onDrag()`
+    // note that using `myStar.drag` (as above) works better than `drag` event handlers
     //myStar.update({ x: ctx.mouse.x, y: ctx.mouse.y });
   });
 
